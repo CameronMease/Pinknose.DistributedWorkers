@@ -6,7 +6,7 @@ using System.Text;
 namespace Pinknose.DistributedWorkers.Messages
 {
     [Serializable]
-    public abstract class PayloadMessage<TPayload> : MessageBase where TPayload:class
+    public abstract class PayloadMessage<TPayload> : MessageBase // where TPayload:class
     {
 
         public PayloadMessage(TPayload payload, bool encryptMessage, bool compressPayload, bool serializePayloadToJson, bool dataIsAlreadyCompressed = false) : base(encryptMessage)

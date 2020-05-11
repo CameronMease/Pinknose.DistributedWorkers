@@ -4,12 +4,16 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pinknose.DistributedWorkers
 {
+    /// <summary>
+    /// Abstraction of a RabbitMQ queue.  This message queue can be written to and can be read from.
+    /// </summary>
     public class ReadableMessageQueue : MessageQueue, IDisposable
     {
         private bool fullConsumeActive = false;
@@ -23,8 +27,7 @@ namespace Pinknose.DistributedWorkers
         private CancellationTokenSource cancellationTokenSource;
 
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
-
-
+        
         /// <summary>
         /// Begin consuming messages as they come in (not rate limited).
         /// </summary>
@@ -45,14 +48,15 @@ namespace Pinknose.DistributedWorkers
         }
 
         /// <summary>
-        /// Begins consuming messages from the queue.
+        /// Begins consuming messages from the queue.  The number of messages consumed is limited by the maxActiveMessages value.  Once the
+        /// client has consumed the max number of messages, no new messages will be received until a message has been acknolwedged.
         /// </summary>
-        /// <param name="maxActiveJobs">The maximum number of messages that can be processed at one time.</param>
-        public void BeginLimitedConsume(int maxActiveJobs, bool autoAcknowledge)
+        /// <param name="maxActiveMessages">The maximum number of messages that can be processed at one time.</param>
+        public void BeginLimitedConsume(int maxActiveMessages, bool autoAcknowledge)
         {
-            if (maxActiveJobs <= 0)
+            if (maxActiveMessages <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(maxActiveJobs), "Value must be more than 0.");
+                throw new ArgumentOutOfRangeException(nameof(maxActiveMessages), "Value must be more than 0.");
             }
 
             if (limitedConsumeSempahore != null)
@@ -68,7 +72,7 @@ namespace Pinknose.DistributedWorkers
             limitedConsumeActive = true;
             autoAcknowledgeMessages = autoAcknowledge;
 
-            limitedConsumeSempahore = new SimpleCountingSemaphore(maxActiveJobs);
+            limitedConsumeSempahore = new SimpleCountingSemaphore(maxActiveMessages);
             cancellationTokenSource = new CancellationTokenSource();
             limitedConsumeCancellationToken = cancellationTokenSource.Token;
 
@@ -83,6 +87,10 @@ namespace Pinknose.DistributedWorkers
             //TODO: Add code here!
         }
 
+        /// <summary>
+        /// This task runs continuously, waiting for new messages.  The task will pend on a semaphore when
+        /// the maximum number of active messages has been reached.
+        /// </summary>
         private void RunLimitedConsumeTask()
         {
             while (true)
@@ -97,22 +105,23 @@ namespace Pinknose.DistributedWorkers
 
                     if (result == null)
                     {
+                        // Wait before checking again.
+                        //TODO: Not the smartest way to do this.  Is there a better way?
                         Thread.Sleep(1000);
                     }
                 } while (result == null);
 
                 MessageBase message = MessageBase.Deserialize(result);
 
-                FireMessageReceivedEvent(message);
-
+                FireMessageReceivedEvent(message, result.Body.ToArray());
             }
         }
 
-        private void FireMessageReceivedEvent(MessageBase message)
+        private void FireMessageReceivedEvent(MessageBase message, byte[] rawData)
         {
             var task = new Task(() =>
             {
-                var eventArgs = new MessageReceivedEventArgs(message);
+                var eventArgs = new MessageReceivedEventArgs(message, rawData);
 
                 MessageReceived?.Invoke(this, eventArgs);
 
@@ -144,7 +153,14 @@ namespace Pinknose.DistributedWorkers
 
         private void Consumer_Received(object sender, BasicDeliverEventArgs e)
         {
-            FireMessageReceivedEvent(MessageBase.Deserialize(e));
+            try
+            {
+                FireMessageReceivedEvent(MessageBase.Deserialize(e), e.Body.ToArray());
+            }
+            catch (SerializationException ex)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         #region IDisposable Support

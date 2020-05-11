@@ -9,6 +9,7 @@ namespace Pinknose.DistributedWorkers.UnitTests
         [TestMethod]
         public void Duhh()
         {
+            /*
             MessageServer server = new MessageServer(
                 "Server",
                 Properties.Resources.SystemName,
@@ -26,6 +27,7 @@ namespace Pinknose.DistributedWorkers.UnitTests
                 Properties.Resources.Password);
 
             IConnection connection = RabbitMQHelpers.GetConnection();
+            */
         }
     }
 }

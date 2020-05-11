@@ -4,6 +4,7 @@ using RabbitMQ.Client.Exceptions;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Pinknose.DistributedWorkers
@@ -12,12 +13,14 @@ namespace Pinknose.DistributedWorkers
     {
         public event EventHandler<MessageReceivedEventArgs> RpcMessageReceived;
 
-        public MessageServer(string serverName, string systemName, string rabbitMqServerHostName, string userName, string password) : base(serverName, systemName, rabbitMqServerHostName, userName, password)
+        private Dictionary<string, ECDsaCng> clientDsa = new Dictionary<string, ECDsaCng>();
+
+        public MessageServer(string serverName, string systemName, string rabbitMqServerHostName, CngKey key, string userName, string password, params MessageTagValue[] subscriptionTags) : base(serverName, systemName, rabbitMqServerHostName, key, userName, password, subscriptionTags)
         {
-            RpcQueue.MessageReceived += RpcQueue_MessageReceived;
+            ServerQueue.MessageReceived += ServerQueue_MessageReceived;
         }
 
-        private void RpcQueue_MessageReceived(object sender, MessageReceivedEventArgs e)
+        private void ServerQueue_MessageReceived(object sender, MessageReceivedEventArgs e)
         {
             if (e.Message.GetType() == typeof(ClientAnnounceMessage))
             {
@@ -33,46 +36,73 @@ namespace Pinknose.DistributedWorkers
 
                     timeoutTimer.Elapsed += TimeoutTimer_Elapsed;
 
-                    clients.Add(
-                        e.Message.ClientName,
-                        (DateTime.Now, DateTime.Now, "duhh", timeoutTimer));
-                    ((MessageQueue)sender).RespondToMessage(e.Message, new ClientAnnounceResponseMessage(AnnounceResponse.Accepted, false));
-                    Log.Information($"Client '{e.Message.ClientName}' announced and accepted.");
+                    var key = CngKey.Import(((ClientAnnounceMessage)e.Message).PublicKey, CngKeyBlobFormat.EccFullPublicBlob);
+                    var dsa = new ECDsaCng(key);
+
+                    AnnounceResponse response;
+                    string message;
+                    if (SignatureIsValid(e.RawData, dsa))
+                    {
+                        response = AnnounceResponse.Accepted;
+                        Log.Information($"Client '{e.Message.ClientName}' announced and accepted.");
+                        message = "";
+                        clients.Add(e.Message.ClientName, (DateTime.Now, DateTime.Now, "duhh", timeoutTimer));
+                        clientDsa.Add(e.Message.ClientName, dsa);
+                    }
+                    else
+                    {
+                        response = AnnounceResponse.Rejected;
+                        Log.Information($"Client '{e.Message.ClientName}' announced and rejected for invalid signature.");
+                        message = "Signature was invalid.";
+                    }
+
+                    ((MessageQueue)sender).RespondToMessage(
+                        e.Message,
+                        new ClientAnnounceResponseMessage(response, this.CngKey, false)
+                        {
+                            MessageText = message
+                        });
                 }
                 else
                 {
                     ((MessageQueue)sender).RespondToMessage(e.Message,
-                        new ClientAnnounceResponseMessage(AnnounceResponse.Rejected, false) { MessageText = $"The client {e.Message.ClientName} already exists." }); 
+                        new ClientAnnounceResponseMessage(AnnounceResponse.Rejected, this.CngKey, false) { MessageText = $"The client {e.Message.ClientName} already exists." });
 
-                    Log.Warning($"Client '{e.Message.ClientName}'  announced and rejected (name already exists).");
-                }
-            }
-            else if (e.Message.GetType() == typeof(HeartbeatMessage))
-            {
-                if (!clients.ContainsKey(e.Message.ClientName))
-                {
-                    Log.Warning($"Heartbeat from unknown client '{e.Message.ClientName}'.");
-
-                    foreach (var clientInfo in clients.Values)
-                    {
-                        clientInfo.TimeoutTimer?.Dispose();
-                    }
-
-                    clients.Clear();
-
-                    BroacastToAllClients(new ClientReannounceRequestMessage(false));
-                }
-                else
-                {
-                    var clientInfo = clients[e.Message.ClientName];
-                    clientInfo.TimeoutTimer.Restart();
-                    clientInfo.LastSeen = DateTime.Now;
+                    Log.Warning($"Client '{e.Message.ClientName}' announced and rejected (name already exists).");
                 }
             }
             else
             {
-                RpcMessageReceived?.Invoke(this, e);
-            }   
+                // TODO: Check message signature
+                var signatureIsValid = SignatureIsValid(e.RawData, clientDsa[e.Message.ClientName]);
+
+                if (e.Message.GetType() == typeof(HeartbeatMessage))
+                {
+                    if (!clients.ContainsKey(e.Message.ClientName))
+                    {
+                        Log.Warning($"Heartbeat from unknown client '{e.Message.ClientName}'.");
+
+                        foreach (var clientInfo in clients.Values)
+                        {
+                            clientInfo.TimeoutTimer?.Dispose();
+                        }
+
+                        clients.Clear();
+
+                        BroacastToAllClients(new ClientReannounceRequestMessage(false));
+                    }
+                    else
+                    {
+                        var clientInfo = clients[e.Message.ClientName];
+                        clientInfo.TimeoutTimer.Restart();
+                        clientInfo.LastSeen = DateTime.Now;
+                    }
+                }
+                else
+                {
+                    RpcMessageReceived?.Invoke(this, e);
+                }
+            }
         }
 
 
@@ -93,30 +123,10 @@ namespace Pinknose.DistributedWorkers
         {
             var message = new HeartbeatMessage(false);
 
-            BroacastToAllClients(message);
+            // TODO: Re-enabled BroacastToAllClients(message);
         }
 
-        public void BroacastToAllClients(MessageBase message)
-        {
-            if (message == null)
-            {
-                throw new ArgumentNullException(nameof(message));
-            }
-
-            try
-            {
-                Channel.BasicPublish(
-                    exchange: BroadcastExchangeName,
-                    routingKey: "",
-                    mandatory: true,
-                    basicProperties: null,
-                    body: message.Serialize());
-            }
-            catch (AlreadyClosedException e)
-            {
-                Log.Warning(e, $"Tried to send data to the closed exchange '{BroadcastExchangeName}'.");
-            }
-        }
+        
 
         public void Start(bool purgeWorkQueue = false)
         {
@@ -125,7 +135,7 @@ namespace Pinknose.DistributedWorkers
                 WorkQueue.Purge();
             }
 
-            RpcQueue.BeginFullConsume(true);
+            ServerQueue.BeginFullConsume(true);
             LogQueue.BeginFullConsume(true);
 
         }

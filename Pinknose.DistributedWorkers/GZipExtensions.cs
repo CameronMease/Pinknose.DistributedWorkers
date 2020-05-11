@@ -20,14 +20,9 @@ namespace Pinknose.DistributedWorkers
                 }
 
                 memoryStream.Seek(0, SeekOrigin.Begin);
-
                 byte[] bytes = new byte[memoryStream.Length];
-
                 memoryStream.Read(bytes);
-
-
                 return bytes;
-
             }
         }
 

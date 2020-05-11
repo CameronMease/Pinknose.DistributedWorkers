@@ -20,8 +20,7 @@ namespace Pinknose.DistributedWorkers.Messages
         // Temporary to create AES encryption keys
         private static byte[] iv = new byte[] { 71, 120, 112, 163, 182, 229, 14, 24, 175, 168, 92, 79, 86, 30, 154, 197 };
         private static byte[] key = new byte[] { 180, 214, 175, 230, 229, 198, 219, 236, 136, 69, 104, 206, 171, 64, 247, 0, 247, 106, 127, 6, 72, 133, 211, 252, 188, 16, 39, 231, 151, 168, 24, 135 };
-
-        
+                
         public abstract Guid MessageTypeGuid { get; }
 
         public string MessageText { get; set; }
@@ -43,7 +42,7 @@ namespace Pinknose.DistributedWorkers.Messages
         /// Serializes the message into a binary format.
         /// </summary>
         /// <returns></returns>
-        internal ReadOnlyMemory<Byte> Serialize()
+        internal byte[] Serialize()
         {
             var formatter = new BinaryFormatter();
             byte[] bytes;
@@ -92,6 +91,8 @@ namespace Pinknose.DistributedWorkers.Messages
                 throw new ArgumentNullException(nameof(e.Body));
             }
             */
+
+
 
             var formatter = new BinaryFormatter();
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Pinknose.DistributedWorkers.Messages
@@ -9,8 +10,11 @@ namespace Pinknose.DistributedWorkers.Messages
     {
         public override Guid MessageTypeGuid =>new Guid("B1C8E58E-DBEB-4D13-98F0-D73D4EE9A643");
 
-        internal ClientAnnounceMessage(bool encryptMessage) : base(encryptMessage)
+        internal ClientAnnounceMessage(CngKey key, bool encryptMessage) : base(encryptMessage)
         {
+            PublicKey = key.Export(CngKeyBlobFormat.EccFullPublicBlob);
         }
+
+        public byte[] PublicKey { get; private set; }
     }
 }

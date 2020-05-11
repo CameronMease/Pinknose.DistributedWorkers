@@ -4,6 +4,7 @@ using RabbitMQ.Client;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 
@@ -17,6 +18,9 @@ namespace Pinknose.DistributedWorkers
         private object rpcLock = new object();
         private string rpcCallCorrelationId;
         private MessageBase lastRpcMessageReceived;
+        private byte[] lastRpcRawDataReceived;
+
+        private ECDsaCng serverDsa = null;
 
         private ReusableThreadSafeTimer serverHeartbeatTimer = new ReusableThreadSafeTimer()
         {
@@ -24,24 +28,31 @@ namespace Pinknose.DistributedWorkers
             AutoReset = false
         };
 
-        public MessageClient(string clientName, string systemName, string rabbitMqServerHostName, string userName, string password) :
-            base(clientName, systemName, rabbitMqServerHostName, userName, password)
+        public MessageClient(string clientName, string systemName, string rabbitMqServerHostName, CngKey key, string userName, string password, params MessageTag[] subscriptionTags) :
+            this(clientName, systemName, rabbitMqServerHostName, key, userName, password, new MessageTagCollection(subscriptionTags))
         {
-            DedicatedQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(Channel, clientName, BroadcastExchangeName, DedicatedQueueName);
+
+        }
+
+        public MessageClient(string clientName, string systemName, string rabbitMqServerHostName, CngKey key, string userName, string password, MessageTagCollection subscriptionTags) :
+            base(clientName, systemName, rabbitMqServerHostName, key, userName, password, subscriptionTags)
+        {
+            DedicatedQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, clientName, BroadcastExchangeName, DedicatedQueueName);
 
             DedicatedQueue.MessageReceived += DedicatedQueue_MessageReceived;
             DedicatedQueue.BeginFullConsume(true);
 
             // Announce client to server
-            ClientAnnounceMessage message = new ClientAnnounceMessage(false);
+            ClientAnnounceMessage message = new ClientAnnounceMessage(CngKey, false);
 
             MessageBase response;
+            byte[] rawResponse;
 
-            while (this.WriteRpcCall(message, out response, 10000) == RpcCallResult.Timeout)
+            while (this.WriteRpcCall(message, out response, out rawResponse, 10000) == RpcCallResult.Timeout)
             {
                 Log.Warning("Timeout trying to communicate with the server.");
             }
-
+            
             switch (((ClientAnnounceResponseMessage)response).Response)
             {
                 case AnnounceResponse.Accepted:
@@ -49,11 +60,24 @@ namespace Pinknose.DistributedWorkers
 
                 case AnnounceResponse.Rejected:
                     throw new Exception($"Client rejected by server with the following message: {response.MessageText}.");
-                    break;
             }
 
-            serverHeartbeatTimer.Elapsed += ServerHeartbeatTimer_Elapsed;
-            serverHeartbeatTimer.Start();
+            // Verify server's public key
+            var tempKey = CngKey.Import(((ClientAnnounceResponseMessage)response).ServerPublicKey, CngKeyBlobFormat.EccFullPublicBlob);
+            var tempDsa = new ECDsaCng(tempKey);
+
+            if (!SignatureIsValid(rawResponse, tempDsa))
+            {
+                throw new Exception("Bad server key.");
+            }
+            else
+            {
+                serverDsa = tempDsa;
+
+                serverHeartbeatTimer.Elapsed += ServerHeartbeatTimer_Elapsed;
+                serverHeartbeatTimer.Start();
+            }
+            
         }
 
         private void ServerHeartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -63,21 +87,25 @@ namespace Pinknose.DistributedWorkers
 
         protected sealed override void SendHeartbeat()
         {
-            this.WriteRpcCallNoWait(new HeartbeatMessage(false));
+            //todo: reenable  this.WriteRpcCallNoWait(new HeartbeatMessage(false));
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="replyToQueue"></param>
-        /// <returns>Returns Correlation ID for the message.</returns>
+
+
         public RpcCallResult WriteRpcCall(MessageBase message, out MessageBase response, int waitTime, bool broadcastResults = false)
+        {
+            byte[] rawMessage;
+
+            return WriteRpcCall(message, out response, out rawMessage, waitTime, broadcastResults);
+        }
+
+        public RpcCallResult WriteRpcCall(MessageBase message, out MessageBase response, out byte[] rawResponse, int waitTime, bool broadcastResults = false)
         {
             if (message == null)
             {
                 throw new ArgumentNullException(nameof(message));
             }
 
+            // Only one RPC call can be done at a time.
             lock (rpcLock)
             {
                 rpcCallCorrelationId = Guid.NewGuid().ToString();
@@ -103,23 +131,35 @@ namespace Pinknose.DistributedWorkers
 
                 basicProperties.ReplyTo = $"exchangeName:{exchangeName},routingKey:{routingKey}";
 
+                byte[] hashedMessage = AddSignature(message.Serialize());
+
                 Channel.BasicPublish(
                     exchange: "",
-                    routingKey: RpcQueue.Name,
+                    routingKey: ServerQueue.Name,
                     basicProperties: basicProperties,
-                    message.Serialize());
+                    hashedMessage);
 
                 RpcCallResult result;
 
                 if (rpcCallWaitHandle.WaitOne(waitTime))
                 {
-                    result = RpcCallResult.Success;
                     response = lastRpcMessageReceived;
+                    rawResponse = lastRpcRawDataReceived;
+
+                    if (serverDsa == null || SignatureIsValid(rawResponse, serverDsa))
+                    {
+                        result = RpcCallResult.Success;
+                    }
+                    else
+                    {
+                        result = RpcCallResult.BadSignature;
+                    }
                 }
                 else
                 {
                     result = RpcCallResult.Timeout;
                     response = null;
+                    rawResponse = null;
                     Log.Warning($"RPC call of type '{message.GetType()}' timed out.");
                 }
 
@@ -160,11 +200,13 @@ namespace Pinknose.DistributedWorkers
 
             basicProperties.ReplyTo = $"exchangeName:{exchangeName},routingKey:{routingKey}";
 
+            byte[] signedMessage = AddSignature(message.Serialize());
+
             Channel.BasicPublish(
                 exchange: "",
-                routingKey: RpcQueue.Name,
+                routingKey: ServerQueue.Name,
                 basicProperties: basicProperties,
-                message.Serialize());
+                signedMessage);
         }
 
         public ReadableMessageQueue DedicatedQueue { get; private set; }
@@ -174,12 +216,13 @@ namespace Pinknose.DistributedWorkers
             if (e.Message.BasicProperties.CorrelationId == rpcCallCorrelationId)
             {
                 lastRpcMessageReceived = e.Message;
+                lastRpcRawDataReceived = e.RawData;
                 rpcCallWaitHandle.Set();
             }
             else if (e.Message.GetType() == typeof(ClientReannounceRequestMessage))
             {
                 Log.Information("Server requested reannouncement of clients.");
-                var message = new ClientAnnounceMessage(false);
+                var message = new ClientAnnounceMessage(CngKey, false);
                 WriteRpcCallNoWait(message);
             }
             else if (e.Message.GetType() == typeof(HeartbeatMessage))
@@ -196,5 +239,7 @@ namespace Pinknose.DistributedWorkers
                 MessageReceived?.Invoke(this, e);
             }
         }
+
+        
     }
 }

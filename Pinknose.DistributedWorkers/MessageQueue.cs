@@ -3,6 +3,8 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -10,12 +12,18 @@ using System.Threading.Tasks;
 
 namespace Pinknose.DistributedWorkers
 {
+    /// <summary>
+    /// Abstraction of a RabbitMQ queue.  This message queue can be written to, but cannot be read from.
+    /// </summary>
     public class MessageQueue
     {
         private QueueDeclareOk queueInfo;
         private string _clientName;
+        protected IMessageClient ParentMessageClient { get; private set; }
 
-        internal static TQueueType CreateMessageQueue<TQueueType>(IModel channel, string clientName, string queueName) where TQueueType : MessageQueue, new()
+        private string boundExchangeName = String.Empty;
+
+        internal static TQueueType CreateMessageQueue<TQueueType>(IMessageClient parentMessageClient, IModel channel, string clientName, string queueName) where TQueueType : MessageQueue, new()
         {
             var queue = new TQueueType()
             {
@@ -25,18 +33,31 @@ namespace Pinknose.DistributedWorkers
                     durable: false,
                     exclusive: false,
                     autoDelete: true),
-                _clientName = clientName
+                _clientName = clientName,
+                ParentMessageClient = parentMessageClient
             };
 
             return queue;
         }
 
+        internal static TQueueType CreateExchangeBoundMessageQueue<TQueueType>(IMessageClient parentMessageClient, IModel channel, string clientName, string exchangeName, string queueName, params MessageTag[] subscriptionTags) where TQueueType : MessageQueue, new()
+        {
+            return CreateExchangeBoundMessageQueue<TQueueType>(
+                parentMessageClient,
+                channel,
+                clientName,
+                exchangeName,
+                queueName,
+                new MessageTagCollection(subscriptionTags));
+        }
+
         /// <summary>
-        /// Declares a queue and binds it to an exchange
+        /// Declares a queue and binds it to an exchange.  Exchanges allow messages to be sent to more than one queue.  Exchange-bound queues are useful when a
+        /// receiver needs to consume broadcast messages.
         /// </summary>
         /// <param name="channel"></param>
         /// <param name="queueName"></param>
-        internal static TQueueType CreateExchangeBoundMessageQueue<TQueueType>(IModel channel, string clientName, string exchangeName, string queueName) where TQueueType : MessageQueue, new()
+        internal static TQueueType CreateExchangeBoundMessageQueue<TQueueType>(IMessageClient parentMessageClient, IModel channel, string clientName, string exchangeName, string queueName, MessageTagCollection subscriptionTags) where TQueueType : MessageQueue, new()
         {
             var queue = new TQueueType()
             {
@@ -46,19 +67,55 @@ namespace Pinknose.DistributedWorkers
                     durable: false,
                     exclusive: true,
                     autoDelete: true),
-                _clientName = clientName
+                _clientName = clientName,
+                ParentMessageClient = parentMessageClient,
+                boundExchangeName = exchangeName
             };
 
-            channel.QueueBind(queueName, exchangeName, "");
+            if (!subscriptionTags.Any())
+            {
+                channel.QueueBind(queueName, exchangeName, "");
+            }
+            else
+            {
+                var map = new Dictionary<string, object>();
+
+                map.Add("x-match", "any");
+
+                foreach (var item in subscriptionTags)
+                {
+                    map.Add(item.GetMangledTagAndValue(), "");
+                }
+
+                channel.QueueBind(queueName, exchangeName, "", map);
+            }
 
             return queue;
         }
 
+        /// <summary>
+        /// Returns the name of the queue.
+        /// </summary>
         public string Name => queueInfo.QueueName;
 
         protected IModel Channel { get; set; }
 
-        public void Write(MessageBase message)
+        public void WriteToBoundExchange(MessageBase message, params MessageTag[] tags) => Write(message, boundExchangeName, tags);
+
+        public void WriteToBoundExchange(MessageBase message, MessageTagCollection tags) => Write(message, boundExchangeName, tags);
+
+         public void Write(MessageBase message, params MessageTag[] tags) => Write(message, "", tags);
+
+          /// <summary>
+        /// Writes a message to the queue.
+        /// </summary>
+        /// <param name="message">The message to be written to the queue.</param>
+        private void Write(MessageBase message, string exchangeName, params MessageTag[] tags)
+        {
+            Write(message, exchangeName, new MessageTagCollection(tags));
+        }
+
+        private void Write(MessageBase message, string exchangeName, MessageTagCollection tags)
         {
             if (message == null)
             {
@@ -67,15 +124,38 @@ namespace Pinknose.DistributedWorkers
 
             message.ClientName = _clientName;
 
+            byte[] hashedMessage = ParentMessageClient.AddSignature(message.Serialize());
+
+            IBasicProperties basicProperties = null;
+
+            if (tags != null && tags.Any())
+            {
+                basicProperties = Channel.CreateBasicProperties();
+                basicProperties.Headers = new Dictionary<string, object>();
+
+                foreach (var tag in tags)
+                {
+                    basicProperties.Headers.Add(tag.GetMangledTagName(), "");
+
+                    // If this is a tag with a value (not just a tag)
+                    if (tag.GetType() != typeof(MessageTag))
+                    {
+                        basicProperties.Headers.Add(tag.GetMangledTagAndValue(), "");
+                    }
+                }
+            }
+
             Channel.BasicPublish(
-                exchange: "",
+                exchange: exchangeName,
                 routingKey: queueInfo.QueueName,
-                basicProperties: null,
-                message.Serialize());
+                basicProperties: basicProperties,
+                hashedMessage);
         }
 
 
-
+        /// <summary>
+        /// Regular expression used to parse the exchange name and routing keys from the message's basic properties.
+        /// </summary>
         private static Regex replyToRegex = new Regex("exchangeName:(?<exchangeName>.*),routingKey:(?<routingKey>.*)", RegexOptions.Compiled);
 
         public void RespondToMessage(MessageBase originalMessage, MessageBase responseMessage)
@@ -99,11 +179,13 @@ namespace Pinknose.DistributedWorkers
             string exchangeName = match.Groups["exchangeName"].Value;
             string routingKey = match.Groups["routingKey"].Value;
 
+            byte[] hashedMessage = ParentMessageClient.AddSignature(responseMessage.Serialize());
+
             Channel.BasicPublish(
                 exchange: exchangeName,
                 routingKey: routingKey,
                 basicProperties: basicProperties,
-                responseMessage.Serialize());
+                hashedMessage);
         }
 
         /*
@@ -119,44 +201,6 @@ namespace Pinknose.DistributedWorkers
 
         public void Purge() => Channel.QueuePurge(Name);
 
-        /*
-                #region IDisposable Support
-                private bool disposedValue = false; // To detect redundant calls
-
-                protected virtual void Dispose(bool disposing)
-                {
-                    if (!disposedValue)
-                    {
-                        if (disposing)
-                        {
-                            // TODO: dispose managed state (managed objects).
-                            cancellationTokenSource?.Dispose();
-
-                        }
-
-                        // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                        // TODO: set large fields to null.
-
-                        disposedValue = true;
-                    }
-                }
-
-                // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-                // ~MessageQueue()
-                // {
-                //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-                //   Dispose(false);
-                // }
-
-                // This code added to correctly implement the disposable pattern.
-                public void Dispose()
-                {
-                    // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-                    Dispose(true);
-                    // TODO: uncomment the following line if the finalizer is overridden above.
-                    // GC.SuppressFinalize(this);
-                }
-                #endregion
-                */
+      
     }
 }
