@@ -1,26 +1,36 @@
-﻿using Pinknose.DistributedWorkers.Messages;
+﻿using EasyNetQ.Management.Client.Model;
+using Newtonsoft.Json.Serialization;
+using Pinknose.DistributedWorkers.Extensions;
+using Pinknose.DistributedWorkers.Messages;
+using Pinknose.DistributedWorkers.MessageTags;
 using Pinknose.Utilities;
 using RabbitMQ.Client;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Pinknose.DistributedWorkers
 {
     public sealed class MessageClient : MessageClientBase<MessageQueue>
     {
-        public event EventHandler<MessageReceivedEventArgs> MessageReceived;
+        //private EventWaitHandle rpcCallWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
+        //private object rpcLock = new object();
 
-        private EventWaitHandle rpcCallWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
-        private object rpcLock = new object();
-        private string rpcCallCorrelationId;
-        private MessageBase lastRpcMessageReceived;
-        private byte[] lastRpcRawDataReceived;
+        private Dictionary<string, RpcCallWaitInfo> rpcCallWaitInfo = new Dictionary<string, RpcCallWaitInfo>();
 
-        private ECDsaCng serverDsa = null;
+        //private string rpcCallCorrelationId;
+        //private MessageBase lastRpcMessageReceived;
+        //private byte[] lastRpcRawDataReceived;
+
+        private bool clientServerHandshakeComplete = false;
+        private string serverName = "server";
+
 
         private ReusableThreadSafeTimer serverHeartbeatTimer = new ReusableThreadSafeTimer()
         {
@@ -38,46 +48,59 @@ namespace Pinknose.DistributedWorkers
             base(clientName, systemName, rabbitMqServerHostName, key, userName, password, subscriptionTags)
         {
             DedicatedQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, clientName, BroadcastExchangeName, DedicatedQueueName);
+            DedicatedQueue.MessageReceived += DedicatedQueue_MessageReceived;           
+        }
 
-            DedicatedQueue.MessageReceived += DedicatedQueue_MessageReceived;
+        public override void Connect(TimeSpan timeout)
+        {
             DedicatedQueue.BeginFullConsume(true);
 
             // Announce client to server
             ClientAnnounceMessage message = new ClientAnnounceMessage(CngKey, false);
 
-            MessageBase response;
-            byte[] rawResponse;
+            var result = this.WriteToServer(message, (int)timeout.TotalMilliseconds, false).Result;
 
-            while (this.WriteRpcCall(message, out response, out rawResponse, 10000) == RpcCallResult.Timeout)
-            {
-                Log.Warning("Timeout trying to communicate with the server.");
-            }
+            //var result = this.WriteToServer(message, out response, out rawResponse, (int)timeout.TotalMilliseconds);
             
-            switch (((ClientAnnounceResponseMessage)response).Response)
+            if (result.CallResult == RpcCallResult.Timeout)
+            {
+                throw new ConnectionException("Timeout trying to communicate with the server.");
+            }
+
+            switch (((ClientAnnounceResponseMessage)result.ResponseMessage).Response)
             {
                 case AnnounceResponse.Accepted:
+                    clientServerHandshakeComplete = true;
+                    serverName = ((ClientAnnounceResponseMessage)result.ResponseMessage).ClientName;
                     break;
 
                 case AnnounceResponse.Rejected:
-                    throw new Exception($"Client rejected by server with the following message: {response.MessageText}.");
+                    throw new ConnectionException($"Client rejected by server with the following message: {result.ResponseMessage.MessageText}.");
             }
 
-            // Verify server's public key
-            var tempKey = CngKey.Import(((ClientAnnounceResponseMessage)response).ServerPublicKey, CngKeyBlobFormat.EccFullPublicBlob);
-            var tempDsa = new ECDsaCng(tempKey);
+            PublicKeystore.Merge(((ClientAnnounceResponseMessage)result.ResponseMessage).PublicKeystore);
+            PublicKeystore[result.ResponseMessage.ClientName].Iv = ((ClientAnnounceResponseMessage)result.ResponseMessage).Iv;
 
-            if (!SignatureIsValid(rawResponse, tempDsa))
+            result.ResponseMessage.ReverifySignature(PublicKeystore[result.ResponseMessage.ClientName].Dsa);
+
+            if (result.ResponseMessage.SignatureVerificationStatus != SignatureVerificationStatus.SignatureValid)
             {
                 throw new Exception("Bad server key.");
             }
             else
             {
-                serverDsa = tempDsa;
-
                 serverHeartbeatTimer.Elapsed += ServerHeartbeatTimer_Elapsed;
                 serverHeartbeatTimer.Start();
             }
-            
+
+            base.Connect(timeout);
+
+            IsConnected = true; 
+        }
+
+        public override void Disconnect()
+        {
+            throw new NotImplementedException();
         }
 
         private void ServerHeartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -90,86 +113,108 @@ namespace Pinknose.DistributedWorkers
             //todo: reenable  this.WriteRpcCallNoWait(new HeartbeatMessage(false));
         }
 
-
-        public RpcCallResult WriteRpcCall(MessageBase message, out MessageBase response, int waitTime, bool broadcastResults = false)
+        public async Task<RpcCallWaitInfo> WriteToServer(MessageBase message, int waitTime, bool broadcastResults=false)
         {
-            byte[] rawMessage;
-
-            return WriteRpcCall(message, out response, out rawMessage, waitTime, broadcastResults);
+            return await WriteToClient(
+                ServerQueueName,  
+                PublicKeystore.ContainsKey(serverName) ? PublicKeystore[serverName].Dsa : null,
+                message, 
+                waitTime, 
+                broadcastResults).ConfigureAwait(false);
         }
 
-        public RpcCallResult WriteRpcCall(MessageBase message, out MessageBase response, out byte[] rawResponse, int waitTime, bool broadcastResults = false)
+        public async Task<RpcCallWaitInfo> WriteToClient(MessageClientInfo clientInfo, MessageBase message, int waitTime, bool broadcastResults = false)
+        {
+            if (clientInfo == null)
+            {
+                throw new ArgumentNullException(nameof(clientInfo));
+            }
+
+            return await WriteToClient(clientInfo.DedicatedQueueName, clientInfo.Dsa, message, waitTime, broadcastResults).ConfigureAwait(false);
+        }
+
+        private async Task<RpcCallWaitInfo> WriteToClient(string queueName, ECDsaCng clientDsa, MessageBase message, int waitTime, bool broadcastResults=false)
         {
             if (message == null)
             {
                 throw new ArgumentNullException(nameof(message));
             }
 
-            // Only one RPC call can be done at a time.
-            lock (rpcLock)
+            var formattedMessage = ConfigureRpcMessageForSend(message, broadcastResults);
+
+            Channel.BasicPublish(
+                exchange: "",
+                routingKey: queueName,
+                basicProperties: formattedMessage.BasicProperties,
+                formattedMessage.SignedMessage);
+
+            RpcCallWaitInfo response = new RpcCallWaitInfo();
+            response.WaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+
+            rpcCallWaitInfo.Add(formattedMessage.BasicProperties.CorrelationId, response);
+
+            Task task = new Task(() =>
             {
-                rpcCallCorrelationId = Guid.NewGuid().ToString();
 
-                message.ClientName = ClientName;
-
-                IBasicProperties basicProperties = this.Channel.CreateBasicProperties();
-                basicProperties.CorrelationId = rpcCallCorrelationId;
-
-                string exchangeName;
-                string routingKey;
-
-                if (!broadcastResults)
+                if (!response.WaitHandle.WaitOne(waitTime))
                 {
-                    exchangeName = "";
-                    routingKey = DedicatedQueue.Name;
+                    response.CallResult = RpcCallResult.Timeout;
                 }
                 else
                 {
-                    exchangeName = BroadcastExchangeName;
-                    routingKey = "";
-                }
-
-                basicProperties.ReplyTo = $"exchangeName:{exchangeName},routingKey:{routingKey}";
-
-                byte[] hashedMessage = AddSignature(message.Serialize());
-
-                Channel.BasicPublish(
-                    exchange: "",
-                    routingKey: ServerQueue.Name,
-                    basicProperties: basicProperties,
-                    hashedMessage);
-
-                RpcCallResult result;
-
-                if (rpcCallWaitHandle.WaitOne(waitTime))
-                {
-                    response = lastRpcMessageReceived;
-                    rawResponse = lastRpcRawDataReceived;
-
-                    if (serverDsa == null || SignatureIsValid(rawResponse, serverDsa))
+                    if (response.ResponseMessage.SignatureVerificationStatus == SignatureVerificationStatus.SignatureValid)
                     {
-                        result = RpcCallResult.Success;
+                        response.CallResult = RpcCallResult.Success;
                     }
                     else
                     {
-                        result = RpcCallResult.BadSignature;
+                        response.CallResult = RpcCallResult.BadSignature;
                     }
                 }
-                else
-                {
-                    result = RpcCallResult.Timeout;
-                    response = null;
-                    rawResponse = null;
-                    Log.Warning($"RPC call of type '{message.GetType()}' timed out.");
-                }
 
-                rpcCallCorrelationId = "";
+                rpcCallWaitInfo.Remove(formattedMessage.BasicProperties.CorrelationId);
+                response.WaitHandle.Dispose();
+            });
 
-                return result;
-            }
+            task.Start();
+
+            await task.ConfigureAwait(false);
+
+            return response;
         }
 
-        public void WriteRpcCallNoWait(MessageBase message, bool broadcastResults = false)
+        public void WriteToServerNoWait(MessageBase message, bool broadcastResults = false)
+        {
+            WriteToClientNoWait(ServerQueueName, PublicKeystore[serverName].Dsa, message, broadcastResults);
+        }
+
+        public void WriteToClientNoWait(MessageClientInfo clientInfo, MessageBase message, bool broadcastResults = false)
+        {
+            if (clientInfo == null)
+            {
+                throw new ArgumentNullException(nameof(clientInfo));
+            }
+
+            WriteToClientNoWait(clientInfo.DedicatedQueueName, clientInfo.Dsa, message, broadcastResults);
+        }
+
+        private void WriteToClientNoWait(string queueName, ECDsaCng publicDsa, MessageBase message, bool broadcastResults)
+        {
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+
+            var formattedMessage = ConfigureRpcMessageForSend(message, broadcastResults);
+
+            Channel.BasicPublish(
+                exchange: "",
+                routingKey: queueName,
+                basicProperties: formattedMessage.BasicProperties,
+                formattedMessage.SignedMessage);
+        }
+
+        private (byte[] SignedMessage, IBasicProperties BasicProperties) ConfigureRpcMessageForSend(MessageBase message, bool broadcastResults)
         {
             if (message == null)
             {
@@ -200,46 +245,57 @@ namespace Pinknose.DistributedWorkers
 
             basicProperties.ReplyTo = $"exchangeName:{exchangeName},routingKey:{routingKey}";
 
-            byte[] signedMessage = AddSignature(message.Serialize());
+            byte[] signedMessage = message.Serialize(this);
 
-            Channel.BasicPublish(
-                exchange: "",
-                routingKey: ServerQueue.Name,
-                basicProperties: basicProperties,
-                signedMessage);
+            return (signedMessage, basicProperties);
         }
 
-        public ReadableMessageQueue DedicatedQueue { get; private set; }
+        private ReadableMessageQueue DedicatedQueue { get; set; }
 
         private void DedicatedQueue_MessageReceived(object sender, MessageReceivedEventArgs e)
         {
-            if (e.Message.BasicProperties.CorrelationId == rpcCallCorrelationId)
-            {
-                lastRpcMessageReceived = e.Message;
-                lastRpcRawDataReceived = e.RawData;
-                rpcCallWaitHandle.Set();
+            //var signatureIsValid = clientServerHandshakeComplete && SignatureIsValid(e.RawData, PublicKeystore[e.Message.ClientName].Dsa);
+
+            if (e.Message.BasicProperties.CorrelationId != null &&
+                rpcCallWaitInfo.ContainsKey(e.Message.BasicProperties.CorrelationId))
+            { 
+                var waitInfo = rpcCallWaitInfo[e.Message.BasicProperties.CorrelationId];
+                waitInfo.ResponseMessage = e.Message;
+                //waitInfo.RawResponse = e.RawData;
+                waitInfo.WaitHandle.Set();           
             }
-            else if (e.Message.GetType() == typeof(ClientReannounceRequestMessage))
+            else if (e.Message.SignatureVerificationStatus == SignatureVerificationStatus.SignatureValid)
             {
-                Log.Information("Server requested reannouncement of clients.");
-                var message = new ClientAnnounceMessage(CngKey, false);
-                WriteRpcCallNoWait(message);
-            }
-            else if (e.Message.GetType() == typeof(HeartbeatMessage))
-            {
-                if (!serverHeartbeatTimer.Enabled)
+                if (e.Message.GetType() == typeof(ClientReannounceRequestMessage))
                 {
-                    Log.Information("Server heartbeat re-established.");
+                    Log.Information("Server requested reannouncement of clients.");
+                    var message = new ClientAnnounceMessage(CngKey, false);
+                    WriteToServerNoWait(message);
                 }
+                else if (e.Message.GetType() == typeof(HeartbeatMessage))
+                {
+                    if (!serverHeartbeatTimer.Enabled)
+                    {
+                        Log.Information("Server heartbeat re-established.");
+                    }
 
-                serverHeartbeatTimer.Restart();
+                    serverHeartbeatTimer.Restart();
+                }
+                else if (e.Message.GetType() == typeof(PublicKeyUpdate))
+                {
+                    var tempMessage = (PublicKeyUpdate)e.Message;
+                    PublicKeystore[tempMessage.ClientInfo.Name] = tempMessage.ClientInfo;
+                    Log.Verbose($"Received public key '{tempMessage.ClientInfo.PublicKey.GetPublicKeyHash()}' for client '{tempMessage.ClientInfo.Name}'.");
+                }
+                else
+                {
+                    FireMessageReceivedEvent(e);
+                }
             }
-            else
+            else if (clientServerHandshakeComplete)
             {
-                MessageReceived?.Invoke(this, e);
+                throw new Exception();
             }
-        }
-
-        
+        }        
     }
 }

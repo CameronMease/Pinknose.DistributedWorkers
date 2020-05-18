@@ -14,7 +14,7 @@ namespace Pinknose.DistributedWorkers
     /// <summary>
     /// Abstraction of a RabbitMQ queue.  This message queue can be written to and can be read from.
     /// </summary>
-    public class ReadableMessageQueue : MessageQueue, IDisposable
+    public class ReadableMessageQueue : MessageQueue
     {
         private bool fullConsumeActive = false;
         private bool limitedConsumeActive = false;
@@ -111,17 +111,17 @@ namespace Pinknose.DistributedWorkers
                     }
                 } while (result == null);
 
-                MessageBase message = MessageBase.Deserialize(result);
+                MessageBase message = MessageBase.Deserialize(result, this.ParentMessageClient);
 
-                FireMessageReceivedEvent(message, result.Body.ToArray());
+                FireMessageReceivedEvent(message);
             }
         }
 
-        private void FireMessageReceivedEvent(MessageBase message, byte[] rawData)
+        private void FireMessageReceivedEvent(MessageBase message)
         {
             var task = new Task(() =>
             {
-                var eventArgs = new MessageReceivedEventArgs(message, rawData);
+                var eventArgs = new MessageReceivedEventArgs(message);
 
                 MessageReceived?.Invoke(this, eventArgs);
 
@@ -155,7 +155,7 @@ namespace Pinknose.DistributedWorkers
         {
             try
             {
-                FireMessageReceivedEvent(MessageBase.Deserialize(e), e.Body.ToArray());
+                FireMessageReceivedEvent(MessageBase.Deserialize(e, this.ParentMessageClient));
             }
             catch (SerializationException ex)
             {

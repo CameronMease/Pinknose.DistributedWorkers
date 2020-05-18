@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Pinknose.DistributedWorkers.MessageTags;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -7,7 +8,7 @@ namespace Pinknose.DistributedWorkers.Messages
     [Serializable]
     internal sealed class ClientReannounceRequestMessage : MessageBase
     {
-        public ClientReannounceRequestMessage(bool encryptMessage) : base(encryptMessage)
+        public ClientReannounceRequestMessage(bool encryptMessage, params MessageTag[] tags) : base(encryptMessage, tags)
         {
 
         }

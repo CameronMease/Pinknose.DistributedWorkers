@@ -1,19 +1,21 @@
-﻿using System;
+﻿using Pinknose.DistributedWorkers.MessageTags;
+using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace Pinknose.DistributedWorkers.Messages
 {
+    /// <summary>
+    /// A message that has a strongly-typed payload.  There are a variety of options for compression or serialization
+    /// of the data.  This is good for payload types that cannot be binary serialized.
+    /// </summary>
+    /// <typeparam name="TPayload"></typeparam>
     [Serializable]
-    public abstract class PayloadMessage<TPayload> : MessageBase // where TPayload:class
+    public abstract class PayloadMessage<TPayload> : MessageBase 
     {
-
-        public PayloadMessage(TPayload payload, bool encryptMessage, bool compressPayload, bool serializePayloadToJson, bool dataIsAlreadyCompressed = false) : base(encryptMessage)
+        public PayloadMessage(TPayload payload, bool encryptMessage, bool compressPayload, bool serializePayloadToJson, bool dataIsAlreadyCompressed = false, params MessageTag[] tags) : base(encryptMessage, tags)
         {
-            //MessageType = messageType;
-            //PayloadSerializationMode = payloadSerializationMode;
-
             if (payload != null)
             {
                 if ((serializePayloadToJson && compressPayload) & !dataIsAlreadyCompressed)
@@ -37,57 +39,10 @@ namespace Pinknose.DistributedWorkers.Messages
                 PayloadIsJsonSerialized = serializePayloadToJson;
                 KeepPayloadCompressed = dataIsAlreadyCompressed;
 
-                /*
-
-                switch (payloadSerializationMode)
-                {
-                    
-
-                    case SerializationMode.Binary:
-                        PayloadInternal = payload;
-                        break;
-
-                    case SerializationMode.EncryptedString:
-                        using (AesCng aes = new AesCng())
-                        {
-                            aes.IV = iv;
-                            aes.Key = key;
-
-                            using (var transform = aes.CreateEncryptor())
-                            {
-                                byte[] bytes = UTF8Encoding.UTF8.GetBytes((string)(object)payload);
-                                PayloadInternal = transform.TransformFinalBlock(bytes, 0, bytes.Length);
-                            }
-                        }
-                        break;
-
-                    case SerializationMode.GZippedBinary:
-                        if (!dataIsAlreadyCompressed)
-                        {
-                            PayloadInternal = SerializationHelpers.GZip((byte[])(object)payload);
-                        }
-                        else
-                        {
-                            PayloadInternal = (byte[])(object)payload;
-                        }
-                        break;
-
-                    default:
-                        throw new NotImplementedException();
-                }
-                */
-            }
-
-            if (payload != null)
-            {
                 PayloadTypeName = payload.GetType().FullName;
             }
         }
-
-        //public SerializationMode PayloadSerializationMode { get; private set; }
-
         
-
         public string PayloadTypeName { get; private set; }
 
         private object PayloadInternal { get; set; } = null;
@@ -122,20 +77,6 @@ namespace Pinknose.DistributedWorkers.Messages
                 {
                     throw new NotImplementedException();
                 }
-                    /*
-                    using (AesCng aes = new AesCng())
-                    {
-                        aes.IV = iv;
-                        aes.Key = key;
-
-                        using (var transform = aes.CreateDecryptor())
-                        {
-                            byte[] bytes = transform.TransformFinalBlock((byte[])PayloadInternal, 0, ((byte[])PayloadInternal).Length);
-                            string payload = UTF8Encoding.UTF8.GetString(bytes);
-                            return payload;
-                        }
-                    }
-                    */
             }
         }
     }

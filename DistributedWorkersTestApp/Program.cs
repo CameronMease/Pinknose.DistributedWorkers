@@ -1,4 +1,8 @@
 ﻿using Pinknose.DistributedWorkers;
+using Pinknose.DistributedWorkers.Extensions;
+using Pinknose.DistributedWorkers.Logging;
+using Pinknose.DistributedWorkers.MessageTags;
+using Serilog;
 using System;
 using System.Security.Cryptography;
 using System.Threading;
@@ -16,10 +20,16 @@ namespace DistributedWorkersTestApp
 
             string systemName = "aSystem";
             string serverName = "localhost";
-            using var serverKey = CngKey.Create(CngAlgorithm.ECDsaP256);
-            using var client1Key = CngKey.Create(CngAlgorithm.ECDsaP256);
-            using var client2Key = CngKey.Create(CngAlgorithm.ECDsaP256);
-            using var client3Key = CngKey.Create(CngAlgorithm.ECDsaP256);
+
+
+
+
+            using var serverKey = CngKey.Create(CngAlgorithm.ECDiffieHellmanP521);
+            using var client1Key = CngKey.Create(CngAlgorithm.ECDiffieHellmanP521);
+            using var client2Key = CngKey.Create(CngAlgorithm.ECDiffieHellmanP521);
+            using var client3Key = CngKey.Create(CngAlgorithm.ECDiffieHellmanP521);
+
+            
 
             var server= new MessageServer(
                 "server",
@@ -29,7 +39,9 @@ namespace DistributedWorkersTestApp
                 "guest",
                 "guest");
 
-            server.SubscriptionQueue.MessageReceived += (sender, e) => e.Response = MessageResponse.Ack;
+            server.MessageReceived += (sender, e) => e.Response = MessageResponse.Ack;
+
+            
 
             System.Timers.Timer sendTimer = new System.Timers.Timer(1000)
             {
@@ -39,17 +51,25 @@ namespace DistributedWorkersTestApp
             sendTimer.Elapsed += (sender, e) =>
             {
                 IntMessage message = new IntMessage(val);
-                //server.WorkQueue.Write(message);
-
+                
                 string tag = val % 2 == 0 ? "even" : "odd";
+                message.Tags.Add(new MessageTagValue("duhh", tag));
 
-                server.SubscriptionQueue.WriteToBoundExchange(message, new MessageTagValue("duhh", tag));
+                server.WriteToSubscriptionQueues(message);
                 val++;
 
                 //server.BroacastToAllClients(message);
             };
 
-            server.Start();
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.DistributedWorkersSink(server)
+                .WriteTo.Console()
+                .CreateLogger();
+
+            Log.Verbose($"Server public string: {serverKey.PublicKeyToString()}");
+
+            server.Connect(TimeSpan.FromSeconds(10));
             sendTimer.Start();
 
             //Thread.Sleep(30000);
@@ -66,14 +86,13 @@ namespace DistributedWorkersTestApp
                 "guest",
                 "guest",
                 odd);
-            client1.WorkQueue.MessageReceived += (sender, e) => Console.WriteLine($"Client 1: Message Payload: {((IntMessage)e.Message).Payload}.");
-            //client1.DedicatedQueue.MessageReceived += (sender, e) => Console.WriteLine($"Client 1: Dedicated message received.");
-            client1.SubscriptionQueue.MessageReceived += (sender, e) =>
+
+            client1.MessageReceived += (sender, e) =>
             {
                 e.Response = MessageResponse.Ack;
                 Console.WriteLine($"Client 1: Message Payload: {((IntMessage)e.Message).Payload}.");
             };
-            client1.WorkQueue.BeginFullConsume(true);
+            client1.BeginFullWorkConsume(true);
 
             MessageClient client2 = new MessageClient(
                 "client2",
@@ -83,14 +102,12 @@ namespace DistributedWorkersTestApp
                 "guest",
                 "guest",
                 even);
-            client2.WorkQueue.MessageReceived += (sender, e) => Console.WriteLine($"Client 2: Message Payload: {((IntMessage)e.Message).Payload}.");
-            //client2.DedicatedQueue.MessageReceived += (sender, e) => Console.WriteLine($"Client 2: Dedicated message received.");
-            client2.SubscriptionQueue.MessageReceived += (sender, e) =>
+            client2.MessageReceived += (sender, e) =>
             {
                 e.Response = MessageResponse.Ack;
                 Console.WriteLine($"Client 2: Message Payload: {((IntMessage)e.Message).Payload}.");
             };
-            client2.WorkQueue.BeginFullConsume(true);
+            client2.BeginFullWorkConsume(true);
 
             MessageClient client3 = new MessageClient(
                 "client3",
@@ -99,20 +116,23 @@ namespace DistributedWorkersTestApp
                 client3Key,
                 "guest",
                 "guest",
-                odd | even);
-            client3.WorkQueue.MessageReceived += (sender, e) => Console.WriteLine($"Client 3: Message Payload: {((IntMessage)e.Message).Payload}.");
-            //client3.DedicatedQueue.MessageReceived += (sender, e) => Console.WriteLine($"Client 3: Dedicated message received.");
-            client3.SubscriptionQueue.MessageReceived += (sender, e) =>
+                odd | even | SystemTags.SerilogFatalEvent);
+            client3.MessageReceived += (sender, e) =>
             {
                 e.Response = MessageResponse.Ack;
                 Console.WriteLine($"Client 3: Message Payload: {((IntMessage)e.Message).Payload}.");
             };
 
-            client3.WorkQueue.BeginFullConsume(true);
+            client3.BeginFullWorkConsume(true);
+            
+            client1.Connect(TimeSpan.FromSeconds(10));
+            //client2.Connect(TimeSpan.FromSeconds(10));
+            //client3.Connect(TimeSpan.FromSeconds(10));
+
+
+            Log.Information("Dumdum");
 
             Console.ReadKey();
-        }
-
-        
+        }        
     }
 }
