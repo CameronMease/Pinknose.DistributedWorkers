@@ -7,7 +7,7 @@ using System.Text;
 namespace Pinknose.DistributedWorkers.Messages
 {
     [Serializable]
-    public class PublicKeyUpdate : MessageBase
+    public sealed class PublicKeyUpdate : MessageBase
     {
         public PublicKeyUpdate(MessageClientInfo clientInfo, bool encryptMessage=false, params MessageTag[] tags) : base(encryptMessage, tags)
         {

@@ -6,7 +6,7 @@ using System.Text;
 namespace Pinknose.DistributedWorkers.Messages
 {
     [Serializable]
-    public class HeartbeatMessage : MessageBase
+    public sealed class HeartbeatMessage : MessageBase
     {
         public HeartbeatMessage(bool encryptMessage, params MessageTag[] tags) : base(encryptMessage, tags)
         {
