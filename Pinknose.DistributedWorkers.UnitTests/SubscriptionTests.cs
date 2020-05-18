@@ -29,7 +29,7 @@ namespace Pinknose.DistributedWorkers.UnitTests
                 "server",
                 CngKey.Create(CngAlgorithm.ECDsaP256));
 
-            server.Start();
+            //server.Start();
 
             using var sender = RabbitMQHelpers.CreateClient(
                 "sender",
