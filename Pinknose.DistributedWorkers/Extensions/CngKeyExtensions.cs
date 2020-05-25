@@ -38,5 +38,11 @@ namespace Pinknose.DistributedWorkers.Extensions
 
             return Convert.ToBase64String(keyBytes);
         }
+
+        public static CngKey GetPublicKey(this CngKey key)
+        {
+            byte[] bytes = key.Export(CngKeyBlobFormat.EccFullPublicBlob);
+            return CngKey.Import(bytes, CngKeyBlobFormat.EccFullPublicBlob);
+        }
     }
 }

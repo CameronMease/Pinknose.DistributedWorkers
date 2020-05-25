@@ -36,7 +36,7 @@ namespace Pinknose.DistributedWorkers.Messages
         /// Serializes the message into a binary format.
         /// </summary>
         /// <returns></returns>
-        internal byte[] Serialize(MessageClientBase messageClient)
+        internal byte[] Serialize()
         {
             var formatter = new BinaryFormatter();
             byte[] data;
@@ -52,9 +52,57 @@ namespace Pinknose.DistributedWorkers.Messages
                 }
             }
 
+            return data;
+        }
+
+#if false
+
+        /// <summary>
+        /// Serializes the message into a binary format.
+        /// </summary>
+        /// <returns></returns>
+        internal byte[] Serialize(MessageClientBase messageClient, string clientName, EncryptionOption encryptionOption)
+        {
+            var formatter = new BinaryFormatter();
+            byte[] data;
+
+            using (MemoryStream stream = new MemoryStream())
+            {
+                formatter.Serialize(stream, this);
+                stream.Seek(0, SeekOrigin.Begin);
+                data = new byte[stream.Length];
+                if (stream.Read(data, 0, data.Length) != data.Length)
+                {
+                    throw new Exception();
+                }
+            }
+
+            byte[] iv = null;
+            MessageSerializationWrapper header;
+
+            
+
+
+            if (encryptionOption == EncryptionOption.EncryptWithPrivateKey)
+            {
+                (data, iv) = messageClient.EncryptDataWithClientKey(data, clientName);
+            }
+            else if (encryptionOption == EncryptionOption.EncryptWithSystemSharedKey)
+            {
+                (data, iv) = messageClient.EncryptDataWithSystemSharedKey(data);
+            }
+
             byte[] signature = messageClient.SignData(data);
 
-            var header = new MessageSerializationHeader(IsEncrypted, signature);
+            if (encryptionOption != EncryptionOption.None)
+            {
+                header = new MessageSerializationWrapper(signature, iv, encryptionOption);
+            }
+            else
+            {
+                header = new MessageSerializationWrapper(signature);
+            }
+
 
             byte[] output = new byte[header.Length + data.Length];
             header.CopyTo(output, 0);            
@@ -63,36 +111,30 @@ namespace Pinknose.DistributedWorkers.Messages
             return output;
         }
 
-        private static MessageBase Deserialize(byte[] body, string exchange, ulong deliveryTag, bool redelivered, string routingKey, IBasicProperties basicProperties, MessageClientBase messageClient)
+#endif
+
+        internal static MessageBase Deserialize(byte[] messageBytes)
         {
-            var header = MessageSerializationHeader.Deserialize(body);
+            //var header = MessageSerializationWrapper.Deserialize(body);
                         
 
-            byte[] messageContent = body[header.Length..];
+            //byte[] messageContent = body[header.Length..];
 
             var formatter = new BinaryFormatter();
 
             using (MemoryStream memoryStream = new MemoryStream())
             {
-                memoryStream.Write(messageContent, 0, messageContent.Length);
+                memoryStream.Write(messageBytes);
                 memoryStream.Seek(0, SeekOrigin.Begin);
 
                 var message = (MessageBase)formatter.Deserialize(memoryStream);
-                message.Exchange = exchange;
-                message.DeliveryTag = deliveryTag;
-                message.Redelivered = redelivered;
-                message.RoutingKey = routingKey;
-                message.BasicProperties = basicProperties;
-
-                message.SignatureVerificationStatus =  messageClient.ValidateSignature(messageContent, header.Signature, message.ClientName);
-                message.receivedSignature = header.Signature;
-                message.receivedRawMessage = messageContent;
 
                 return message;
             }
         }
 
-        internal static MessageBase Deserialize(BasicDeliverEventArgs e, MessageClientBase messageClient)
+#if false
+        internal static MessageBase Deserialize(MessageEnvelope wrapper, BasicDeliverEventArgs e, MessageClientBase messageClient)
         {
             if (e == null)
             {
@@ -100,7 +142,7 @@ namespace Pinknose.DistributedWorkers.Messages
             }
 
             return Deserialize(
-                e.Body.ToArray(),
+                wrapper,
                 e.Exchange,
                 e.DeliveryTag,
                 e.Redelivered,
@@ -108,7 +150,7 @@ namespace Pinknose.DistributedWorkers.Messages
                 e.BasicProperties,
                 messageClient);
         }
-        internal static MessageBase Deserialize(BasicGetResult result, MessageClientBase messageClient)
+        internal static MessageBase Deserialize(MessageEnvelope wrapper, BasicGetResult result, MessageClientBase messageClient)
         {
             if (result == null)
             {
@@ -116,7 +158,7 @@ namespace Pinknose.DistributedWorkers.Messages
             }
 
             return Deserialize(
-                result.Body.ToArray(),
+                wrapper,
                 result.Exchange,
                 result.DeliveryTag,
                 result.Redelivered,
@@ -124,6 +166,7 @@ namespace Pinknose.DistributedWorkers.Messages
                 result.BasicProperties,
                 messageClient);
         }
+#endif
 
     }
 }

@@ -8,17 +8,19 @@ namespace Pinknose.DistributedWorkers
 {
     [Serializable]
     public class MessageClientInfo : IDisposable, ISerializable
-    { 
-        internal MessageClientInfo(string name, CngKey publicKey)
+    {
+        internal MessageClientInfo(string systemName, string clientName, CngKey publicKey)
         {
-            Name = name;
+            SystemName = systemName;
+            Name = clientName;
             PublicKey = publicKey;
             Dsa = new ECDsaCng(publicKey);
         }
 
-        internal MessageClientInfo(string name, byte[] publicKeyBytes, CngKeyBlobFormat format)
+        internal MessageClientInfo(string systemName, string clientName, byte[] publicKeyBytes, CngKeyBlobFormat format)
         {
-            Name = name;
+            SystemName = systemName;
+            Name = clientName;
             PublicKey = CngKey.Import(publicKeyBytes, format);
             Dsa = new ECDsaCng(PublicKey);
         }
@@ -30,18 +32,28 @@ namespace Pinknose.DistributedWorkers
                 throw new ArgumentNullException(nameof(info));
             }
 
-            Name = (string)info.GetValue("Name", typeof(string));
-            PublicKey = CngKey.Import((byte[])info.GetValue("PublicKey", typeof(byte[])), CngKeyBlobFormat.EccFullPublicBlob);
+            SystemName = (string)info.GetValue(nameof(SystemName), typeof(string));
+            Name = (string)info.GetValue(nameof(Name), typeof(string));
+            PublicKey = CngKey.Import((byte[])info.GetValue(nameof(PublicKey), typeof(byte[])), CngKeyBlobFormat.EccFullPublicBlob);
             Dsa = new ECDsaCng(PublicKey);
         }
 
+        public string SystemName { get; private set; }
         public string Name { get; private set; }
         public CngKey PublicKey { get; private set; }
 
         /// <summary>
         /// Symmetric key between the client and the holder of the MessageClientInfo.  Note: This field is not serialized.
         /// </summary>
-        public byte[] SymmetricKey { get; set; } = null;
+        public byte[] SymmetricKey { get; private set; }
+
+        public void GenerateSymmetricKey(CngKey localKey)
+        {
+            using ECDiffieHellmanCng ecdh = new ECDiffieHellmanCng(localKey);
+            ecdh.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hash;
+            ecdh.HashAlgorithm = CngAlgorithm.Sha256;
+            SymmetricKey = ecdh.DeriveKeyMaterial(PublicKey);
+        }
 
         /// <summary>
         /// Initialization vector for crypto between the client and the holder of the MessageClientInfo.  Note: This field is not serialized.
@@ -49,8 +61,8 @@ namespace Pinknose.DistributedWorkers
         public byte[] Iv { get; set; } = null;
 
         public ECDsaCng Dsa { get; private set; }
-        
-        internal string DedicatedQueueName { get; private set; }
+
+        internal string DedicatedQueueName => NameHelper.GetDedicatedQueueName(SystemName, Name);
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
@@ -59,8 +71,9 @@ namespace Pinknose.DistributedWorkers
                 throw new ArgumentNullException(nameof(info));
             }
 
-            info.AddValue("Name", Name);
-            info.AddValue("PublicKey", PublicKey.Export(CngKeyBlobFormat.EccFullPublicBlob));
+            info.AddValue(nameof(SystemName), SystemName);
+            info.AddValue(nameof(Name), Name);
+            info.AddValue(nameof(PublicKey), PublicKey.Export(CngKeyBlobFormat.EccFullPublicBlob));
         }
 
         #region IDisposable Support

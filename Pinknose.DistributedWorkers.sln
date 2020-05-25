@@ -7,7 +7,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pinknose.DistributedWorkers
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pinknose.DistributedWorkers.UnitTests", "Pinknose.DistributedWorkers.UnitTests\Pinknose.DistributedWorkers.UnitTests.csproj", "{E5DC4659-3281-4320-BA8F-301630D4A51E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistributedWorkersTestApp", "DistributedWorkersTestApp\DistributedWorkersTestApp.csproj", "{C1D313C3-8883-49D7-96BE-56E0B1F3B7EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistributedWorkersTestApp", "DistributedWorkersTestApp\DistributedWorkersTestApp.csproj", "{C1D313C3-8883-49D7-96BE-56E0B1F3B7EC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A8337D54-78E7-4F9E-9D92-FE862DEAFC94}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

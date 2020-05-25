@@ -1,4 +1,5 @@
-﻿using Pinknose.DistributedWorkers.Messages;
+﻿using Pinknose.DistributedWorkers.Exceptions;
+using Pinknose.DistributedWorkers.Messages;
 using Pinknose.Utilities;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -27,7 +28,9 @@ namespace Pinknose.DistributedWorkers
         private CancellationTokenSource cancellationTokenSource;
 
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
-        
+
+        public event EventHandler<AsynchronousExceptionEventArgs> AsynchronousException;
+
         /// <summary>
         /// Begin consuming messages as they come in (not rate limited).
         /// </summary>
@@ -111,17 +114,19 @@ namespace Pinknose.DistributedWorkers
                     }
                 } while (result == null);
 
-                MessageBase message = MessageBase.Deserialize(result, this.ParentMessageClient);
+                var wrapper = MessageEnvelope.Deserialize(result.Body.ToArray(), result, this.ParentMessageClient);
 
-                FireMessageReceivedEvent(message);
+                //MessageBase message = MessageBase.Deserialize(wrapper, result, this.ParentMessageClient);
+
+                FireMessageReceivedEvent(wrapper);
             }
         }
 
-        private void FireMessageReceivedEvent(MessageBase message)
+        private void FireMessageReceivedEvent(MessageEnvelope messageEnvelope)
         {
             var task = new Task(() =>
             {
-                var eventArgs = new MessageReceivedEventArgs(message);
+                var eventArgs = new MessageReceivedEventArgs(messageEnvelope);
 
                 MessageReceived?.Invoke(this, eventArgs);
 
@@ -129,19 +134,19 @@ namespace Pinknose.DistributedWorkers
                 {
                     if (eventArgs.Response == MessageResponse.Ack)
                     {
-                        Channel.BasicAck(message.DeliveryTag, false);
+                        Channel.BasicAck(messageEnvelope.DeliveryTag, false);
                     }
                     else if (eventArgs.Response == MessageResponse.Nack)
                     {
-                        Channel.BasicAck(message.DeliveryTag, false);
+                        Channel.BasicAck(messageEnvelope.DeliveryTag, false);
                     }
                     else if (eventArgs.Response == MessageResponse.RejectPermanent)
                     {
-                        Channel.BasicReject(message.DeliveryTag, false);
+                        Channel.BasicReject(messageEnvelope.DeliveryTag, false);
                     }
                     else
                     {
-                        Channel.BasicReject(message.DeliveryTag, true);
+                        Channel.BasicReject(messageEnvelope.DeliveryTag, true);
                     }
                 }
 
@@ -155,11 +160,12 @@ namespace Pinknose.DistributedWorkers
         {
             try
             {
-                FireMessageReceivedEvent(MessageBase.Deserialize(e, this.ParentMessageClient));
+                var wrapper = MessageEnvelope.Deserialize(e.Body.ToArray(), e, this.ParentMessageClient);
+                FireMessageReceivedEvent(wrapper);
             }
-            catch (SerializationException ex)
+            catch (Exception ex)
             {
-                throw new NotImplementedException();
+                AsynchronousException?.Invoke(this, new AsynchronousExceptionEventArgs(ex));
             }
         }
 

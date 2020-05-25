@@ -14,90 +14,125 @@ namespace Pinknose.DistributedWorkers
     {
         public event EventHandler<MessageReceivedEventArgs> RpcMessageReceived;
 
-        public MessageServer(string serverName, string systemName, string rabbitMqServerHostName, CngKey key, string userName, string password, params MessageTag[] subscriptionTags) : base(serverName, systemName, rabbitMqServerHostName, key, userName, password, subscriptionTags)
+        public MessageServer(MessageClientInfo serverInfo, string rabbitMqServerHostName, string userName, string password, params MessageClientInfo[] clientInfos) :
+            base(serverInfo, rabbitMqServerHostName, userName, password)
         {
-            ServerQueue.MessageReceived += ServerQueue_MessageReceived;
+            if (serverInfo is null)
+            {
+                throw new ArgumentNullException(nameof(serverInfo));
+            }
 
-            PublicKeystore.Add(this.ClientName, key);
+            if (serverInfo.Name != NameHelper.GetServerName())
+            {
+                throw new Exception();
+            }
+
+            
+
+            //PublicKeystore.Add(this.SystemName, this.ClientName, key);
+            PublicKeystore.AddRange(clientInfos);
+
+            //TODO: Add persistent key support?
+
+            byte[] key = new byte[SharedKeyByteSize];
+            Rand.GetBytes(key);
+            PreviousSystemSharedKey = CurrentSystemSharedKey;
+            CurrentSystemSharedKey = key;
         }
+
 
         private void ServerQueue_MessageReceived(object sender, MessageReceivedEventArgs e)
         {
-            if (e.Message.GetType() == typeof(ClientAnnounceMessage))
+            if (e.MessageEnevelope.Message.GetType() == typeof(ClientAnnounceMessage))
             {
-                if (!clients.ContainsKey(e.Message.ClientName))
+                if (!clients.ContainsKey(e.MessageEnevelope.SenderName))
                 {
                     ReusableThreadSafeTimer timeoutTimer = new ReusableThreadSafeTimer()
                     {
                         AutoReset = false,
                         Interval = HeartbeatTime * 2,
                         Enabled = true,
-                        Tag = e.Message.ClientName
+                        Tag = e.MessageEnevelope.SenderName
                     };
 
                     timeoutTimer.Elapsed += TimeoutTimer_Elapsed;
 
-                    var clientInfo = new MessageClientInfo(e.Message.ClientName, ((ClientAnnounceMessage)e.Message).PublicKey, CngKeyBlobFormat.EccFullPublicBlob);
+                    var clientInfo = new MessageClientInfo(this.SystemName, e.MessageEnevelope.SenderName, ((ClientAnnounceMessage)e.MessageEnevelope.Message).PublicKey, CngKeyBlobFormat.EccFullPublicBlob);
 
-                    e.Message.ReverifySignature(clientInfo.Dsa);
+                    //e.MessageEnevelope.ReverifySignature(clientInfo.Dsa);
 
-                    AnnounceResponse response;
                     string message;
-                    if (e.Message.SignatureVerificationStatus == SignatureVerificationStatus.SignatureValid)
+                    if (e.MessageEnevelope.SignatureVerificationStatus == SignatureVerificationStatus.SignatureValid)
                     {
-                        response = AnnounceResponse.Accepted;
-                        Log.Information($"Client '{e.Message.ClientName}' announced and accepted.");
+                        //TODO: This is where we need to determine what to do with a new unstrusted signature
+
+                        Log.Information($"Client '{e.MessageEnevelope.SenderName}' announced and accepted.");
                         message = "";
-                        clients.Add(e.Message.ClientName, (DateTime.Now, DateTime.Now, "duhh", timeoutTimer));
+                        clients.Add(e.MessageEnevelope.SenderName, (DateTime.Now, DateTime.Now, "duhh", timeoutTimer));
 
-                        PublicKeystore[e.Message.ClientName] = clientInfo;
+                        //PublicKeystore[e.MessageEnevelope.SenderName] = clientInfo;
 
-                        using ECDiffieHellmanCng ecdh = new ECDiffieHellmanCng(this.CngKey);
-                        ecdh.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hash;
-                        ecdh.HashAlgorithm = CngAlgorithm.Sha256;
-                        clientInfo.SymmetricKey =  ecdh.DeriveKeyMaterial(clientInfo.PublicKey);
+                        //clientInfo.GenerateSymmetricKey(this.CngKey);
 
-                        var rand = new Random();
-                        clientInfo.Iv = new byte[16];
-                        rand.NextBytes(clientInfo.Iv);
+                        ((MessageQueue)sender).RespondToMessage(
+                        e.MessageEnevelope,
+                        new ClientAnnounceResponseMessage(AnnounceResponse.Accepted, CurrentSystemSharedKey.ToArray(), this.PublicKeystore)
+                        {
+                            MessageText = message
+                        },
+                        EncryptionOption.EncryptWithPrivateKey);
 
-                        var keyMessage = new PublicKeyUpdate(PublicKeystore[e.Message.ClientName]);
-                        this.BroadcastToAllClients(keyMessage);
+
+                        var keyMessage = new PublicKeyUpdate(PublicKeystore[e.MessageEnevelope.SenderName]);
+                        //TODO: How to determine when to encyrpt
+                        this.BroadcastToAllClients(keyMessage, EncryptionOption.None);
+
+                        // Send the system AES key to the new client
+                        //var aesKeyMessage = new SystemSharedKeyUpdate(CurrentSystemSharedKey.ToArray());
+                        //this.WriteToClientNoWait(clientInfo, aesKeyMessage, EncryptionOption.EncryptWithPrivateKey);
+
                     }
                     else
                     {
-                        response = AnnounceResponse.Rejected;
-                        Log.Information($"Client '{e.Message.ClientName}' announced and rejected for invalid signature.");
+                        Log.Information($"Client '{e.MessageEnevelope.SenderName}' announced and rejected for invalid signature.");
                         message = "Signature was invalid.";
-                    }
 
-                    ((MessageQueue)sender).RespondToMessage(
-                        e.Message,
-                        new ClientAnnounceResponseMessage(response, this.CngKey, clientInfo.Iv, this.PublicKeystore)
+                        ((MessageQueue)sender).RespondToMessage(
+                        e.MessageEnevelope,
+                        new ClientAnnounceResponseMessage(AnnounceResponse.Rejected, Array.Empty<byte>(), this.PublicKeystore)
                         {
                             MessageText = message
-                        });
+                        },
+                        EncryptionOption.EncryptWithPrivateKey);
+                    }
+
+                    
                 }
                 else
                 {
-                    ((MessageQueue)sender).RespondToMessage(e.Message,
-                        new ClientAnnounceResponseMessage(AnnounceResponse.Rejected, this.CngKey, null, this.PublicKeystore) { MessageText = $"The client {e.Message.ClientName} already exists." });
+                    //TODO: What to do here?
+#if false
+                    ((MessageQueue)sender).RespondToMessage(
+                        e.MessageEnevelope,
+                        new ClientAnnounceResponseMessage(AnnounceResponse.Rejected, PublicKeystore.ParentClientInfo.PublicKey, null, this.PublicKeystore) { MessageText = $"The client {e.MessageEnevelope.SenderName} already exists." },
+                        EncryptionOption.None);
 
-                    Log.Warning($"Client '{e.Message.ClientName}' announced and rejected (name already exists).");
+                    Log.Warning($"Client '{e.MessageEnevelope.SenderName}' announced and rejected (name already exists).");
+#endif
                 }
             }
             else
             {
-                if (e.Message.SignatureVerificationStatus != SignatureVerificationStatus.SignatureValid)
+                if (e.MessageEnevelope.SignatureVerificationStatus != SignatureVerificationStatus.SignatureValid)
                 {
                     throw new Exception();
                 }
 
-                if (e.Message.GetType() == typeof(HeartbeatMessage))
+                if (e.MessageEnevelope.GetType() == typeof(HeartbeatMessage))
                 {
-                    if (!clients.ContainsKey(e.Message.ClientName))
+                    if (!clients.ContainsKey(e.MessageEnevelope.SenderName))
                     {
-                        Log.Warning($"Heartbeat from unknown client '{e.Message.ClientName}'.");
+                        Log.Warning($"Heartbeat from unknown client '{e.MessageEnevelope.SenderName}'.");
 
                         foreach (var clientInfo in clients.Values)
                         {
@@ -105,12 +140,13 @@ namespace Pinknose.DistributedWorkers
                         }
 
                         clients.Clear();
-
-                        BroadcastToAllClients(new ClientReannounceRequestMessage(false));
+                        
+                        //TODO: How to determine when to encyrpt
+                        BroadcastToAllClients(new ClientReannounceRequestMessage(false), EncryptionOption.None);
                     }
                     else
                     {
-                        var clientInfo = clients[e.Message.ClientName];
+                        var clientInfo = clients[e.MessageEnevelope.SenderName];
                         clientInfo.TimeoutTimer.Restart();
                         clientInfo.LastSeen = DateTime.Now;
                     }
@@ -138,18 +174,21 @@ namespace Pinknose.DistributedWorkers
 
         protected sealed override void SendHeartbeat()
         {
-            var message = new HeartbeatMessage(false);
+            var message = new HeartbeatMessage();
 
             // TODO: Re-enabled BroacastToAllClients(message);
         }
 
 
 
-        public override void Connect(TimeSpan timeout)
+        public void Connect(TimeSpan timeout)
         {
-            base.Connect(timeout);
+            SetupConnections(timeout, new MessageTagCollection());
 
-            WorkQueue.Purge();
+            ServerQueue.MessageReceived += ServerQueue_MessageReceived;
+            ServerQueue.AsynchronousException += (sender, eventArgs) => this.FireAsynchronousExceptionEvent(sender, eventArgs);
+
+            //WorkQueue.Purge();
 
             ServerQueue.BeginFullConsume(true);
             //LogQueue.BeginFullConsume(true);

@@ -9,7 +9,7 @@ namespace Pinknose.DistributedWorkers.Messages
     [Serializable]
     public sealed class PublicKeyUpdate : MessageBase
     {
-        public PublicKeyUpdate(MessageClientInfo clientInfo, bool encryptMessage=false, params MessageTag[] tags) : base(encryptMessage, tags)
+        public PublicKeyUpdate(MessageClientInfo clientInfo, params MessageTag[] tags) : base(tags)
         {
             ClientInfo = clientInfo;
         }

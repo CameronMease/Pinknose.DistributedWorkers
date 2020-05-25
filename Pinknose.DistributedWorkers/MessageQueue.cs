@@ -1,4 +1,5 @@
-﻿using Pinknose.DistributedWorkers.Messages;
+﻿using EasyNetQ.Management.Client.Model;
+using Pinknose.DistributedWorkers.Messages;
 using Pinknose.DistributedWorkers.MessageTags;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -33,7 +34,7 @@ namespace Pinknose.DistributedWorkers
                     queue: queueName,
                     durable: false,
                     exclusive: false,
-                    autoDelete: true),
+                    autoDelete: false),
                 _clientName = clientName,
                 ParentMessageClient = parentMessageClient
             };
@@ -67,7 +68,7 @@ namespace Pinknose.DistributedWorkers
                     queue: queueName,
                     durable: false,
                     exclusive: true,
-                    autoDelete: true),
+                    autoDelete: false),
                 _clientName = clientName,
                 ParentMessageClient = parentMessageClient,
                 boundExchangeName = exchangeName
@@ -101,34 +102,66 @@ namespace Pinknose.DistributedWorkers
 
         protected IModel Channel { get; set; }
 
-        public void WriteToBoundExchange(MessageBase message) => Write(message, boundExchangeName);
-                
-        public void Write(MessageBase message) => Write(message, "");
-
-        public void Write(MessageBase message, IBasicProperties basicProperties) => Write(message, "", basicProperties);
-
-        private void Write(MessageBase message, string exchangeName)
+        public void WriteToBoundExchange(MessageBase message, EncryptionOption encryptionOption, MessageTagCollection tags)
         {
-            Write(message, exchangeName, Channel.CreateBasicProperties());
+            if (encryptionOption == EncryptionOption.EncryptWithPrivateKey)
+            {
+                //TODO: Add message text
+                throw new ArgumentOutOfRangeException(nameof(encryptionOption));
+            }
+
+            Write(message, boundExchangeName, encryptionOption, tags);
         }
 
-        private void Write(MessageBase message, string exchangeName, IBasicProperties basicProperties)
+        public void Write(MessageBase message, EncryptionOption encryptionOptions, MessageTagCollection tags)
+        {
+            Write(message, "", encryptionOptions, tags);
+        }
+
+        public void Write(MessageBase message, IBasicProperties basicProperties, EncryptionOption encryptionOptions, MessageTagCollection tags)
+        {
+            if (basicProperties is null)
+            {
+                throw new ArgumentNullException(nameof(basicProperties));
+            }
+
+            Write(message, "", basicProperties, encryptionOptions, tags);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="exchangeName"></param>
+        private void Write(MessageBase message, string exchangeName, EncryptionOption encryptionOptions, MessageTagCollection tags)
+        {
+            Write(message, exchangeName, Channel.CreateBasicProperties(), encryptionOptions, tags);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="exchangeName"></param>
+        /// <param name="basicProperties"></param>
+        private void Write(MessageBase message, string exchangeName, IBasicProperties basicProperties, EncryptionOption encryptionOption, MessageTagCollection tags)
         {
             if (message == null)
             {
                 throw new ArgumentNullException(nameof(message));
             }
 
-            message.ClientName = _clientName;
+            //message.ClientName = _clientName;
 
-            byte[] hashedMessage = message.Serialize(this.ParentMessageClient);
+            var envelope = MessageEnvelope.WrapMessage(message, "", this.ParentMessageClient, encryptionOption);
 
+            byte[] hashedMessage = envelope.Serialize();
 
             //TODO: Move this into the message serialization?
             basicProperties.Headers = new Dictionary<string, object>();
             basicProperties.Headers.Add(new MessageSenderTag(this._clientName).GetMangledTagAndValue(), "");
 
-            foreach (var tag in message.Tags)
+            foreach (var tag in tags)
             {
                 basicProperties.Headers.Add(tag.GetMangledTagName(), "");
 
@@ -153,11 +186,11 @@ namespace Pinknose.DistributedWorkers
         /// </summary>
         private static Regex replyToRegex = new Regex("exchangeName:(?<exchangeName>.*),routingKey:(?<routingKey>.*)", RegexOptions.Compiled);
 
-        public void RespondToMessage(MessageBase originalMessage, MessageBase responseMessage)
+        public void RespondToMessage(MessageEnvelope originalMessageEnvelope, MessageBase responseMessage, EncryptionOption encryptionOption)
         {
-            if (originalMessage == null)
+            if (originalMessageEnvelope == null)
             {
-                throw new ArgumentNullException(nameof(originalMessage));
+                throw new ArgumentNullException(nameof(originalMessageEnvelope));
             }
 
             if (responseMessage == null)
@@ -165,16 +198,17 @@ namespace Pinknose.DistributedWorkers
                 throw new ArgumentNullException(nameof(responseMessage));
             }
 
-            responseMessage.ClientName = _clientName;
+            //responseMessage.ClientName = _clientName;
 
             IBasicProperties basicProperties = this.Channel.CreateBasicProperties();
-            basicProperties.CorrelationId = originalMessage.BasicProperties.CorrelationId;
+            basicProperties.CorrelationId = originalMessageEnvelope.BasicProperties.CorrelationId;
 
-            Match match = replyToRegex.Match(originalMessage.BasicProperties.ReplyTo);
+            Match match = replyToRegex.Match(originalMessageEnvelope.BasicProperties.ReplyTo);
             string exchangeName = match.Groups["exchangeName"].Value;
             string routingKey = match.Groups["routingKey"].Value;
 
-            byte[] hashedMessage = responseMessage.Serialize(this.ParentMessageClient);
+            var envelope = MessageEnvelope.WrapMessage(responseMessage, originalMessageEnvelope.SenderName, this.ParentMessageClient, encryptionOption);
+            byte[] hashedMessage = envelope.Serialize();
 
             Channel.BasicPublish(
                 exchange: exchangeName,
@@ -182,14 +216,6 @@ namespace Pinknose.DistributedWorkers
                 basicProperties: basicProperties,
                 hashedMessage);
         }
-
-        /*
-
-        public void StopLimitedConsume()
-        {
-            cancellationTokenSource?.Cancel();
-        }
-        */
 
         public int QueueCount => (int)Channel.MessageCount(Name);
         public int ConsumerCount => (int)Channel.ConsumerCount(Name);

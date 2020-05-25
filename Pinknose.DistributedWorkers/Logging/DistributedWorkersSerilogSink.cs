@@ -21,13 +21,10 @@ namespace Pinknose.DistributedWorkers.Logging
         public void Emit(LogEvent logEvent)
         {
             var message = new SerilogEventMessage(
-                logEvent,
-                false,
-                false,
-                true,
-                false);
+                logEvent);
 
-            messageClient.WriteToSubscriptionQueues(message);
+            //TODO: Need to be able to set encryption type
+            messageClient.WriteToSubscriptionQueues(message, EncryptionOption.None);
         }
 
         

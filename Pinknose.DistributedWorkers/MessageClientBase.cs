@@ -1,4 +1,5 @@
-﻿using Pinknose.DistributedWorkers.Extensions;
+﻿using Pinknose.DistributedWorkers.Exceptions;
+using Pinknose.DistributedWorkers.Extensions;
 using Pinknose.DistributedWorkers.Messages;
 using Pinknose.DistributedWorkers.MessageTags;
 using RabbitMQ.Client;
@@ -9,16 +10,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.ServiceModel.Channels;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Pinknose.DistributedWorkers
 {
     public enum RpcCallResult { Success, Timeout, BadSignature }
 
-    public enum SignatureVerificationStatus { SignatureValid, SignatureNotValid, NoValidClientInfo, SignatureUnverified}
+    public enum SignatureVerificationStatus { SignatureValid, SignatureValidButUntrusted, SignatureNotValid, NoValidClientInfo, SignatureUnverified}
+
+    public enum EncryptionOption { None = 0, EncryptWithPrivateKey=1, EncryptWithSystemSharedKey=2}
 
     public abstract class MessageClientBase<TServerQueue> : MessageClientBase where TServerQueue : MessageQueue, new()
     {
+
         //internal TServerQueue LogQueue { get; private set; }
 
         /// <summary>
@@ -26,15 +33,16 @@ namespace Pinknose.DistributedWorkers
         /// </summary>
         protected TServerQueue ServerQueue { get; private set; }
 
-        protected MessageClientBase(string clientName, string systemName, string rabbitMqServerHostName, CngKey key, string userName, string password, params MessageTag[] subscriptionTags) :
-            this(clientName, systemName, rabbitMqServerHostName, key, userName, password, new MessageTagCollection(subscriptionTags))
+        protected MessageClientBase(MessageClientInfo clientInfo, string rabbitMqServerHostName, string userName, string password) :
+            base(clientInfo, rabbitMqServerHostName, userName, password)
         {
-
+            
         }
 
-        protected MessageClientBase(string clientName, string systemName, string rabbitMqServerHostName, CngKey key, string userName, string password, MessageTagCollection subscriptionTags) :
-            base(clientName, systemName, rabbitMqServerHostName, key, userName, password, subscriptionTags)
+        protected override void SetupConnections(TimeSpan timeout, MessageTagCollection subscriptionTags)
         {
+            base.SetupConnections(timeout, subscriptionTags);
+
             ServerQueue = MessageQueue.CreateMessageQueue<TServerQueue>(this, Channel, ClientName, ServerQueueName);
         }
     }
@@ -42,25 +50,37 @@ namespace Pinknose.DistributedWorkers
     /// <summary>
     /// The base class for message clients and servers.
     /// </summary>
-    public abstract class MessageClientBase : IDisposable
+    public abstract partial class MessageClientBase : IDisposable
     {
-        protected CngKey CngKey { get; private set; }
-        protected internal ECDsaCng Dsa { get; private set; }
+        protected static readonly int SharedKeyByteSize = 32;
 
-        protected PublicKeystore PublicKeystore { get; } = new PublicKeystore();
+        public event EventHandler<AsynchronousExceptionEventArgs> AsynchronousException;
+        protected void FireAsynchronousExceptionEvent(object sender, AsynchronousExceptionEventArgs eventArgs) => AsynchronousException?.Invoke(this, eventArgs);
+
+        protected readonly Dictionary<string, RpcCallWaitInfo> rpcCallWaitInfo = new Dictionary<string, RpcCallWaitInfo>();
+
+        // TODO: Change to byte[]?
+        protected ReadOnlyMemory<byte> PreviousSystemSharedKey { get; set; }  = null;
+        protected ReadOnlyMemory<byte> CurrentSystemSharedKey { get; set; } = null;
+
+        //protected CngKey CngKey { get; private set; }
+        //protected internal ECDsaCng Dsa { get; private set; }
+
+        protected MessageClientInfo ClientInfo { get; private set; }
+
+        protected PublicKeystore PublicKeystore { get; }
 
         private string _userName;
         private string _password;
+        private string _rabbitMqServerHostName;
 
-#pragma warning disable CA1308 // Normalize strings to uppercase
-        protected string WorkQueueName => $"{SystemName}-queue-work".ToLowerInvariant();
-        protected string BroadcastExchangeName => $"{SystemName}-exchange-broadcast".ToLowerInvariant();
-        protected string SubscriptionExchangeName => $"{SystemName}-exchange-subscription".ToLowerInvariant();
-        protected string DedicatedQueueName => $"{SystemName}-{ClientName}-queue-dedicated".ToLowerInvariant();
-        protected string ServerQueueName => $"{SystemName}-queue-server".ToLowerInvariant();
-        protected string SubscriptionQueueName => $"{SystemName}-{ClientName}-queue-subscription".ToLowerInvariant();
-        protected string LogQueueName => $"{SystemName}-queue-log".ToLowerInvariant();
-#pragma warning restore CA1308 // Normalize strings to uppercase
+        protected string WorkQueueName => NameHelper.GetWorkQueueName(SystemName);
+        protected string BroadcastExchangeName => NameHelper.GetBroadcastExchangeName(SystemName);
+        protected string SubscriptionExchangeName => NameHelper.GetSubscriptionExchangeName(SystemName);
+        protected string DedicatedQueueName => NameHelper.GetDedicatedQueueName(SystemName, ClientName);
+        protected string ServerQueueName => NameHelper.GetServerQueueName(SystemName);
+        protected string SubscriptionQueueName => NameHelper.GetSubscriptionQueueName(SystemName, ClientName);
+        //protected string LogQueueName => $"{SystemName}-queue-log".ToLowerInvariant();
 
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
 
@@ -83,23 +103,12 @@ namespace Pinknose.DistributedWorkers
         private IConnection connection;
         protected IModel Channel { get; private set; }
 
-        protected MessageClientBase(string clientName, string systemName, string rabbitMqServerHostName, CngKey key, string userName, string password, params MessageTag[] subscriptionTags) :
-            this(clientName, systemName, rabbitMqServerHostName, key, userName, password, new MessageTagCollection(subscriptionTags))
+
+        protected MessageClientBase(MessageClientInfo clientInfo, string rabbitMqServerHostName, string userName, string password)
         {
-            
-        }
-
-
-        protected MessageClientBase(string clientName, string systemName, string rabbitMqServerHostName, CngKey key, string userName, string password, MessageTagCollection subscriptionTags )
-        {
-            if (string.IsNullOrEmpty(clientName))
+             if (clientInfo is null)
             {
-                throw new ArgumentNullException(nameof(clientName));
-            }
-
-            if (string.IsNullOrEmpty(systemName))
-            {
-                throw new ArgumentNullException(nameof(systemName));
+                throw new ArgumentNullException(nameof(clientInfo));
             }
 
             if (string.IsNullOrEmpty(rabbitMqServerHostName))
@@ -117,62 +126,20 @@ namespace Pinknose.DistributedWorkers
                 throw new ArgumentNullException(nameof(password));
             }
 
-            if (key == null)
-            {
-                throw new ArgumentNullException(nameof(key));
-            }
 
-            if (subscriptionTags == null)
-            {
-                throw new ArgumentNullException(nameof(subscriptionTags));
-            }
+            ClientInfo = clientInfo;
 
-            CngKey = key;
-            Dsa = new ECDsaCng(CngKey);
+            PublicKeystore = new PublicKeystore(clientInfo);
 
             _userName = userName;
             _password = password;
-            ClientName = clientName;
+            _rabbitMqServerHostName = rabbitMqServerHostName;
 
-            Log.Verbose($"Client '{clientName}' has public key '{key.GetPublicKeyHash()}'.");
+            //Log.Verbose($"Client '{ClientInfo.Name}' has public key '{ClientInfo.k.GetPublicKeyHash()}'.");
 
             InternalId = Guid.NewGuid().ToString();
-            SystemName = systemName;
 
-            ConnectionFactory factory = new ConnectionFactory()
-            {
-                HostName = rabbitMqServerHostName,
-                UserName = userName,
-                Password = password,
-                //VirtualHost = systemName,
-                RequestedHeartbeat = TimeSpan.FromSeconds(10) //todo: Need to set elsewhere, be configurable
-            };
-
-            connection = factory.CreateConnection();
-            Channel = connection.CreateModel();
-
-            WorkQueue = MessageQueue.CreateMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, WorkQueueName);
-            WorkQueue.MessageReceived += Queue_MessageReceived;
-
-            Channel.ExchangeDeclare(
-                BroadcastExchangeName,
-                ExchangeType.Fanout,
-                false,
-                true,
-                new Dictionary<string, object>());
-
-            
-            //LogQueue = MessageQueue.CreateMessageQueue<TServerQueue>(this, Channel, ClientName, LogQueueName);
-
-            Channel.ExchangeDeclare(
-                SubscriptionExchangeName,
-                ExchangeType.Headers,
-                false,
-                true,
-                new Dictionary<string, object>());
-
-            SubscriptionQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, SubscriptionExchangeName, SubscriptionQueueName, subscriptionTags);
-            SubscriptionQueue.MessageReceived += Queue_MessageReceived;
+           
         }
 
         private void Queue_MessageReceived(object sender, MessageReceivedEventArgs e)
@@ -185,85 +152,143 @@ namespace Pinknose.DistributedWorkers
             SendHeartbeat();
         }
 
-        /*
-        public byte[] AddSignature(byte[] message)
+        protected (byte[] SignedMessage, IBasicProperties BasicProperties) ConfigureUnicastMessageForSend(MessageBase message, string recipientName, EncryptionOption encryptionOptions)
         {
             if (message == null)
             {
                 throw new ArgumentNullException(nameof(message));
             }
 
-            byte[] signature = Dsa.SignData(message);
+            string correlationId = Guid.NewGuid().ToString();
 
-            if (signature.Length > 256)
-            {
-                throw new Exception("Signature too long.");
-            }
+            //message.ClientName = ClientName;
 
-            byte[] output = new byte[message.Length + signature.Length + 1];
+            IBasicProperties basicProperties = this.Channel.CreateBasicProperties();
+            basicProperties.CorrelationId = correlationId;
 
-            message.CopyTo(output, 0);
-            signature.CopyTo(output, message.Length);
-            output[output.Length-1] = (byte)signature.Length;
-                        
-            return output;
+            string exchangeName;
+            string routingKey;
+
+            exchangeName = "";
+            routingKey = DedicatedQueueName;
+            
+            basicProperties.ReplyTo = $"exchangeName:{exchangeName},routingKey:{routingKey}";
+
+            var wrapper = MessageEnvelope.WrapMessage(message, recipientName, this, encryptionOptions);
+            //byte[] signedMessage = message.Serialize(this, clientName, encryptionOptions);
+
+            return (wrapper.Serialize(), basicProperties);
         }
-        */
 
-
-
-        public SignatureVerificationStatus ValidateSignature(byte[] message, byte[] signature, string clientName)
+        public async Task<RpcCallWaitInfo> WriteToClient(MessageClientInfo clientInfo, MessageBase message, int waitTime, EncryptionOption encryptionOptions)
         {
-            if (!PublicKeystore.ContainsKey(clientName))
+            if (clientInfo == null)
             {
-                return SignatureVerificationStatus.NoValidClientInfo;
+                throw new ArgumentNullException(nameof(clientInfo));
             }
-            else if (PublicKeystore[clientName].Dsa.VerifyData(message, signature))
-            {
-                return SignatureVerificationStatus.SignatureValid;
-            }
-            else
-            {
-                return SignatureVerificationStatus.SignatureNotValid;
-            }
+
+            return await WriteToClient(clientInfo.Name, message, waitTime, encryptionOptions).ConfigureAwait(false);
         }
 
-        /*
-        public static bool SignatureIsValid(byte[] message, byte[] signature, ECDsaCng dsa)
+        protected async Task<RpcCallWaitInfo> WriteToClient(string clientName, MessageBase message, int waitTime, EncryptionOption encryptionOptions)
         {
             if (message == null)
             {
                 throw new ArgumentNullException(nameof(message));
             }
 
-            if (dsa == null)
+            var formattedMessage = ConfigureUnicastMessageForSend(message, clientName, encryptionOptions);
+
+            Channel.BasicPublish(
+                exchange: "",
+                routingKey: NameHelper.GetDedicatedQueueName(SystemName, clientName),
+                basicProperties: formattedMessage.BasicProperties,
+                formattedMessage.SignedMessage);
+
+            RpcCallWaitInfo response = new RpcCallWaitInfo();
+            response.WaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+
+            rpcCallWaitInfo.Add(formattedMessage.BasicProperties.CorrelationId, response);
+
+            Task task = new Task(() =>
             {
-                throw new ArgumentNullException(nameof(dsa));
+
+                if (!response.WaitHandle.WaitOne(waitTime))
+                {
+                    response.CallResult = RpcCallResult.Timeout;
+                }
+                else
+                {
+                    if (response.ResponseMessageEnvelope.SignatureVerificationStatus == SignatureVerificationStatus.SignatureValid)
+                    {
+                        response.CallResult = RpcCallResult.Success;
+                    }
+                    else
+                    {
+                        response.CallResult = RpcCallResult.BadSignature;
+                    }
+                }
+
+                rpcCallWaitInfo.Remove(formattedMessage.BasicProperties.CorrelationId);
+                response.WaitHandle.Dispose();
+            });
+
+            task.Start();
+
+            await task.ConfigureAwait(false);
+
+            return response;
+        }
+
+        public void WriteToClientNoWait(MessageClientInfo clientInfo, MessageBase message, EncryptionOption encryptionOptions)
+        {
+            if (clientInfo == null)
+            {
+                throw new ArgumentNullException(nameof(clientInfo));
             }
 
-            // The last byte of the message is the length of the signature
-            int signatureIndex = (int)message[^1] + 1;
-
-            // First portion of the messages is the binary serialized message, the next portion is
-            // the signature
-            return dsa.VerifyData(message, signature);
+            WriteToClientNoWait(clientInfo.Name, message, encryptionOptions);
         }
-        */
+
+        protected void WriteToClientNoWait(string clientName, MessageBase message, EncryptionOption encryptionOptions)
+        {
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+
+            var formattedMessage = ConfigureUnicastMessageForSend(message, clientName, encryptionOptions);
+
+            Channel.BasicPublish(
+                exchange: "",
+                routingKey: NameHelper.GetDedicatedQueueName(SystemName, clientName),
+                basicProperties: formattedMessage.BasicProperties,
+                formattedMessage.SignedMessage);
+        }
+
+        
+
 
         /// <summary>
         /// Sends the message to all clients.
         /// </summary>
         /// <param name="message"></param>
-        public void BroadcastToAllClients(MessageBase message)
+        public void BroadcastToAllClients(MessageBase message, EncryptionOption encryptionOption)
         {
+            if (encryptionOption == EncryptionOption.EncryptWithPrivateKey)
+            {
+                //TODO: Add message
+                throw new ArgumentOutOfRangeException(nameof(encryptionOption));
+            }
+
             if (message == null)
             {
                 throw new ArgumentNullException(nameof(message));
             }
 
-            message.ClientName = this.ClientName;
+            //message.ClientName = this.ClientName;
 
-            byte[] hashedMessage = message.Serialize(this);            
+            var wrapper = MessageEnvelope.WrapMessage(message, "", this, encryptionOption);
 
             try
             {
@@ -272,7 +297,7 @@ namespace Pinknose.DistributedWorkers
                     routingKey: "",
                     mandatory: true,
                     basicProperties: null,
-                    body: hashedMessage);
+                    body: wrapper.Serialize());
             }
             catch (AlreadyClosedException e)
             {
@@ -281,8 +306,45 @@ namespace Pinknose.DistributedWorkers
             
         }
 
-        public virtual void Connect(TimeSpan timeout)
+        protected virtual void SetupConnections(TimeSpan timeout, MessageTagCollection subscriptionTags)
         {
+            ConnectionFactory factory = new ConnectionFactory()
+            {
+                HostName = _rabbitMqServerHostName,
+                UserName = _userName,
+                Password = _password,
+                //VirtualHost = systemName,
+                RequestedHeartbeat = TimeSpan.FromSeconds(10) //todo: Need to set elsewhere, be configurable
+            };
+
+            connection = factory.CreateConnection();
+            Channel = connection.CreateModel();
+
+            WorkQueue = MessageQueue.CreateMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, WorkQueueName);
+            WorkQueue.MessageReceived += Queue_MessageReceived;
+            WorkQueue.AsynchronousException += (sender, eventArgs) => this.AsynchronousException?.Invoke(this, eventArgs);
+
+            Channel.ExchangeDeclare(
+                BroadcastExchangeName,
+                ExchangeType.Fanout,
+                false,
+                true,
+                new Dictionary<string, object>());
+
+
+            //LogQueue = MessageQueue.CreateMessageQueue<TServerQueue>(this, Channel, ClientName, LogQueueName);
+
+            Channel.ExchangeDeclare(
+                SubscriptionExchangeName,
+                ExchangeType.Headers,
+                false,
+                true,
+                new Dictionary<string, object>());
+
+            SubscriptionQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, SubscriptionExchangeName, SubscriptionQueueName, subscriptionTags);
+            SubscriptionQueue.MessageReceived += Queue_MessageReceived;
+            SubscriptionQueue.AsynchronousException += (sender, eventArgs) => FireAsynchronousExceptionEvent(sender, eventArgs);
+
             //TODO: SHould ACK be required?
             SubscriptionQueue.BeginFullConsume(false);
 
@@ -300,25 +362,32 @@ namespace Pinknose.DistributedWorkers
 
         protected ReadableMessageQueue SubscriptionQueue { get; private set; }
 
-        public string SystemName { get; private set; }
+        public string SystemName => ClientInfo.SystemName;
 
         public string InternalId { get; private set; }
 
 
-        public string ClientName { get; private set; }
+        public string ClientName => ClientInfo.Name;
 
+        public void WriteToSubscriptionQueues(MessageBase message, EncryptionOption encryptionOption, params MessageTag[] tags) =>
+            WriteToSubscriptionQueues(message, encryptionOption, new MessageTagCollection(tags));
 
-        public void WriteToSubscriptionQueues(MessageBase message) => SubscriptionQueue.WriteToBoundExchange(message);
+        public void WriteToSubscriptionQueues(MessageBase message, EncryptionOption encryptionOption, MessageTagCollection tags)
+        {
+            if (encryptionOption == EncryptionOption.EncryptWithPrivateKey)
+            {
+                //TODO: Add message
+                throw new ArgumentOutOfRangeException(nameof(encryptionOption));
+            }
+            SubscriptionQueue.WriteToBoundExchange(message, encryptionOption, tags);
+        }
 
         protected abstract void SendHeartbeat();
 
         public void BeginFullWorkConsume(bool autoAcknowledge) => WorkQueue.BeginFullConsume(autoAcknowledge);
         public void BeginLimitedWorkConsume(int maxActiveMessages, bool autoAcknowledge) => WorkQueue.BeginLimitedConsume(maxActiveMessages, autoAcknowledge);
 
-        internal byte[] SignData(byte[] data)
-        {
-            return Dsa.SignData(data);
-        }
+
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
@@ -332,7 +401,6 @@ namespace Pinknose.DistributedWorkers
                     // TODO: dispose managed state (managed objects).
                     heartbeatTimer?.Dispose();
                     connection?.Dispose();
-                    Dsa?.Dispose();
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

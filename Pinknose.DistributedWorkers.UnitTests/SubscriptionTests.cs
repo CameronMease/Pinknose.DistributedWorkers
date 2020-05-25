@@ -18,6 +18,7 @@ namespace Pinknose.DistributedWorkers.UnitTests
         public readonly MessageTagValue Tag2a = new MessageTagValue("Tag2", "a");
         public readonly MessageTagValue Tag2b = new MessageTagValue("Tag2", "b");
 
+#if false
         [TestMethod]
         public void ReceiveAllMessagesTest()
         {
@@ -69,5 +70,6 @@ namespace Pinknose.DistributedWorkers.UnitTests
             Assert.IsTrue(gotTag2a);
             Assert.IsTrue(gotTag2b);
         }
+#endif
     }
 }

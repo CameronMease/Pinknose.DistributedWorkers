@@ -5,6 +5,7 @@
     <UserSecretsId>ea55413e-3cc7-4a27-81fb-998057dcbc4a</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="DevExpress.Xpo" Version="19.2.4" />
     <PackageReference Include="EasyNetQ.Management.Client" Version="1.3.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0">
       <PrivateAssets>all</PrivateAssets>
@@ -23,9 +24,5 @@
     <PackageReference Include="RabbitMQ.Client" Version="6.0.0" />
     <PackageReference Include="Serilog" Version="2.9.0" />
     <PackageReference Include="System.Security.Cryptography.Cng" Version="4.7.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Exceptions\" />
-    <Folder Include="Code Maps\" />
   </ItemGroup>
 </Project>

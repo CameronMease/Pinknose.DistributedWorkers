@@ -19,27 +19,31 @@ namespace DistributedWorkersTestApp
             int val = 0;
 
             string systemName = "aSystem";
-            string serverName = "localhost";
+            string rabbitMQServerName = "localhost";
+
+            var duhh1 = AesCng.Create();
 
 
 
 
-            using var serverKey = CngKey.Create(CngAlgorithm.ECDiffieHellmanP521);
-            using var client1Key = CngKey.Create(CngAlgorithm.ECDiffieHellmanP521);
-            using var client2Key = CngKey.Create(CngAlgorithm.ECDiffieHellmanP521);
-            using var client3Key = CngKey.Create(CngAlgorithm.ECDiffieHellmanP521);
+            using var serverInfo = MessageClientCrypto.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
+            using var client1Info = MessageClientCrypto.CreateClientInfo(systemName, "client1", ECDiffieHellmanCurve.P256);
+            using var client2Info = MessageClientCrypto.CreateClientInfo(systemName, "client2", ECDiffieHellmanCurve.P256);
+            using var client3Info = MessageClientCrypto.CreateClientInfo(systemName, "client3", ECDiffieHellmanCurve.P256);
 
-            
+
 
             var server= new MessageServer(
-                "server",
-                systemName,
-                serverName,
-                serverKey,
+                serverInfo,
+                rabbitMQServerName,
                 "guest",
-                "guest");
+                "guest",
+                client1Info,
+                client2Info,
+                client3Info);
 
             server.MessageReceived += (sender, e) => e.Response = MessageResponse.Ack;
+            server.AsynchronousException += Client_AsynchronousException;
 
             
 
@@ -53,9 +57,8 @@ namespace DistributedWorkersTestApp
                 IntMessage message = new IntMessage(val);
                 
                 string tag = val % 2 == 0 ? "even" : "odd";
-                message.Tags.Add(new MessageTagValue("duhh", tag));
-
-                server.WriteToSubscriptionQueues(message);
+                
+                server.WriteToSubscriptionQueues(message, EncryptionOption.EncryptWithSystemSharedKey, new MessageTagValue("duhh", tag));
                 val++;
 
                 //server.BroacastToAllClients(message);
@@ -67,7 +70,7 @@ namespace DistributedWorkersTestApp
                 .WriteTo.Console()
                 .CreateLogger();
 
-            Log.Verbose($"Server public string: {serverKey.PublicKeyToString()}");
+            //Log.Verbose($"Server public string: {serverInfo.PublicKey.PublicKeyToString()}");
 
             server.Connect(TimeSpan.FromSeconds(10));
             sendTimer.Start();
@@ -79,53 +82,58 @@ namespace DistributedWorkersTestApp
             var never = new MessageTagValue("duhh", "never");
 
             MessageClient client1 = new MessageClient(
-                "client1",
-                systemName,
-                serverName,
-                client1Key,
+                client1Info,
+                serverInfo,
+                rabbitMQServerName,
                 "guest",
-                "guest",
-                odd);
+                "guest");
+
+            client1.AsynchronousException += Client_AsynchronousException;
 
             client1.MessageReceived += (sender, e) =>
             {
                 e.Response = MessageResponse.Ack;
-                Console.WriteLine($"Client 1: Message Payload: {((IntMessage)e.Message).Payload}.");
-            };
-            client1.BeginFullWorkConsume(true);
 
+                if (e.MessageEnevelope.Message.GetType() == typeof(IntMessage))
+                {
+                    Console.WriteLine($"Client 1: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
+                }
+            };
+            client1.Connect(TimeSpan.FromSeconds(10), odd);
+            client1.BeginFullWorkConsume(true);
+#if false
             MessageClient client2 = new MessageClient(
-                "client2",
-                systemName,
-                serverName,
-                client2Key,
+                client2Info,
+                serverInfo,
+                rabbitMQServerName,
                 "guest",
                 "guest",
                 even);
             client2.MessageReceived += (sender, e) =>
             {
                 e.Response = MessageResponse.Ack;
-                Console.WriteLine($"Client 2: Message Payload: {((IntMessage)e.Message).Payload}.");
+                Console.WriteLine($"Client 2: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
             };
             client2.BeginFullWorkConsume(true);
 
             MessageClient client3 = new MessageClient(
-                "client3",
-                systemName,
-                serverName,
-                client3Key,
+                client3Info,
+                serverInfo,
+                rabbitMQServerName,
                 "guest",
                 "guest",
                 odd | even | SystemTags.SerilogFatalEvent);
             client3.MessageReceived += (sender, e) =>
             {
                 e.Response = MessageResponse.Ack;
-                Console.WriteLine($"Client 3: Message Payload: {((IntMessage)e.Message).Payload}.");
+                Console.WriteLine($"Client 3: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
             };
 
             client3.BeginFullWorkConsume(true);
             
-            client1.Connect(TimeSpan.FromSeconds(10));
+#endif
+
+            
             //client2.Connect(TimeSpan.FromSeconds(10));
             //client3.Connect(TimeSpan.FromSeconds(10));
 
@@ -133,6 +141,11 @@ namespace DistributedWorkersTestApp
             Log.Information("Dumdum");
 
             Console.ReadKey();
-        }        
+        }
+
+        private static void Client_AsynchronousException(object sender, Pinknose.DistributedWorkers.Exceptions.AsynchronousExceptionEventArgs e)
+        {
+            Log.Warning(e.Exception, $"Asynchronous Exception from {((MessageClientBase)sender).ClientName}");
+        }
     }
 }

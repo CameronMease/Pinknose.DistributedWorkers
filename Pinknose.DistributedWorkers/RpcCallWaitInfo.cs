@@ -1,4 +1,5 @@
 ﻿using Pinknose.DistributedWorkers.Messages;
+using Pinknose.DistributedWorkers.MessageTags;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,6 +13,6 @@ namespace Pinknose.DistributedWorkers
 
         internal EventWaitHandle WaitHandle { get; set;  }
 
-        public MessageBase ResponseMessage { get; set; }
+        public MessageEnvelope ResponseMessageEnvelope { get; set; }
     }
 }

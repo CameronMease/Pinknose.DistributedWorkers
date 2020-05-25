@@ -8,7 +8,7 @@ namespace DistributedWorkersTestApp
     [Serializable]
     public class IntMessage : PayloadMessage<int>
     {
-        public IntMessage(int payload) : base(payload, false, false, false, false)
+        public IntMessage(int payload) : base(payload, false, false, false)
         {
         }
 

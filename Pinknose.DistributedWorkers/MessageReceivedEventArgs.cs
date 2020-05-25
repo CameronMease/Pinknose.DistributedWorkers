@@ -9,16 +9,16 @@ namespace Pinknose.DistributedWorkers
 
     public class MessageReceivedEventArgs : EventArgs
     {
-        public MessageReceivedEventArgs(MessageBase message)
+        public MessageReceivedEventArgs(MessageEnvelope envelope)
         {
-            Message = message;
+            MessageEnevelope = envelope;
             Response = MessageResponse.RejectRequeue;
         }
 
         /// <summary>
         /// The serialized message.
         /// </summary>
-        public MessageBase Message { get; private set; }
+        public MessageEnvelope MessageEnevelope { get; private set; }
 
         public MessageResponse Response { get; set; }
     }

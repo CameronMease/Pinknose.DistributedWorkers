@@ -15,10 +15,11 @@ namespace Pinknose.DistributedWorkers.Messages
     [Serializable]
     internal sealed class ClientAnnounceResponseMessage : MessageBase
     {
-        internal ClientAnnounceResponseMessage(AnnounceResponse response, CngKey key, byte[] iv, PublicKeystore publicKeystore, params MessageTag[] tags) : base(false, tags)
+        internal ClientAnnounceResponseMessage(AnnounceResponse response, byte[] systemSharedKey, PublicKeystore publicKeystore, params MessageTag[] tags) : base(tags)
         {
             Response = response;
-            ServerPublicKey = key.Export(CngKeyBlobFormat.EccFullPublicBlob);
+            //ServerPublicKey = key.Export(CngKeyBlobFormat.EccFullPublicBlob);
+            SystemSharedKey = systemSharedKey;
             PublicKeystore = publicKeystore;
         }
 
@@ -26,10 +27,10 @@ namespace Pinknose.DistributedWorkers.Messages
 
         public AnnounceResponse Response { get; private set; }
 
-        public byte[] ServerPublicKey { get; private set; }
+        public byte[] SystemSharedKey { get; private set; }
 
         // Initialization Vector for asymmetric encryption.
-        public byte[] Iv { get; private set; }
+        //public byte[] Iv { get; private set; }
 
         public PublicKeystore PublicKeystore { get; private set; }
     }

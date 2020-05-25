@@ -17,15 +17,9 @@ namespace Pinknose.DistributedWorkers.Messages
     [Serializable]
     public abstract partial class MessageBase
     {
-
-        // Temporary to create AES encryption keys
-        private static byte[] iv = new byte[] { 71, 120, 112, 163, 182, 229, 14, 24, 175, 168, 92, 79, 86, 30, 154, 197 };
-        private static byte[] key = new byte[] { 180, 214, 175, 230, 229, 198, 219, 236, 136, 69, 104, 206, 171, 64, 247, 0, 247, 106, 127, 6, 72, 133, 211, 252, 188, 16, 39, 231, 151, 168, 24, 135 };
-                
-        public MessageBase(bool encryptMessage, params MessageTag[] tags)
+        public MessageBase(params MessageTag[] tags)
         {
-            IsEncrypted = encryptMessage;
-            Tags.AddRange(tags);
+            //Tags.AddRange(tags);
         }
 
         public abstract Guid MessageTypeGuid { get; }
@@ -33,11 +27,11 @@ namespace Pinknose.DistributedWorkers.Messages
         public string MessageText { get; set; }
 
         //TODO: How to restrict access to set but not break serialization?
-        public string ClientName { get; internal set; }
+        //public string ClientName { get; internal set; }
 
-        public MessageTagCollection Tags { get; private set; } = new MessageTagCollection();
+        //public MessageTagCollection Tags { get; private set; } = new MessageTagCollection();
 
-        public bool IsEncrypted { get; private set; } = false;
+        //public bool IsEncrypted { get; private set; } = false;
 
 
 
@@ -47,23 +41,7 @@ namespace Pinknose.DistributedWorkers.Messages
 
         
 
-        [field: NonSerializedAttribute()]
-        public string Exchange { get; private set; }
-
-        [field: NonSerializedAttribute()]
-        public ulong DeliveryTag { get; private set; }
-
-        [field: NonSerializedAttribute()]
-        public PublicationAddress ReplyToAddres { get; private set; }
-
-        [field: NonSerializedAttribute()]
-        public IBasicProperties BasicProperties { get; private set; } = null;
-
-        [field: NonSerializedAttribute()]
-        public bool Redelivered { get; private set; }
-
-        [field: NonSerializedAttribute()]
-        public string RoutingKey { get; private set; }
+        
 
         [field: NonSerializedAttribute()]
         public SignatureVerificationStatus SignatureVerificationStatus { get; private set; } = SignatureVerificationStatus.SignatureUnverified;
