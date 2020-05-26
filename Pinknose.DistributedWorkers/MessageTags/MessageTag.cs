@@ -14,7 +14,7 @@ namespace Pinknose.DistributedWorkers.MessageTags
     {
         public MessageTag(string tagName)
         {
-            TagName = tagName;
+            TagName = tagName.ToLower();
         }
 
         public string TagName { get; private set; }
@@ -31,7 +31,7 @@ namespace Pinknose.DistributedWorkers.MessageTags
 
         internal static string MangleTag(string tagName, object tagValue)
         {
-            return $"{tagName}:{tagValue.ToString()}";
+            return $"{tagName}:{tagValue.ToString().ToLower()}";
         }
 
         public override bool Equals(object obj)

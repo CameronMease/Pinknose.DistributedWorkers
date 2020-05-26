@@ -8,7 +8,7 @@ namespace Pinknose.DistributedWorkers.Messages
     [Serializable]
     public sealed class HeartbeatMessage : MessageBase
     {
-        public HeartbeatMessage(params MessageTag[] tags) : base(tags)
+        public HeartbeatMessage() : base()
         {
 
         }

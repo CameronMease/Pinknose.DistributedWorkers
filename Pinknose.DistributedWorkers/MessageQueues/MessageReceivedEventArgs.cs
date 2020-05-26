@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Pinknose.DistributedWorkers
+namespace Pinknose.DistributedWorkers.MessageQueues
 {
     public enum MessageResponse { Ack, Nack, RejectRequeue, RejectPermanent }
 

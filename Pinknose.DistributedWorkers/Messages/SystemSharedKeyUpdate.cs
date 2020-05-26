@@ -10,7 +10,7 @@ namespace Pinknose.DistributedWorkers.Messages
     [Serializable]
     public class SystemSharedKeyUpdate : MessageBase
     {
-        public SystemSharedKeyUpdate(byte[] key,  params MessageTag[] tags) : base(tags)
+        public SystemSharedKeyUpdate(byte[] key) : base()
         {
             if (key is null)
             {

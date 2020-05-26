@@ -1,4 +1,5 @@
 ﻿using EasyNetQ.Management.Client.Model;
+using Pinknose.DistributedWorkers.Clients;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
@@ -188,26 +189,13 @@ namespace Pinknose.DistributedWorkers.Messages
                     throw new Exception();
                 }
 
-                var tempStatus = messageClient.ValidateSignature(bytes[..^signatureLength], signature, envelope.SenderName);
+                envelope.SignatureVerificationStatus = messageClient.ValidateSignature(bytes[..^signatureLength], signature, envelope.SenderName);
 
-                if (tempStatus == SignatureVerificationStatus.NoValidClientInfo)
+                if (envelope.SignatureVerificationStatus != SignatureVerificationStatus.SignatureValid)
                 {
-                    if (isClientAnnounce)
-                    {
-                        tempStatus = MessageClientBase.ValidateSignature(bytes[..^signatureLength], signature, ((ClientAnnounceMessage)envelope.Message).PublicKey);
-                    }
-                    else if (isClientAnnounceResponse)
-                    {
-                        //tempStatus = MessageClientBase.ValidateSignature(bytes[..^signatureLength], signature, ((ClientAnnounceResponseMessage)envelope.Message).ServerPublicKey);
-                    }
-
-                    if (tempStatus == SignatureVerificationStatus.SignatureValid)
-                    {
-                        tempStatus = SignatureVerificationStatus.SignatureValidButUntrusted;
-                    }
+                    throw new NotImplementedException();
                 }
-
-                envelope.SignatureVerificationStatus = tempStatus;
+                
 
                 // Get the bytes representing the message
                 byte[] messageBytes = bytes[index..^signatureLength];
@@ -227,7 +215,7 @@ namespace Pinknose.DistributedWorkers.Messages
 
                 return envelope;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                  throw;
             }

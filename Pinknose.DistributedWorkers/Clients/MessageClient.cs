@@ -1,6 +1,7 @@
 ﻿using EasyNetQ.Management.Client.Model;
 using Newtonsoft.Json.Serialization;
 using Pinknose.DistributedWorkers.Extensions;
+using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.Messages;
 using Pinknose.DistributedWorkers.MessageTags;
 using Pinknose.Utilities;
@@ -15,7 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Pinknose.DistributedWorkers
+namespace Pinknose.DistributedWorkers.Clients
 {
     public sealed class MessageClient : MessageClientBase<MessageQueue>
     {
@@ -42,6 +43,9 @@ namespace Pinknose.DistributedWorkers
 
         public void Connect(TimeSpan timeout, MessageTagCollection subscriptionTags)
         {
+
+            //TODO: Add subscription of broadcast tags
+
             SetupConnections(timeout, subscriptionTags);
 
             DedicatedQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, BroadcastExchangeName, DedicatedQueueName);
@@ -51,7 +55,7 @@ namespace Pinknose.DistributedWorkers
             DedicatedQueue.BeginFullConsume(true);
 
             // Announce client to server
-            ClientAnnounceMessage message = new ClientAnnounceMessage(PublicKeystore.ParentClientInfo.PublicKey);
+            ClientAnnounceMessage message = new ClientAnnounceMessage(PublicKeystore.ParentClientInfo.ECKey);
 
             var result = this.WriteToServer(message, (int)timeout.TotalMilliseconds, EncryptionOption.None).Result;
 
@@ -62,12 +66,14 @@ namespace Pinknose.DistributedWorkers
                 throw new ConnectionException("Timeout trying to communicate with the server.");
             }
 
-            switch (((ClientAnnounceResponseMessage)result.ResponseMessageEnvelope.Message).Response)
+            var resultMessage = (ClientAnnounceResponseMessage)result.ResponseMessageEnvelope.Message;
+
+            switch (resultMessage.Response)
             {
                 case AnnounceResponse.Accepted:
                     clientServerHandshakeComplete = true;
                     //serverName = result.ResponseMessageEnvelope.SenderName;
-                    CurrentSystemSharedKey = ((ClientAnnounceResponseMessage)result.ResponseMessageEnvelope.Message).SystemSharedKey;
+                    PublicKeystore.SystemSharedKeys[resultMessage.SystemSharedKeyId] = resultMessage.SystemSharedKey;
                     break;
 
                 case AnnounceResponse.Rejected:
@@ -85,7 +91,7 @@ namespace Pinknose.DistributedWorkers
             }
             else
             {
-                PublicKeystore.Merge(((ClientAnnounceResponseMessage)result.ResponseMessageEnvelope.Message).PublicKeystore);
+                //PublicKeystore.Merge(((ClientAnnounceResponseMessage)result.ResponseMessageEnvelope.Message).PublicKeystore);
                 //TODO: Fix PublicKeystore[result.ResponseMessageEnvelope.SenderName].Iv = ((ClientAnnounceResponseMessage)result.ResponseMessageEnvelope.Message).Iv;
 
                 serverHeartbeatTimer.Elapsed += ServerHeartbeatTimer_Elapsed;
@@ -161,7 +167,7 @@ namespace Pinknose.DistributedWorkers
                 if (e.MessageEnevelope.GetType() == typeof(ClientReannounceRequestMessage))
                 {
                     Log.Information("Server requested reannouncement of clients.");
-                    var message = new ClientAnnounceMessage(PublicKeystore.ParentClientInfo.PublicKey);
+                    var message = new ClientAnnounceMessage(PublicKeystore.ParentClientInfo.ECKey);
                     WriteToServerNoWait(message, EncryptionOption.None);
                 }
                 else if (e.MessageEnevelope.GetType() == typeof(HeartbeatMessage))
@@ -177,7 +183,7 @@ namespace Pinknose.DistributedWorkers
                 {
                     var tempMessage = (PublicKeyUpdate)e.MessageEnevelope.Message;
                     PublicKeystore.Add(tempMessage.ClientInfo);
-                    Log.Verbose($"Received public key '{tempMessage.ClientInfo.PublicKey.GetPublicKeyHash()}' for client '{tempMessage.ClientInfo.Name}'.");
+                    Log.Verbose($"Received public key '{tempMessage.ClientInfo.ECKey.GetPublicKeyHash()}' for client '{tempMessage.ClientInfo.Name}'.");
                 }
                 else if (e.MessageEnevelope.GetType() == typeof(SystemSharedKeyUpdate))
                 {

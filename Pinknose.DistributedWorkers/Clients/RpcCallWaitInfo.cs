@@ -1,11 +1,12 @@
-﻿using Pinknose.DistributedWorkers.Messages;
+﻿using Pinknose.DistributedWorkers.Clients;
+using Pinknose.DistributedWorkers.Messages;
 using Pinknose.DistributedWorkers.MessageTags;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace Pinknose.DistributedWorkers
+namespace Pinknose.DistributedWorkers.Clients
 {
     public class RpcCallWaitInfo
     {

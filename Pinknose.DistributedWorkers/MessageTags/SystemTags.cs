@@ -16,5 +16,6 @@ namespace Pinknose.DistributedWorkers.MessageTags
         public static MessageTagValue SerilogVerboseEvent => SerilogEvent(LogEventLevel.Verbose);
         public static MessageTagValue SerilogWarningEvent => SerilogEvent(LogEventLevel.Warning);
         public static MessageTagValue SerilogInformationEvent => SerilogEvent(LogEventLevel.Information);
+        public static MessageTag BroadcastTag => new MessageTag("broadcast");
     }
 }

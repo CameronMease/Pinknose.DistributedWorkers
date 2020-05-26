@@ -1,4 +1,5 @@
-﻿using Pinknose.DistributedWorkers.MessageTags;
+﻿using Pinknose.DistributedWorkers.Clients;
+using Pinknose.DistributedWorkers.MessageTags;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -9,7 +10,7 @@ namespace Pinknose.DistributedWorkers.Messages
     [Serializable]
     public sealed class PublicKeyUpdate : MessageBase
     {
-        public PublicKeyUpdate(MessageClientInfo clientInfo, params MessageTag[] tags) : base(tags)
+        public PublicKeyUpdate(MessageClientInfo clientInfo) : base()
         {
             ClientInfo = clientInfo;
         }

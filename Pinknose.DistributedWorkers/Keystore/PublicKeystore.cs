@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Pinknose.DistributedWorkers.Clients;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -7,19 +8,21 @@ using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Pinknose.DistributedWorkers
+namespace Pinknose.DistributedWorkers.Keystore
 {
     [Serializable]
     public sealed class PublicKeystore : IEnumerable<MessageClientInfo>
     {
         private Dictionary<string, MessageClientInfo> dictionary = new Dictionary<string, MessageClientInfo>();
 
+        private Dictionary<(CngKey PrivateKey, CngKey PublicKey), byte[]> symmetricKeys = new Dictionary<(CngKey PrivateKey, CngKey PublicKey), byte[]>();
+
         public PublicKeystore(MessageClientInfo parentClientInfo)
         {
             ParentClientInfo = parentClientInfo;
         }
 
-        public MessageClientInfo this[string key] 
+        public MessageClientInfo this[string key]
         {
             get => AddSymmetricKeyIfNotExist(dictionary[key]);
             //set => throw new NotImplementedException();
@@ -32,14 +35,30 @@ namespace Pinknose.DistributedWorkers
         }
         */
 
+        public int CurrentSharedKeyId { get; set; } = 0;
+
+        public SharedKeyCollection SystemSharedKeys { get; } = new SharedKeyCollection();
+
         private MessageClientInfo AddSymmetricKeyIfNotExist(MessageClientInfo clientInfo)
         {
-            if (clientInfo.SymmetricKey == null)
+            var key = (ParentClientInfo.ECKey, clientInfo.ECKey);
+
+            if (!symmetricKeys.ContainsKey(key))
             {
-                clientInfo.GenerateSymmetricKey(this.ParentClientInfo.PublicKey);
+                symmetricKeys.Add(key, GenerateSymmetricKey(ParentClientInfo.ECKey, clientInfo.ECKey));
             }
 
             return clientInfo;
+        }
+
+        public byte[] GetSymmetricKey(string clientName)
+        {
+            return symmetricKeys[(ParentClientInfo.ECKey, this[clientName].ECKey)];
+        }
+
+        public byte[] GetSymmetricKey(MessageClientInfo clientInfo)
+        {
+            return symmetricKeys[(ParentClientInfo.ECKey, clientInfo.ECKey)];
         }
 
         public MessageClientInfo ParentClientInfo { get; private set; }
@@ -128,6 +147,13 @@ namespace Pinknose.DistributedWorkers
             return dictionary.Values.GetEnumerator();
         }
 
+        private static byte[] GenerateSymmetricKey(CngKey privateKey, CngKey publicKey)
+        {
+            using ECDiffieHellmanCng ecdh = new ECDiffieHellmanCng(privateKey);
+            ecdh.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hash;
+            ecdh.HashAlgorithm = CngAlgorithm.Sha256;
+            return ecdh.DeriveKeyMaterial(publicKey);
+        }
 
         /*
         public override void GetObjectData(SerializationInfo info, StreamingContext context)

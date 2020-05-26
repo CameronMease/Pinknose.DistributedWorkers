@@ -8,7 +8,7 @@ namespace Pinknose.DistributedWorkers.Messages
     [Serializable]
     internal sealed class ClientReannounceRequestMessage : MessageBase
     {
-        public ClientReannounceRequestMessage(bool encryptMessage, params MessageTag[] tags) : base(tags)
+        public ClientReannounceRequestMessage(bool encryptMessage) : base()
         {
 
         }

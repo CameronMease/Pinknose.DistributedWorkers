@@ -14,7 +14,7 @@ namespace Pinknose.DistributedWorkers.Messages
     [Serializable]
     public abstract class PayloadMessage<TPayload> : MessageBase 
     {
-        public PayloadMessage(TPayload payload, bool compressPayload, bool serializePayloadToJson, bool dataIsAlreadyCompressed = false, params MessageTag[] tags) : base(tags)
+        public PayloadMessage(TPayload payload, bool compressPayload, bool serializePayloadToJson, bool dataIsAlreadyCompressed = false) : base()
         {
             if (payload != null)
             {

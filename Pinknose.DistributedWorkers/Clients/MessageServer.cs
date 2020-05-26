@@ -1,4 +1,5 @@
-﻿using Pinknose.DistributedWorkers.Messages;
+﻿using Pinknose.DistributedWorkers.MessageQueues;
+using Pinknose.DistributedWorkers.Messages;
 using Pinknose.DistributedWorkers.MessageTags;
 using Pinknose.Utilities;
 using RabbitMQ.Client.Exceptions;
@@ -8,10 +9,12 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Pinknose.DistributedWorkers
+namespace Pinknose.DistributedWorkers.Clients
 {
     public sealed class MessageServer : MessageClientBase<ReadableMessageQueue>
     {
+        
+
         public event EventHandler<MessageReceivedEventArgs> RpcMessageReceived;
 
         public MessageServer(MessageClientInfo serverInfo, string rabbitMqServerHostName, string userName, string password, params MessageClientInfo[] clientInfos) :
@@ -34,10 +37,9 @@ namespace Pinknose.DistributedWorkers
 
             //TODO: Add persistent key support?
 
-            byte[] key = new byte[SharedKeyByteSize];
-            Rand.GetBytes(key);
-            PreviousSystemSharedKey = CurrentSystemSharedKey;
-            CurrentSystemSharedKey = key;
+            byte[] key = GetRandomBytes(SharedKeyByteSize);
+
+            PublicKeystore.SystemSharedKeys[PublicKeystore.CurrentSharedKeyId] = key;
         }
 
 
@@ -76,16 +78,16 @@ namespace Pinknose.DistributedWorkers
 
                         ((MessageQueue)sender).RespondToMessage(
                         e.MessageEnevelope,
-                        new ClientAnnounceResponseMessage(AnnounceResponse.Accepted, CurrentSystemSharedKey.ToArray(), this.PublicKeystore)
+                        new ClientAnnounceResponseMessage(AnnounceResponse.Accepted, PublicKeystore.CurrentSharedKeyId, PublicKeystore.SystemSharedKeys[PublicKeystore.CurrentSharedKeyId])
                         {
                             MessageText = message
                         },
                         EncryptionOption.EncryptWithPrivateKey);
 
 
-                        var keyMessage = new PublicKeyUpdate(PublicKeystore[e.MessageEnevelope.SenderName]);
+                        //var keyMessage = new PublicKeyUpdate(PublicKeystore[e.MessageEnevelope.SenderName]);
                         //TODO: How to determine when to encyrpt
-                        this.BroadcastToAllClients(keyMessage, EncryptionOption.None);
+                        //this.BroadcastToAllClients(keyMessage, EncryptionOption.None);
 
                         // Send the system AES key to the new client
                         //var aesKeyMessage = new SystemSharedKeyUpdate(CurrentSystemSharedKey.ToArray());
@@ -99,7 +101,7 @@ namespace Pinknose.DistributedWorkers
 
                         ((MessageQueue)sender).RespondToMessage(
                         e.MessageEnevelope,
-                        new ClientAnnounceResponseMessage(AnnounceResponse.Rejected, Array.Empty<byte>(), this.PublicKeystore)
+                        new ClientAnnounceResponseMessage(AnnounceResponse.Rejected, 0, Array.Empty<byte>())
                         {
                             MessageText = message
                         },

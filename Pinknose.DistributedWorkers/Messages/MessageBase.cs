@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Pinknose.DistributedWorkers.Clients;
 using Pinknose.DistributedWorkers.MessageTags;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -17,9 +18,8 @@ namespace Pinknose.DistributedWorkers.Messages
     [Serializable]
     public abstract partial class MessageBase
     {
-        public MessageBase(params MessageTag[] tags)
+        public MessageBase()
         {
-            //Tags.AddRange(tags);
         }
 
         public abstract Guid MessageTypeGuid { get; }

@@ -1,4 +1,5 @@
 ﻿using EasyNetQ.Management.Client.Model;
+using Pinknose.DistributedWorkers.Clients;
 using Pinknose.DistributedWorkers.Messages;
 using Pinknose.DistributedWorkers.MessageTags;
 using RabbitMQ.Client;
@@ -12,7 +13,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Pinknose.DistributedWorkers
+namespace Pinknose.DistributedWorkers.MessageQueues
 {
     /// <summary>
     /// Abstraction of a RabbitMQ queue.  This message queue can be written to, but cannot be read from.

@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using Pinknose.DistributedWorkers.Clients;
+using Serilog;
 using Serilog.Configuration;
 using System;
 using System.Collections.Generic;

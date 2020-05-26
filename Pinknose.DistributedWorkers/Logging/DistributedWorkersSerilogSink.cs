@@ -1,4 +1,5 @@
-﻿using Pinknose.DistributedWorkers.MessageTags;
+﻿using Pinknose.DistributedWorkers.Clients;
+using Pinknose.DistributedWorkers.MessageTags;
 using Serilog.Core;
 using Serilog.Events;
 using System;

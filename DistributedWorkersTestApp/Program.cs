@@ -1,9 +1,12 @@
 ﻿using Pinknose.DistributedWorkers;
+using Pinknose.DistributedWorkers.Clients;
 using Pinknose.DistributedWorkers.Extensions;
 using Pinknose.DistributedWorkers.Logging;
+using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.MessageTags;
 using Serilog;
 using System;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Timers;
@@ -26,10 +29,17 @@ namespace DistributedWorkersTestApp
 
 
 
-            using var serverInfo = MessageClientCrypto.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
-            using var client1Info = MessageClientCrypto.CreateClientInfo(systemName, "client1", ECDiffieHellmanCurve.P256);
-            using var client2Info = MessageClientCrypto.CreateClientInfo(systemName, "client2", ECDiffieHellmanCurve.P256);
-            using var client3Info = MessageClientCrypto.CreateClientInfo(systemName, "client3", ECDiffieHellmanCurve.P256);
+            using var serverInfo = MessageClientInfo.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
+            using var client1Info = MessageClientInfo.CreateClientInfo(systemName, "client1", ECDiffieHellmanCurve.P256);
+            using var client2Info = MessageClientInfo.CreateClientInfo(systemName, "client2", ECDiffieHellmanCurve.P256);
+            using var client3Info = MessageClientInfo.CreateClientInfo(systemName, "client3", ECDiffieHellmanCurve.P256);
+
+
+            //serverInfo.GenerateSymmetricKey(client1Info.ECKey);
+            //client1Info.GenerateSymmetricKey(serverInfo.ECKey);
+
+            //Console.WriteLine(serverInfo.SymmetricKey.ToHashedHexString());
+            //Console.WriteLine(client1Info.SymmetricKey.ToHashedHexString());
 
 
 
@@ -101,20 +111,28 @@ namespace DistributedWorkersTestApp
             };
             client1.Connect(TimeSpan.FromSeconds(10), odd);
             client1.BeginFullWorkConsume(true);
-#if false
+
             MessageClient client2 = new MessageClient(
                 client2Info,
                 serverInfo,
                 rabbitMQServerName,
                 "guest",
-                "guest",
-                even);
+                "guest");
+
+            client2.AsynchronousException += Client_AsynchronousException;
+
             client2.MessageReceived += (sender, e) =>
             {
                 e.Response = MessageResponse.Ack;
-                Console.WriteLine($"Client 2: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
+                if (e.MessageEnevelope.Message.GetType() == typeof(IntMessage))
+                {
+                    Console.WriteLine($"Client 2: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
+                }
             };
+            client2.Connect(TimeSpan.FromSeconds(10), even);
             client2.BeginFullWorkConsume(true);
+
+#if false
 
             MessageClient client3 = new MessageClient(
                 client3Info,
@@ -133,8 +151,8 @@ namespace DistributedWorkersTestApp
             
 #endif
 
-            
-            //client2.Connect(TimeSpan.FromSeconds(10));
+
+            //
             //client3.Connect(TimeSpan.FromSeconds(10));
 
 

@@ -10,7 +10,7 @@ namespace Pinknose.DistributedWorkers.Logging
     [Serializable]
     public class SerilogEventMessage : PayloadMessage<LogEvent>
     {
-        public SerilogEventMessage(LogEvent payload, params MessageTag[] tags) : base(payload, false, true, false, tags)
+        public SerilogEventMessage(LogEvent payload) : base(payload, false, true, false)
         {
             if (payload == null)
             {

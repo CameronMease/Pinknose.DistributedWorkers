@@ -8,6 +8,7 @@ using System.Runtime;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
+using Pinknose.DistributedWorkers.Clients;
 
 namespace Pinknose.DistributedWorkers.Messages
 {

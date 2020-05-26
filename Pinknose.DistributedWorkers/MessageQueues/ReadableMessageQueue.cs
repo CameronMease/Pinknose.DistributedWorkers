@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Pinknose.DistributedWorkers
+namespace Pinknose.DistributedWorkers.MessageQueues
 {
     /// <summary>
     /// Abstraction of a RabbitMQ queue.  This message queue can be written to and can be read from.
