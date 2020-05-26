@@ -23,6 +23,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 using Pinknose.DistributedWorkers.Clients;
+using Pinknose.DistributedWorkers.Configuration;
 using Pinknose.DistributedWorkers.Logging;
 using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.MessageTags;
@@ -57,15 +58,17 @@ namespace DistributedWorkersTestApp
             //Console.WriteLine(serverInfo.SymmetricKey.ToHashedHexString());
             //Console.WriteLine(client1Info.SymmetricKey.ToHashedHexString());
 
-            var server = new MessageServer(
-                serverInfo,
-                rabbitMQServerName,
-                "guest",
-                "guest",
-                client1Info,
-                client2Info,
-                client3Info);
 
+            var server = new MessageServerConfiguration()
+                .Credentials("guest", "guest")
+                .RabbitMQServer(rabbitMQServerName)
+                .ServerInfo(serverInfo)
+                .AddClientInfo(client1Info)
+                .AddClientInfo(client2Info)
+                .AddClientInfo(client3Info)
+                .CreateMessageServer();
+
+ 
             server.MessageReceived += (sender, e) => e.Response = MessageResponse.Ack;
             server.AsynchronousException += Client_AsynchronousException;
 
@@ -103,12 +106,12 @@ namespace DistributedWorkersTestApp
             var even = new MessageTagValue("duhh", "even");
             var never = new MessageTagValue("duhh", "never");
 
-            MessageClient client1 = new MessageClient(
-                client1Info,
-                serverInfo,
-                rabbitMQServerName,
-                "guest",
-                "guest");
+            MessageClient client1 = new MessageClientConfiguration()
+                .Credentials("guest", "guest")
+                .RabbitMQServer(rabbitMQServerName)
+                .ServerInfo(serverInfo)
+                .ClientInfo(client1Info)
+                .CreateMessageClient();
 
             client1.AsynchronousException += Client_AsynchronousException;
 
@@ -124,12 +127,12 @@ namespace DistributedWorkersTestApp
             client1.Connect(TimeSpan.FromSeconds(10), odd);
             client1.BeginFullWorkConsume(true);
 
-            MessageClient client2 = new MessageClient(
-                client2Info,
-                serverInfo,
-                rabbitMQServerName,
-                "guest",
-                "guest");
+            MessageClient client2 = new MessageClientConfiguration()
+                .Credentials("guest", "guest")
+                .RabbitMQServer(rabbitMQServerName)
+                .ServerInfo(serverInfo)
+                .ClientInfo(client2Info)
+                .CreateMessageClient();
 
             client2.AsynchronousException += Client_AsynchronousException;
 
@@ -146,13 +149,12 @@ namespace DistributedWorkersTestApp
 
 #if false
 
-            MessageClient client3 = new MessageClient(
-                client3Info,
-                serverInfo,
-                rabbitMQServerName,
-                "guest",
-                "guest",
-                odd | even | SystemTags.SerilogFatalEvent);
+            MessageClient client3 = new MessageClientConfiguration()
+                .Credentials("guest", "guest")
+                .RabbitMQServer(rabbitMQServerName)
+                .ServerInfo(serverInfo)
+                .ClientInfo(client3Info)
+                .CreateMessageClient();
             client3.MessageReceived += (sender, e) =>
             {
                 e.Response = MessageResponse.Ack;

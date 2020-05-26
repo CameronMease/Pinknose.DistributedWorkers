@@ -32,6 +32,7 @@ using RabbitMQ.Client.Exceptions;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -172,8 +173,7 @@ namespace Pinknose.DistributedWorkers.Clients
         {
             if (encryptionOption == EncryptionOption.EncryptWithPrivateKey)
             {
-                //TODO: Add message
-                throw new ArgumentOutOfRangeException(nameof(encryptionOption));
+                throw new ArgumentOutOfRangeException(nameof(encryptionOption), "Broadcast messages cannot be encrypted with private keys.");
             }
 
             if (message == null)
@@ -252,8 +252,6 @@ namespace Pinknose.DistributedWorkers.Clients
             }
 
             string correlationId = Guid.NewGuid().ToString();
-
-            //message.ClientName = ClientName;
 
             IBasicProperties basicProperties = this.Channel.CreateBasicProperties();
             basicProperties.CorrelationId = correlationId;
@@ -335,7 +333,10 @@ namespace Pinknose.DistributedWorkers.Clients
                 true,
                 new Dictionary<string, object>());
 
-            SubscriptionQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, SubscriptionExchangeName, SubscriptionQueueName, subscriptionTags);
+            var tempTags = subscriptionTags.ToList();
+            tempTags.Add(SystemTags.BroadcastTag);
+
+            SubscriptionQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, SubscriptionExchangeName, SubscriptionQueueName, tempTags.ToArray());
             SubscriptionQueue.MessageReceived += Queue_MessageReceived;
             SubscriptionQueue.AsynchronousException += (sender, eventArgs) => FireAsynchronousExceptionEvent(sender, eventArgs);
 

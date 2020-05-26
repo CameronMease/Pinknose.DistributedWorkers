@@ -237,7 +237,7 @@ namespace Pinknose.DistributedWorkers.Messages
 
                 if (signatureLength != SignatureLengthConst)
                 {
-                    throw new Exception();
+                    throw new NotImplementedException();
                 }
 
                 envelope.SignatureVerificationStatus = messageClient.ValidateSignature(bytes[..^signatureLength], signature, envelope.SenderName);

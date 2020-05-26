@@ -37,7 +37,7 @@ namespace Pinknose.DistributedWorkers.Clients
     {
         public event EventHandler<MessageReceivedEventArgs> RpcMessageReceived;
 
-        public MessageServer(MessageClientInfo serverInfo, string rabbitMqServerHostName, string userName, string password, params MessageClientInfo[] clientInfos) :
+        internal MessageServer(MessageClientInfo serverInfo, string rabbitMqServerHostName, string userName, string password, params MessageClientInfo[] clientInfos) :
             base(serverInfo, rabbitMqServerHostName, userName, password)
         {
             if (serverInfo is null)

@@ -76,11 +76,6 @@ namespace Pinknose.DistributedWorkers.Clients
 
         public CngKey ECKey { get; private set; }
 
-        /// <summary>
-        /// Initialization vector for crypto between the client and the holder of the MessageClientInfo.  Note: This field is not serialized.
-        /// </summary>
-        public byte[] Iv { get; set; } = null;
-
         public string Name { get; private set; }
 
         public string SystemName { get; private set; }

@@ -125,6 +125,7 @@ namespace Pinknose.DistributedWorkers.MessageQueues
         public void StopConsume()
         {
             //TODO: Add code here!
+            throw new NotImplementedException();
         }
 
         protected virtual void Dispose(bool disposing)
