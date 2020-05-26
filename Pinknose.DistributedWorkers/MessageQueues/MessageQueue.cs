@@ -1,17 +1,35 @@
-﻿using EasyNetQ.Management.Client.Model;
+﻿///////////////////////////////////////////////////////////////////////////////////
+// MIT License
+//
+// Copyright(c) 2020 Cameron Mease
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////
+
 using Pinknose.DistributedWorkers.Clients;
 using Pinknose.DistributedWorkers.Messages;
 using Pinknose.DistributedWorkers.MessageTags;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Pinknose.DistributedWorkers.MessageQueues
 {
@@ -20,27 +38,102 @@ namespace Pinknose.DistributedWorkers.MessageQueues
     /// </summary>
     public class MessageQueue : IDisposable
     {
-        private QueueDeclareOk queueInfo;
+        #region Fields
+
+        /// <summary>
+        /// Regular expression used to parse the exchange name and routing keys from the message's basic properties.
+        /// </summary>
+        private static Regex replyToRegex = new Regex("exchangeName:(?<exchangeName>.*),routingKey:(?<routingKey>.*)", RegexOptions.Compiled);
+
         private string _clientName;
-        internal MessageClientBase ParentMessageClient { get; private set; }
-
         private string boundExchangeName = String.Empty;
+        private bool disposedValue = false;
+        private QueueDeclareOk queueInfo;
 
-        internal static TQueueType CreateMessageQueue<TQueueType>(MessageClientBase parentMessageClient, IModel channel, string clientName, string queueName) where TQueueType : MessageQueue, new()
+        #endregion Fields
+
+        #region Properties
+
+        /// <summary>
+        /// Returns the name of the queue.
+        /// </summary>
+        public string Name => queueInfo.QueueName;
+
+        public int QueueCount => (int)Channel.MessageCount(Name);
+        public int ConsumerCount => (int)Channel.ConsumerCount(Name);
+        internal MessageClientBase ParentMessageClient { get; private set; }
+        protected IModel Channel { get; set; }
+
+        #endregion Properties
+
+        #region Methods
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
         {
-            var queue = new TQueueType()
-            {
-                Channel = channel,
-                queueInfo = channel.QueueDeclare(
-                    queue: queueName,
-                    durable: false,
-                    exclusive: false,
-                    autoDelete: false),
-                _clientName = clientName,
-                ParentMessageClient = parentMessageClient
-            };
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
 
-            return queue;
+        public void Purge() => Channel.QueuePurge(Name);
+
+        public void RespondToMessage(MessageEnvelope originalMessageEnvelope, MessageBase responseMessage, EncryptionOption encryptionOption)
+        {
+            if (originalMessageEnvelope == null)
+            {
+                throw new ArgumentNullException(nameof(originalMessageEnvelope));
+            }
+
+            if (responseMessage == null)
+            {
+                throw new ArgumentNullException(nameof(responseMessage));
+            }
+
+            //responseMessage.ClientName = _clientName;
+
+            IBasicProperties basicProperties = this.Channel.CreateBasicProperties();
+            basicProperties.CorrelationId = originalMessageEnvelope.BasicProperties.CorrelationId;
+
+            Match match = replyToRegex.Match(originalMessageEnvelope.BasicProperties.ReplyTo);
+            string exchangeName = match.Groups["exchangeName"].Value;
+            string routingKey = match.Groups["routingKey"].Value;
+
+            var envelope = MessageEnvelope.WrapMessage(responseMessage, originalMessageEnvelope.SenderName, this.ParentMessageClient, encryptionOption);
+            byte[] hashedMessage = envelope.Serialize();
+
+            Channel.BasicPublish(
+                exchange: exchangeName,
+                routingKey: routingKey,
+                basicProperties: basicProperties,
+                hashedMessage);
+        }
+
+        public void Write(MessageBase message, EncryptionOption encryptionOptions, MessageTagCollection tags)
+        {
+            Write(message, "", encryptionOptions, tags);
+        }
+
+        public void Write(MessageBase message, IBasicProperties basicProperties, EncryptionOption encryptionOptions, MessageTagCollection tags)
+        {
+            if (basicProperties is null)
+            {
+                throw new ArgumentNullException(nameof(basicProperties));
+            }
+
+            Write(message, "", basicProperties, encryptionOptions, tags);
+        }
+
+        public void WriteToBoundExchange(MessageBase message, EncryptionOption encryptionOption, MessageTagCollection tags)
+        {
+            if (encryptionOption == EncryptionOption.EncryptWithPrivateKey)
+            {
+                //TODO: Add message text
+                throw new ArgumentOutOfRangeException(nameof(encryptionOption));
+            }
+
+            Write(message, boundExchangeName, encryptionOption, tags);
         }
 
         internal static TQueueType CreateExchangeBoundMessageQueue<TQueueType>(MessageClientBase parentMessageClient, IModel channel, string clientName, string exchangeName, string queueName, params MessageTag[] subscriptionTags) where TQueueType : MessageQueue, new()
@@ -96,41 +189,42 @@ namespace Pinknose.DistributedWorkers.MessageQueues
             return queue;
         }
 
-        /// <summary>
-        /// Returns the name of the queue.
-        /// </summary>
-        public string Name => queueInfo.QueueName;
-
-        protected IModel Channel { get; set; }
-
-        public void WriteToBoundExchange(MessageBase message, EncryptionOption encryptionOption, MessageTagCollection tags)
+        internal static TQueueType CreateMessageQueue<TQueueType>(MessageClientBase parentMessageClient, IModel channel, string clientName, string queueName) where TQueueType : MessageQueue, new()
         {
-            if (encryptionOption == EncryptionOption.EncryptWithPrivateKey)
+            var queue = new TQueueType()
             {
-                //TODO: Add message text
-                throw new ArgumentOutOfRangeException(nameof(encryptionOption));
-            }
+                Channel = channel,
+                queueInfo = channel.QueueDeclare(
+                    queue: queueName,
+                    durable: false,
+                    exclusive: false,
+                    autoDelete: false),
+                _clientName = clientName,
+                ParentMessageClient = parentMessageClient
+            };
 
-            Write(message, boundExchangeName, encryptionOption, tags);
+            return queue;
         }
 
-        public void Write(MessageBase message, EncryptionOption encryptionOptions, MessageTagCollection tags)
+        protected virtual void Dispose(bool disposing)
         {
-            Write(message, "", encryptionOptions, tags);
-        }
-
-        public void Write(MessageBase message, IBasicProperties basicProperties, EncryptionOption encryptionOptions, MessageTagCollection tags)
-        {
-            if (basicProperties is null)
+            if (!disposedValue)
             {
-                throw new ArgumentNullException(nameof(basicProperties));
-            }
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects).
+                }
 
-            Write(message, "", basicProperties, encryptionOptions, tags);
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+                Channel.QueueDelete(Name, true, true);
+
+                disposedValue = true;
+            }
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="message"></param>
         /// <param name="exchangeName"></param>
@@ -140,7 +234,7 @@ namespace Pinknose.DistributedWorkers.MessageQueues
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="message"></param>
         /// <param name="exchangeName"></param>
@@ -180,86 +274,14 @@ namespace Pinknose.DistributedWorkers.MessageQueues
                 hashedMessage);
         }
 
+        #endregion Methods
 
-
-        /// <summary>
-        /// Regular expression used to parse the exchange name and routing keys from the message's basic properties.
-        /// </summary>
-        private static Regex replyToRegex = new Regex("exchangeName:(?<exchangeName>.*),routingKey:(?<routingKey>.*)", RegexOptions.Compiled);
-
-        public void RespondToMessage(MessageEnvelope originalMessageEnvelope, MessageBase responseMessage, EncryptionOption encryptionOption)
-        {
-            if (originalMessageEnvelope == null)
-            {
-                throw new ArgumentNullException(nameof(originalMessageEnvelope));
-            }
-
-            if (responseMessage == null)
-            {
-                throw new ArgumentNullException(nameof(responseMessage));
-            }
-
-            //responseMessage.ClientName = _clientName;
-
-            IBasicProperties basicProperties = this.Channel.CreateBasicProperties();
-            basicProperties.CorrelationId = originalMessageEnvelope.BasicProperties.CorrelationId;
-
-            Match match = replyToRegex.Match(originalMessageEnvelope.BasicProperties.ReplyTo);
-            string exchangeName = match.Groups["exchangeName"].Value;
-            string routingKey = match.Groups["routingKey"].Value;
-
-            var envelope = MessageEnvelope.WrapMessage(responseMessage, originalMessageEnvelope.SenderName, this.ParentMessageClient, encryptionOption);
-            byte[] hashedMessage = envelope.Serialize();
-
-            Channel.BasicPublish(
-                exchange: exchangeName,
-                routingKey: routingKey,
-                basicProperties: basicProperties,
-                hashedMessage);
-        }
-
-        public int QueueCount => (int)Channel.MessageCount(Name);
-        public int ConsumerCount => (int)Channel.ConsumerCount(Name);
-
-        public void Purge() => Channel.QueuePurge(Name);
-
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects).
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // TODO: set large fields to null.
-                Channel.QueueDelete(Name, true, true);
-
-                disposedValue = true;
-            }
-        }
-
+        // To detect redundant calls
         // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
         // ~MessageQueue()
         // {
         //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
         //   Dispose(false);
         // }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
-            // GC.SuppressFinalize(this);
-        }
-        #endregion
-
-
     }
 }

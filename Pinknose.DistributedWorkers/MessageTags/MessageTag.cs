@@ -1,8 +1,30 @@
-﻿using Pinknose.Utilities;
+﻿///////////////////////////////////////////////////////////////////////////////////
+// MIT License
+//
+// Copyright(c) 2020 Cameron Mease
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////
+
+using Pinknose.Utilities;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 
 namespace Pinknose.DistributedWorkers.MessageTags
 {
@@ -12,26 +34,31 @@ namespace Pinknose.DistributedWorkers.MessageTags
     [Serializable]
     public class MessageTag : IEquatable<MessageTag>
     {
+        #region Constructors
+
         public MessageTag(string tagName)
         {
             TagName = tagName.ToLower();
         }
 
+        #endregion Constructors
+
+        #region Properties
+
         public string TagName { get; private set; }
 
-        internal virtual string GetMangledTagAndValue()
+        #endregion Properties
+
+        #region Methods
+
+        public static bool operator !=(MessageTag tag1, MessageTag tag2)
         {
-            return MangleTag(this.TagName, "");
+            return !tag1.Equals(tag2);
         }
 
-        internal string GetMangledTagName()
+        public static bool operator ==(MessageTag tag1, MessageTag tag2)
         {
-            return MangleTag(this.TagName, "");
-        }
-
-        internal static string MangleTag(string tagName, object tagValue)
-        {
-            return $"{tagName}:{tagValue.ToString().ToLower()}";
+            return tag1.Equals(tag2);
         }
 
         public override bool Equals(object obj)
@@ -44,30 +71,6 @@ namespace Pinknose.DistributedWorkers.MessageTags
             return !(other is null) && this.GetMangledTagAndValue() == other.GetMangledTagAndValue();
         }
 
-        public static bool operator ==(MessageTag tag1, MessageTag tag2)
-        {
-            return tag1.Equals(tag2);
-        }
-
-        public static bool operator !=(MessageTag tag1, MessageTag tag2)
-        {
-            return !tag1.Equals(tag2);
-        }
-
-        public static MessageTagCollection operator | (MessageTag tag1, MessageTag tag2)
-        {
-            var tags = new MessageTagCollection();
-            tags.Add(tag1);
-            tags.Add(tag2);
-            return tags;
-        }
-
-        public static MessageTagCollection operator | (MessageTagCollection tags, MessageTag tag1)
-        {
-            tags.Add(tag1);
-            return tags;
-        }
-
         public override int GetHashCode()
         {
             return GetMangledTagAndValue().GetHashCode(StringComparison.Ordinal);
@@ -77,5 +80,36 @@ namespace Pinknose.DistributedWorkers.MessageTags
         {
             return GetMangledTagAndValue();
         }
+
+        public static MessageTagCollection operator |(MessageTag tag1, MessageTag tag2)
+        {
+            var tags = new MessageTagCollection();
+            tags.Add(tag1);
+            tags.Add(tag2);
+            return tags;
+        }
+
+        public static MessageTagCollection operator |(MessageTagCollection tags, MessageTag tag1)
+        {
+            tags.Add(tag1);
+            return tags;
+        }
+
+        internal static string MangleTag(string tagName, object tagValue)
+        {
+            return $"{tagName}:{tagValue.ToString().ToLower()}";
+        }
+
+        internal virtual string GetMangledTagAndValue()
+        {
+            return MangleTag(this.TagName, "");
+        }
+
+        internal string GetMangledTagName()
+        {
+            return MangleTag(this.TagName, "");
+        }
+
+        #endregion Methods
     }
 }

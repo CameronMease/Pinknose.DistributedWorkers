@@ -1,26 +1,70 @@
-﻿using Pinknose.DistributedWorkers.Clients;
+﻿///////////////////////////////////////////////////////////////////////////////////
+// MIT License
+//
+// Copyright(c) 2020 Cameron Mease
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////
+
+using Pinknose.DistributedWorkers.Clients;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace Pinknose.DistributedWorkers.Keystore
 {
     [Serializable]
     public sealed class PublicKeystore : IEnumerable<MessageClientInfo>
     {
+        #region Fields
+
         private Dictionary<string, MessageClientInfo> dictionary = new Dictionary<string, MessageClientInfo>();
 
         private Dictionary<(CngKey PrivateKey, CngKey PublicKey), byte[]> symmetricKeys = new Dictionary<(CngKey PrivateKey, CngKey PublicKey), byte[]>();
+
+        #endregion Fields
+
+        #region Constructors
 
         public PublicKeystore(MessageClientInfo parentClientInfo)
         {
             ParentClientInfo = parentClientInfo;
         }
+
+        #endregion Constructors
+
+        #region Properties
+
+        public int CurrentSharedKeyId { get; set; } = 0;
+
+        public MessageClientInfo ParentClientInfo { get; private set; }
+
+        public SharedKeyCollection SystemSharedKeys { get; } = new SharedKeyCollection();
+
+        public int Count => dictionary.Count;
+
+        #endregion Properties
+
+        #region Indexers
 
         public MessageClientInfo this[string key]
         {
@@ -28,54 +72,15 @@ namespace Pinknose.DistributedWorkers.Keystore
             //set => throw new NotImplementedException();
         }
 
+        #endregion Indexers
+
         /*
         protected PublicKeystore(SerializationInfo info, StreamingContext context) : base(info, context)
         {
-
         }
         */
 
-        public int CurrentSharedKeyId { get; set; } = 0;
-
-        public SharedKeyCollection SystemSharedKeys { get; } = new SharedKeyCollection();
-
-        private MessageClientInfo AddSymmetricKeyIfNotExist(MessageClientInfo clientInfo)
-        {
-            var key = (ParentClientInfo.ECKey, clientInfo.ECKey);
-
-            if (!symmetricKeys.ContainsKey(key))
-            {
-                symmetricKeys.Add(key, GenerateSymmetricKey(ParentClientInfo.ECKey, clientInfo.ECKey));
-            }
-
-            return clientInfo;
-        }
-
-        public byte[] GetSymmetricKey(string clientName)
-        {
-            return symmetricKeys[(ParentClientInfo.ECKey, this[clientName].ECKey)];
-        }
-
-        public byte[] GetSymmetricKey(MessageClientInfo clientInfo)
-        {
-            return symmetricKeys[(ParentClientInfo.ECKey, clientInfo.ECKey)];
-        }
-
-        public MessageClientInfo ParentClientInfo { get; private set; }
-
-        public int Count => dictionary.Count;
-
-        /*
-        internal PublicKeystore(SerializationInfo info, StreamingContext context)
-        {
-            foreach (var entry in info)
-            {
-                var key = CngKey.Import((byte[])entry.Value, CngKeyBlobFormat.EccFullPublicBlob);
-                this.Add(entry.Name, new MessageClientInfo(entry.Name, (byte[])entry.Value, CngKeyBlobFormat.EccFullPublicBlob));
-            }
-
-        }
-        */
+        #region Methods
 
         public void Add(string systemName, string clientName, byte[] publicKeyBlob, CngKeyBlobFormat format)
         {
@@ -109,6 +114,16 @@ namespace Pinknose.DistributedWorkers.Keystore
         public bool Contains(string clientName)
         {
             return dictionary.ContainsKey(clientName);
+        }
+
+        public byte[] GetSymmetricKey(string clientName)
+        {
+            return symmetricKeys[(ParentClientInfo.ECKey, this[clientName].ECKey)];
+        }
+
+        public byte[] GetSymmetricKey(MessageClientInfo clientInfo)
+        {
+            return symmetricKeys[(ParentClientInfo.ECKey, clientInfo.ECKey)];
         }
 
         public void Merge(PublicKeystore keystore)
@@ -155,6 +170,30 @@ namespace Pinknose.DistributedWorkers.Keystore
             return ecdh.DeriveKeyMaterial(publicKey);
         }
 
+        private MessageClientInfo AddSymmetricKeyIfNotExist(MessageClientInfo clientInfo)
+        {
+            var key = (ParentClientInfo.ECKey, clientInfo.ECKey);
+
+            if (!symmetricKeys.ContainsKey(key))
+            {
+                symmetricKeys.Add(key, GenerateSymmetricKey(ParentClientInfo.ECKey, clientInfo.ECKey));
+            }
+
+            return clientInfo;
+        }
+
+        #endregion Methods
+
+        /*
+        internal PublicKeystore(SerializationInfo info, StreamingContext context)
+        {
+            foreach (var entry in info)
+            {
+                var key = CngKey.Import((byte[])entry.Value, CngKeyBlobFormat.EccFullPublicBlob);
+                this.Add(entry.Name, new MessageClientInfo(entry.Name, (byte[])entry.Value, CngKeyBlobFormat.EccFullPublicBlob));
+            }
+        }
+        */
         /*
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {

@@ -1,20 +1,41 @@
-﻿using EasyNetQ.Management.Client.Model;
+﻿///////////////////////////////////////////////////////////////////////////////////
+// MIT License
+//
+// Copyright(c) 2020 Cameron Mease
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////
+
 using Pinknose.DistributedWorkers.Clients;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Security;
 using System.Text;
-using System.Text.Unicode;
 
 namespace Pinknose.DistributedWorkers.Messages
 {
     public class MessageEnvelope
     {
+
+        #region Fields
+
         //TODO:  How to calculate this?
         private const int SignatureLengthConst = 132;
 
@@ -26,16 +47,37 @@ namespace Pinknose.DistributedWorkers.Messages
         private static readonly BitVector32.Section encryptionOptionSection = BitVector32.CreateSection(7, ivLengthSection);
         private static readonly BitVector32.Section senderNameLengthSection = BitVector32.CreateSection(255, encryptionOptionSection);
         private static readonly BitVector32.Section sharedKeyIdSection = BitVector32.CreateSection(255, senderNameLengthSection);
+        
+        private EncryptionOption _encryptionOption;
+        private MessageClientBase _messageClient = null;
 
+        #endregion Fields
+
+        #region Constructors
+
+        private MessageEnvelope()
+        {
+        }
+
+        #endregion Constructors
+
+        #region Properties
+
+        public IBasicProperties BasicProperties { get; private set; } = null;
+        public ulong DeliveryTag { get; private set; }
+        public string Exchange { get; private set; }
         public MessageBase Message { get; private set; } = null;
 
-        public string SenderName { get; private set; }
-
         public string RecipientName { get; private set; }
-        
+        public bool Redelivered { get; private set; }
+        public PublicationAddress ReplyToAddres { get; private set; }
+        public string RoutingKey { get; private set; }
+        public string SenderName { get; private set; }
+        public SignatureVerificationStatus SignatureVerificationStatus { get; private set; }
 
-        private MessageClientBase _messageClient = null;
-        private EncryptionOption _encryptionOption;
+        #endregion Properties
+
+        #region Methods
 
         public static MessageEnvelope WrapMessage(MessageBase message, string recipientName, MessageClientBase messageClient, EncryptionOption encryptionOption)
         {
@@ -43,7 +85,7 @@ namespace Pinknose.DistributedWorkers.Messages
             {
                 throw new ArgumentOutOfRangeException(nameof(recipientName), $"{nameof(recipientName)} cannot be empty if encryption is set to private key.");
             }
-            
+
             var wrapper = new MessageEnvelope();
             wrapper.Message = message;
             wrapper.SenderName = messageClient.ClientName;
@@ -54,40 +96,16 @@ namespace Pinknose.DistributedWorkers.Messages
             return wrapper;
         }
 
-
-        private MessageEnvelope()
-        {
-        }
-
-
-
-   
-    
-
-        public string Exchange { get; private set; }
-
-        public ulong DeliveryTag { get; private set; }
-
-        public PublicationAddress ReplyToAddres { get; private set; }
-
-        public IBasicProperties BasicProperties { get; private set; } = null;
-
-        public bool Redelivered { get; private set; }
-
-        public string RoutingKey { get; private set; }
-
-        public SignatureVerificationStatus SignatureVerificationStatus { get; private set; }
-
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns></returns>
         /// <remarks>
         /// Message Wrapper Format:
-        /// 
+        ///
         /// [ Info Bits ][ Info Numbers ][ Sender Name ][ IV - Optional][ Serialized Message (encryption optional)][ Signature ]
         /// [                                          Signature based on this data                               ]
-        /// 
+        ///
         /// </remarks>
 
         public byte[] Serialize()
@@ -129,7 +147,7 @@ namespace Pinknose.DistributedWorkers.Messages
 
             // Copy fields
             senderBytes.CopyTo(bytes, 8);
-            iv.CopyTo(bytes, 8 + senderBytes.Length );
+            iv.CopyTo(bytes, 8 + senderBytes.Length);
             messageBytes.CopyTo(bytes, 8 + senderBytes.Length + iv.Length);
 
             byte[] signature = _messageClient.SignData(bytes, 0, totalBufferSize - SignatureLengthConst);
@@ -145,16 +163,50 @@ namespace Pinknose.DistributedWorkers.Messages
             return bytes;
         }
 
+        internal static MessageEnvelope Deserialize(byte[] bytes, BasicDeliverEventArgs e, MessageClientBase messageClient)
+        {
+            if (e == null)
+            {
+                throw new ArgumentNullException(nameof(e));
+            }
+
+            return Deserialize(
+                bytes,
+                e.Exchange,
+                e.DeliveryTag,
+                e.Redelivered,
+                e.RoutingKey,
+                e.BasicProperties,
+                messageClient);
+        }
+
+        internal static MessageEnvelope Deserialize(byte[] bytes, BasicGetResult result, MessageClientBase messageClient)
+        {
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
+
+            return Deserialize(
+                bytes,
+                result.Exchange,
+                result.DeliveryTag,
+                result.Redelivered,
+                result.RoutingKey,
+                result.BasicProperties,
+                messageClient);
+        }
+
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="bytes"></param>
         /// <returns></returns>
         /// <remarks>
         /// Message Wrapper Format:
-        /// 
+        ///
         /// [ Info Bits ][ Info Numbers ][ Sender Name ][ IV - Optional][ Serialized Message (encryption optional)][ Signature ]
-        /// 
+        ///
         /// </remarks>
         private static MessageEnvelope Deserialize(byte[] bytes, MessageClientBase messageClient)
         {
@@ -181,7 +233,6 @@ namespace Pinknose.DistributedWorkers.Messages
                 var iv = bytes[(index)..(index + ivLength)];
                 index += ivLength;
 
-
                 var signature = bytes[^signatureLength..];
 
                 if (signatureLength != SignatureLengthConst)
@@ -195,7 +246,6 @@ namespace Pinknose.DistributedWorkers.Messages
                 {
                     throw new NotImplementedException();
                 }
-                
 
                 // Get the bytes representing the message
                 byte[] messageBytes = bytes[index..^signatureLength];
@@ -217,7 +267,7 @@ namespace Pinknose.DistributedWorkers.Messages
             }
             catch (Exception e)
             {
-                 throw;
+                throw;
             }
         }
 
@@ -233,38 +283,7 @@ namespace Pinknose.DistributedWorkers.Messages
             return envelope;
         }
 
-        internal static MessageEnvelope Deserialize(byte[] bytes, BasicDeliverEventArgs e, MessageClientBase messageClient)
-        {
-            if (e == null)
-            {
-                throw new ArgumentNullException(nameof(e));
-            }
-
-            return Deserialize(
-                bytes,
-                e.Exchange,
-                e.DeliveryTag,
-                e.Redelivered,
-                e.RoutingKey,
-                e.BasicProperties,
-                messageClient);
-        }
-        internal static MessageEnvelope Deserialize(byte[] bytes, BasicGetResult result, MessageClientBase messageClient)
-        {
-            if (result == null)
-            {
-                throw new ArgumentNullException(nameof(result));
-            }
-
-            return Deserialize(
-                bytes,
-                result.Exchange,
-                result.DeliveryTag,
-                result.Redelivered,
-                result.RoutingKey,
-                result.BasicProperties,
-                messageClient);
-        }
+        #endregion Methods
 
     }
 }

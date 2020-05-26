@@ -1,5 +1,28 @@
-﻿using Pinknose.DistributedWorkers.Exceptions;
-using Pinknose.DistributedWorkers.Extensions;
+﻿///////////////////////////////////////////////////////////////////////////////////
+// MIT License
+//
+// Copyright(c) 2020 Cameron Mease
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////
+
+using Pinknose.DistributedWorkers.Exceptions;
 using Pinknose.DistributedWorkers.Keystore;
 using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.Messages;
@@ -9,11 +32,6 @@ using RabbitMQ.Client.Exceptions;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.ServiceModel.Channels;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,15 +41,13 @@ namespace Pinknose.DistributedWorkers.Clients
 
     public enum RpcCallResult { Success, Timeout, BadSignature }
 
-    public enum SignatureVerificationStatus { SignatureValid, SignatureValidButUntrusted, SignatureNotValid, NoValidClientInfo, SignatureUnverified}
-    
+    public enum SignatureVerificationStatus { SignatureValid, SignatureValidButUntrusted, SignatureNotValid, NoValidClientInfo, SignatureUnverified }
 
     /// <summary>
     /// The base class for message clients and servers.
     /// </summary>
     public abstract partial class MessageClientBase : IDisposable
     {
-
         #region Fields
 
         /// <summary>
@@ -85,7 +101,6 @@ namespace Pinknose.DistributedWorkers.Clients
                 throw new ArgumentNullException(nameof(password));
             }
 
-
             ClientInfo = clientInfo;
 
             PublicKeystore = new PublicKeystore(clientInfo);
@@ -97,8 +112,6 @@ namespace Pinknose.DistributedWorkers.Clients
             //Log.Verbose($"Client '{ClientInfo.Name}' has public key '{ClientInfo.k.GetPublicKeyHash()}'.");
 
             InternalId = Guid.NewGuid().ToString();
-
-
         }
 
         #endregion Constructors
@@ -106,6 +119,7 @@ namespace Pinknose.DistributedWorkers.Clients
         #region Events
 
         public event EventHandler<AsynchronousExceptionEventArgs> AsynchronousException;
+
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
 
         #endregion Events
@@ -184,7 +198,6 @@ namespace Pinknose.DistributedWorkers.Clients
             {
                 Log.Warning(e, $"Tried to send data to the closed exchange '{BroadcastExchangeName}'.");
             }
-
         }
 
         public abstract void Disconnect();
@@ -279,11 +292,13 @@ namespace Pinknose.DistributedWorkers.Clients
         }
 
         protected void FireAsynchronousExceptionEvent(object sender, AsynchronousExceptionEventArgs eventArgs) => AsynchronousException?.Invoke(this, eventArgs);
+
         //protected string LogQueueName => $"{SystemName}-queue-log".ToLowerInvariant();
         protected void FireMessageReceivedEvent(MessageReceivedEventArgs eventArgs)
         {
             MessageReceived?.Invoke(this, eventArgs);
         }
+
         protected abstract void SendHeartbeat();
 
         protected virtual void SetupConnections(TimeSpan timeout, MessageTagCollection subscriptionTags)
@@ -310,7 +325,6 @@ namespace Pinknose.DistributedWorkers.Clients
                 false,
                 true,
                 new Dictionary<string, object>());
-
 
             //LogQueue = MessageQueue.CreateMessageQueue<TServerQueue>(this, Channel, ClientName, LogQueueName);
 
@@ -354,7 +368,6 @@ namespace Pinknose.DistributedWorkers.Clients
 
             Task task = new Task(() =>
             {
-
                 if (!response.WaitHandle.WaitOne(waitTime))
                 {
                     response.CallResult = RpcCallResult.Timeout;
@@ -416,6 +429,5 @@ namespace Pinknose.DistributedWorkers.Clients
         //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
         //   Dispose(false);
         // }
-
     }
 }

@@ -1,23 +1,43 @@
-﻿using Pinknose.DistributedWorkers;
+﻿///////////////////////////////////////////////////////////////////////////////////
+// MIT License
+//
+// Copyright(c) 2020 Cameron Mease
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////
+
 using Pinknose.DistributedWorkers.Clients;
-using Pinknose.DistributedWorkers.Extensions;
 using Pinknose.DistributedWorkers.Logging;
 using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.MessageTags;
 using Serilog;
 using System;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
-using System.Threading;
-using System.Timers;
 
 namespace DistributedWorkersTestApp
 {
-    class Program
+    internal class Program
     {
-        enum dumdum { a, v, c}
+        private enum dumdum
+        { a, v, c }
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             int val = 0;
 
@@ -26,14 +46,10 @@ namespace DistributedWorkersTestApp
 
             var duhh1 = AesCng.Create();
 
-
-
-
             using var serverInfo = MessageClientInfo.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
             using var client1Info = MessageClientInfo.CreateClientInfo(systemName, "client1", ECDiffieHellmanCurve.P256);
             using var client2Info = MessageClientInfo.CreateClientInfo(systemName, "client2", ECDiffieHellmanCurve.P256);
             using var client3Info = MessageClientInfo.CreateClientInfo(systemName, "client3", ECDiffieHellmanCurve.P256);
-
 
             //serverInfo.GenerateSymmetricKey(client1Info.ECKey);
             //client1Info.GenerateSymmetricKey(serverInfo.ECKey);
@@ -41,9 +57,7 @@ namespace DistributedWorkersTestApp
             //Console.WriteLine(serverInfo.SymmetricKey.ToHashedHexString());
             //Console.WriteLine(client1Info.SymmetricKey.ToHashedHexString());
 
-
-
-            var server= new MessageServer(
+            var server = new MessageServer(
                 serverInfo,
                 rabbitMQServerName,
                 "guest",
@@ -55,8 +69,6 @@ namespace DistributedWorkersTestApp
             server.MessageReceived += (sender, e) => e.Response = MessageResponse.Ack;
             server.AsynchronousException += Client_AsynchronousException;
 
-            
-
             System.Timers.Timer sendTimer = new System.Timers.Timer(1000)
             {
                 AutoReset = true
@@ -65,9 +77,9 @@ namespace DistributedWorkersTestApp
             sendTimer.Elapsed += (sender, e) =>
             {
                 IntMessage message = new IntMessage(val);
-                
+
                 string tag = val % 2 == 0 ? "even" : "odd";
-                
+
                 server.WriteToSubscriptionQueues(message, EncryptionOption.EncryptWithSystemSharedKey, new MessageTagValue("duhh", tag));
                 val++;
 
@@ -148,13 +160,11 @@ namespace DistributedWorkersTestApp
             };
 
             client3.BeginFullWorkConsume(true);
-            
-#endif
 
+#endif
 
             //
             //client3.Connect(TimeSpan.FromSeconds(10));
-
 
             Log.Information("Dumdum");
 

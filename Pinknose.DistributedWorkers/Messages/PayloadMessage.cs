@@ -1,8 +1,28 @@
-﻿using Pinknose.DistributedWorkers.MessageTags;
+﻿///////////////////////////////////////////////////////////////////////////////////
+// MIT License
+//
+// Copyright(c) 2020 Cameron Mease
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////
+
 using System;
-using System.Collections.Generic;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Pinknose.DistributedWorkers.Messages
 {
@@ -12,8 +32,10 @@ namespace Pinknose.DistributedWorkers.Messages
     /// </summary>
     /// <typeparam name="TPayload"></typeparam>
     [Serializable]
-    public abstract class PayloadMessage<TPayload> : MessageBase 
+    public abstract class PayloadMessage<TPayload> : MessageBase
     {
+        #region Constructors
+
         public PayloadMessage(TPayload payload, bool compressPayload, bool serializePayloadToJson, bool dataIsAlreadyCompressed = false) : base()
         {
             if (payload != null)
@@ -42,16 +64,10 @@ namespace Pinknose.DistributedWorkers.Messages
                 PayloadTypeName = payload.GetType().FullName;
             }
         }
-        
-        public string PayloadTypeName { get; private set; }
 
-        private object PayloadInternal { get; set; } = null;
+        #endregion Constructors
 
-        private bool PayloadIsCompressed { get; set; }
-
-        private bool PayloadIsJsonSerialized { get; set; }
-
-        private bool KeepPayloadCompressed { get; set; } = false;
+        #region Properties
 
         public TPayload Payload
         {
@@ -79,5 +95,16 @@ namespace Pinknose.DistributedWorkers.Messages
                 }
             }
         }
+
+        public string PayloadTypeName { get; private set; }
+
+        private bool KeepPayloadCompressed { get; set; } = false;
+        private object PayloadInternal { get; set; } = null;
+
+        private bool PayloadIsCompressed { get; set; }
+
+        private bool PayloadIsJsonSerialized { get; set; }
+
+        #endregion Properties
     }
 }

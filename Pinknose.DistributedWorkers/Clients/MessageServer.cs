@@ -1,20 +1,40 @@
-﻿using Pinknose.DistributedWorkers.MessageQueues;
+﻿///////////////////////////////////////////////////////////////////////////////////
+// MIT License
+//
+// Copyright(c) 2020 Cameron Mease
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////
+
+using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.Messages;
 using Pinknose.DistributedWorkers.MessageTags;
 using Pinknose.Utilities;
-using RabbitMQ.Client.Exceptions;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace Pinknose.DistributedWorkers.Clients
 {
     public sealed class MessageServer : MessageClientBase<ReadableMessageQueue>
     {
-        
-
         public event EventHandler<MessageReceivedEventArgs> RpcMessageReceived;
 
         public MessageServer(MessageClientInfo serverInfo, string rabbitMqServerHostName, string userName, string password, params MessageClientInfo[] clientInfos) :
@@ -30,8 +50,6 @@ namespace Pinknose.DistributedWorkers.Clients
                 throw new Exception();
             }
 
-            
-
             //PublicKeystore.Add(this.SystemName, this.ClientName, key);
             PublicKeystore.AddRange(clientInfos);
 
@@ -41,7 +59,6 @@ namespace Pinknose.DistributedWorkers.Clients
 
             PublicKeystore.SystemSharedKeys[PublicKeystore.CurrentSharedKeyId] = key;
         }
-
 
         private void ServerQueue_MessageReceived(object sender, MessageReceivedEventArgs e)
         {
@@ -84,7 +101,6 @@ namespace Pinknose.DistributedWorkers.Clients
                         },
                         EncryptionOption.EncryptWithPrivateKey);
 
-
                         //var keyMessage = new PublicKeyUpdate(PublicKeystore[e.MessageEnevelope.SenderName]);
                         //TODO: How to determine when to encyrpt
                         //this.BroadcastToAllClients(keyMessage, EncryptionOption.None);
@@ -92,7 +108,6 @@ namespace Pinknose.DistributedWorkers.Clients
                         // Send the system AES key to the new client
                         //var aesKeyMessage = new SystemSharedKeyUpdate(CurrentSystemSharedKey.ToArray());
                         //this.WriteToClientNoWait(clientInfo, aesKeyMessage, EncryptionOption.EncryptWithPrivateKey);
-
                     }
                     else
                     {
@@ -107,8 +122,6 @@ namespace Pinknose.DistributedWorkers.Clients
                         },
                         EncryptionOption.EncryptWithPrivateKey);
                     }
-
-                    
                 }
                 else
                 {
@@ -142,7 +155,7 @@ namespace Pinknose.DistributedWorkers.Clients
                         }
 
                         clients.Clear();
-                        
+
                         //TODO: How to determine when to encyrpt
                         BroadcastToAllClients(new ClientReannounceRequestMessage(false), EncryptionOption.None);
                     }
@@ -159,7 +172,6 @@ namespace Pinknose.DistributedWorkers.Clients
                 }
             }
         }
-
 
         private void TimeoutTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
@@ -181,8 +193,6 @@ namespace Pinknose.DistributedWorkers.Clients
             // TODO: Re-enabled BroacastToAllClients(message);
         }
 
-
-
         public void Connect(TimeSpan timeout)
         {
             SetupConnections(timeout, new MessageTagCollection());
@@ -201,8 +211,7 @@ namespace Pinknose.DistributedWorkers.Clients
             throw new NotImplementedException();
         }
 
-        Dictionary<string, (DateTime AnnouncementTime, DateTime LastSeen, string PrivateQueueName, ReusableThreadSafeTimer TimeoutTimer)> clients =
+        private Dictionary<string, (DateTime AnnouncementTime, DateTime LastSeen, string PrivateQueueName, ReusableThreadSafeTimer TimeoutTimer)> clients =
             new Dictionary<string, (DateTime AnnouncementTime, DateTime LastSeen, string PrivateQueueName, ReusableThreadSafeTimer TimeoutTimer)>();
-
     }
 }

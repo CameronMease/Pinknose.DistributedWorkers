@@ -1,23 +1,52 @@
-﻿using System;
+﻿///////////////////////////////////////////////////////////////////////////////////
+// MIT License
+//
+// Copyright(c) 2020 Cameron Mease
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
 
 namespace Pinknose.DistributedWorkers.MessageTags
 {
     [Serializable]
     public class MessageTagCollection : IEnumerable<MessageTag>, ISerializable
     {
+        #region Fields
+
         private List<MessageTag> _tags;
+
+        #endregion Fields
+
+        #region Constructors
 
         public MessageTagCollection()
         {
             _tags = new List<MessageTag>();
         }
 
-        public MessageTagCollection(IEnumerable<MessageTag>tags)
+        public MessageTagCollection(IEnumerable<MessageTag> tags)
         {
             if (tags == null)
             {
@@ -28,15 +57,19 @@ namespace Pinknose.DistributedWorkers.MessageTags
             this.AddRange(tags);
         }
 
-        public IEnumerator<MessageTag> GetEnumerator()
+        protected MessageTagCollection(SerializationInfo info, StreamingContext context)
         {
-            return _tags.GetEnumerator();
+            if (info == null)
+            {
+                throw new ArgumentNullException(nameof(info));
+            }
+
+            _tags = new List<MessageTag>((IEnumerable<MessageTag>)info.GetValue("tags", typeof(MessageTag[])));
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _tags.GetEnumerator();
-        }
+        #endregion Constructors
+
+        #region Methods
 
         public void Add(MessageTag tag)
         {
@@ -53,7 +86,7 @@ namespace Pinknose.DistributedWorkers.MessageTags
             _tags.Add(tag);
         }
 
-        public void AddRange(IEnumerable<MessageTag>tags)
+        public void AddRange(IEnumerable<MessageTag> tags)
         {
             if (tags == null)
             {
@@ -66,14 +99,14 @@ namespace Pinknose.DistributedWorkers.MessageTags
             }
         }
 
-        protected MessageTagCollection(SerializationInfo info, StreamingContext context)
+        public bool ContainsTag(MessageTag tag)
         {
-            if (info == null)
-            {
-                throw new ArgumentNullException(nameof(info));
-            }
+            return _tags.Any(t => t == tag);
+        }
 
-            _tags = new List<MessageTag>((IEnumerable<MessageTag>)info.GetValue("tags", typeof(MessageTag[])));
+        public IEnumerator<MessageTag> GetEnumerator()
+        {
+            return _tags.GetEnumerator();
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
@@ -92,9 +125,11 @@ namespace Pinknose.DistributedWorkers.MessageTags
             return tags1;
         }
 
-        public bool ContainsTag(MessageTag tag)
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            return _tags.Any(t => t == tag);
+            return _tags.GetEnumerator();
         }
+
+        #endregion Methods
     }
 }

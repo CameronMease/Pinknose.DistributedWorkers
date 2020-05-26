@@ -1,12 +1,33 @@
-﻿using Pinknose.DistributedWorkers.Exceptions;
+﻿///////////////////////////////////////////////////////////////////////////////////
+// MIT License
+//
+// Copyright(c) 2020 Cameron Mease
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////
+
+using Pinknose.DistributedWorkers.Exceptions;
 using Pinknose.DistributedWorkers.Messages;
 using Pinknose.Utilities;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,19 +38,28 @@ namespace Pinknose.DistributedWorkers.MessageQueues
     /// </summary>
     public class ReadableMessageQueue : MessageQueue
     {
+        #region Fields
+
+        private bool autoAcknowledgeMessages = false;
+        private CancellationTokenSource cancellationTokenSource;
+        private bool disposedValue = false;
         private bool fullConsumeActive = false;
         private bool limitedConsumeActive = false;
-        private bool autoAcknowledgeMessages = false;
-
+        private CancellationToken limitedConsumeCancellationToken;
         private SimpleCountingSemaphore limitedConsumeSempahore = null;
         private Task limitedConsumeTask = null;
-        private CancellationToken limitedConsumeCancellationToken;
 
-        private CancellationTokenSource cancellationTokenSource;
+        #endregion Fields
+
+        #region Events
+
+        public event EventHandler<AsynchronousExceptionEventArgs> AsynchronousException;
 
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
 
-        public event EventHandler<AsynchronousExceptionEventArgs> AsynchronousException;
+        #endregion Events
+
+        #region Methods
 
         /// <summary>
         /// Begin consuming messages as they come in (not rate limited).
@@ -47,7 +77,6 @@ namespace Pinknose.DistributedWorkers.MessageQueues
             var consumer = new EventingBasicConsumer(Channel);
             consumer.Received += Consumer_Received;
             Channel.BasicConsume(this.Name, autoAcknowledge, consumer);
-
         }
 
         /// <summary>
@@ -81,8 +110,16 @@ namespace Pinknose.DistributedWorkers.MessageQueues
 
             limitedConsumeTask = new Task(RunLimitedConsumeTask, limitedConsumeCancellationToken);
 
-
             limitedConsumeTask.Start();
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
         }
 
         public void StopConsume()
@@ -90,35 +127,34 @@ namespace Pinknose.DistributedWorkers.MessageQueues
             //TODO: Add code here!
         }
 
-        /// <summary>
-        /// This task runs continuously, waiting for new messages.  The task will pend on a semaphore when
-        /// the maximum number of active messages has been reached.
-        /// </summary>
-        private void RunLimitedConsumeTask()
+        protected virtual void Dispose(bool disposing)
         {
-            while (true)
+            if (!disposedValue)
             {
-                limitedConsumeSempahore.Take();
-
-                BasicGetResult result;
-
-                do
+                if (disposing)
                 {
-                    result = Channel.BasicGet(queue: Name, autoAck: autoAcknowledgeMessages);
+                    // TODO: dispose managed state (managed objects).
+                    cancellationTokenSource?.Dispose();
+                    limitedConsumeSempahore?.Dispose();
+                }
 
-                    if (result == null)
-                    {
-                        // Wait before checking again.
-                        //TODO: Not the smartest way to do this.  Is there a better way?
-                        Thread.Sleep(1000);
-                    }
-                } while (result == null);
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
 
-                var wrapper = MessageEnvelope.Deserialize(result.Body.ToArray(), result, this.ParentMessageClient);
+                disposedValue = true;
+            }
+        }
 
-                //MessageBase message = MessageBase.Deserialize(wrapper, result, this.ParentMessageClient);
-
+        private void Consumer_Received(object sender, BasicDeliverEventArgs e)
+        {
+            try
+            {
+                var wrapper = MessageEnvelope.Deserialize(e.Body.ToArray(), e, this.ParentMessageClient);
                 FireMessageReceivedEvent(wrapper);
+            }
+            catch (Exception ex)
+            {
+                AsynchronousException?.Invoke(this, new AsynchronousExceptionEventArgs(ex));
             }
         }
 
@@ -156,55 +192,46 @@ namespace Pinknose.DistributedWorkers.MessageQueues
             task.Start();
         }
 
-        private void Consumer_Received(object sender, BasicDeliverEventArgs e)
+        /// <summary>
+        /// This task runs continuously, waiting for new messages.  The task will pend on a semaphore when
+        /// the maximum number of active messages has been reached.
+        /// </summary>
+        private void RunLimitedConsumeTask()
         {
-            try
+            while (true)
             {
-                var wrapper = MessageEnvelope.Deserialize(e.Body.ToArray(), e, this.ParentMessageClient);
+                limitedConsumeSempahore.Take();
+
+                BasicGetResult result;
+
+                do
+                {
+                    result = Channel.BasicGet(queue: Name, autoAck: autoAcknowledgeMessages);
+
+                    if (result == null)
+                    {
+                        // Wait before checking again.
+                        //TODO: Not the smartest way to do this.  Is there a better way?
+                        Thread.Sleep(1000);
+                    }
+                } while (result == null);
+
+                var wrapper = MessageEnvelope.Deserialize(result.Body.ToArray(), result, this.ParentMessageClient);
+
+                //MessageBase message = MessageBase.Deserialize(wrapper, result, this.ParentMessageClient);
+
                 FireMessageReceivedEvent(wrapper);
             }
-            catch (Exception ex)
-            {
-                AsynchronousException?.Invoke(this, new AsynchronousExceptionEventArgs(ex));
-            }
         }
 
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        #endregion Methods
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects).
-                    cancellationTokenSource?.Dispose();
-                    limitedConsumeSempahore?.Dispose();
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // TODO: set large fields to null.
-
-                disposedValue = true;
-            }
-        }
-
+        // To detect redundant calls
         // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
         // ~ReadableMessageQueue()
         // {
         //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
         //   Dispose(false);
         // }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
-            // GC.SuppressFinalize(this);
-        }
-        #endregion
     }
 }

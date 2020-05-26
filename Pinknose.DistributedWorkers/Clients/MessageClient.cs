@@ -1,28 +1,44 @@
-﻿using EasyNetQ.Management.Client.Model;
-using Newtonsoft.Json.Serialization;
+﻿///////////////////////////////////////////////////////////////////////////////////
+// MIT License
+//
+// Copyright(c) 2020 Cameron Mease
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////
+
 using Pinknose.DistributedWorkers.Extensions;
 using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.Messages;
 using Pinknose.DistributedWorkers.MessageTags;
 using Pinknose.Utilities;
-using RabbitMQ.Client;
 using Serilog;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pinknose.DistributedWorkers.Clients
 {
     public sealed class MessageClient : MessageClientBase<MessageQueue>
     {
+        #region Fields
+
         private bool clientServerHandshakeComplete = false;
         //private string serverName = "server";
-
 
         private ReusableThreadSafeTimer serverHeartbeatTimer = new ReusableThreadSafeTimer()
         {
@@ -30,27 +46,37 @@ namespace Pinknose.DistributedWorkers.Clients
             AutoReset = false
         };
 
+        #endregion Fields
+
+        #region Constructors
 
         public MessageClient(MessageClientInfo clientInfo, MessageClientInfo serverInfo, string rabbitMqServerHostName, string userName, string password) :
             base(clientInfo, rabbitMqServerHostName, userName, password)
         {
-
-
             this.PublicKeystore.Add(serverInfo);
         }
+
+        #endregion Constructors
+
+        #region Properties
+
+        private ReadableMessageQueue DedicatedQueue { get; set; }
+
+        #endregion Properties
+
+        #region Methods
 
         public void Connect(TimeSpan timeout, params MessageTag[] subscriptionTags) => Connect(timeout, new MessageTagCollection(subscriptionTags));
 
         public void Connect(TimeSpan timeout, MessageTagCollection subscriptionTags)
         {
-
             //TODO: Add subscription of broadcast tags
 
             SetupConnections(timeout, subscriptionTags);
 
             DedicatedQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, BroadcastExchangeName, DedicatedQueueName);
             DedicatedQueue.MessageReceived += DedicatedQueue_MessageReceived;
-            DedicatedQueue.AsynchronousException += (sender, eventArgs) =>FireAsynchronousExceptionEvent(this, eventArgs);
+            DedicatedQueue.AsynchronousException += (sender, eventArgs) => FireAsynchronousExceptionEvent(this, eventArgs);
 
             DedicatedQueue.BeginFullConsume(true);
 
@@ -60,7 +86,7 @@ namespace Pinknose.DistributedWorkers.Clients
             var result = this.WriteToServer(message, (int)timeout.TotalMilliseconds, EncryptionOption.None).Result;
 
             //var result = this.WriteToServer(message, out response, out rawResponse, (int)timeout.TotalMilliseconds);
-            
+
             if (result.CallResult == RpcCallResult.Timeout)
             {
                 throw new ConnectionException("Timeout trying to communicate with the server.");
@@ -98,24 +124,12 @@ namespace Pinknose.DistributedWorkers.Clients
                 serverHeartbeatTimer.Start();
             }
 
-
-
-            IsConnected = true; 
+            IsConnected = true;
         }
 
         public override void Disconnect()
         {
             throw new NotImplementedException();
-        }
-
-        private void ServerHeartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            Log.Warning("Server timeout.");
-        }
-
-        protected sealed override void SendHeartbeat()
-        {
-            //todo: reenable  this.WriteRpcCallNoWait(new HeartbeatMessage(false));
         }
 
         public async Task<RpcCallWaitInfo> WriteToServer(MessageBase message, int waitTime, EncryptionOption encryptionOptions)
@@ -132,8 +146,6 @@ namespace Pinknose.DistributedWorkers.Clients
                 encryptionOptions);
         }
 
-
-
         public void WriteToServerNoWait(MessageBase message, EncryptionOption encryptionOptions)
         {
             WriteToClientNoWait(
@@ -142,11 +154,10 @@ namespace Pinknose.DistributedWorkers.Clients
                 encryptionOptions);
         }
 
-        
-
-        
-
-        private ReadableMessageQueue DedicatedQueue { get; set; }
+        protected sealed override void SendHeartbeat()
+        {
+            //todo: reenable  this.WriteRpcCallNoWait(new HeartbeatMessage(false));
+        }
 
         private void DedicatedQueue_MessageReceived(object sender, MessageReceivedEventArgs e)
         {
@@ -156,11 +167,11 @@ namespace Pinknose.DistributedWorkers.Clients
 
             if (e.MessageEnevelope.BasicProperties.CorrelationId != null &&
                 rpcCallWaitInfo.ContainsKey(e.MessageEnevelope.BasicProperties.CorrelationId))
-            { 
+            {
                 var waitInfo = rpcCallWaitInfo[e.MessageEnevelope.BasicProperties.CorrelationId];
                 waitInfo.ResponseMessageEnvelope = e.MessageEnevelope;
                 //waitInfo.RawResponse = e.RawData;
-                waitInfo.WaitHandle.Set();           
+                waitInfo.WaitHandle.Set();
             }
             else if (e.MessageEnevelope.SignatureVerificationStatus == SignatureVerificationStatus.SignatureValid)
             {
@@ -198,6 +209,13 @@ namespace Pinknose.DistributedWorkers.Clients
             {
                 throw new Exception();
             }
-        }        
+        }
+
+        private void ServerHeartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            Log.Warning("Server timeout.");
+        }
+
+        #endregion Methods
     }
 }
