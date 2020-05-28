@@ -1,0 +1,6 @@
+var namespace_pinknose_1_1_distributed_workers_1_1_configuration =
+[
+    [ "MessageClientConfiguration", "class_pinknose_1_1_distributed_workers_1_1_configuration_1_1_message_client_configuration.html", "class_pinknose_1_1_distributed_workers_1_1_configuration_1_1_message_client_configuration" ],
+    [ "MessageClientConfigurationBase", "class_pinknose_1_1_distributed_workers_1_1_configuration_1_1_message_client_configuration_base.html", null ],
+    [ "MessageServerConfiguration", "class_pinknose_1_1_distributed_workers_1_1_configuration_1_1_message_server_configuration.html", "class_pinknose_1_1_distributed_workers_1_1_configuration_1_1_message_server_configuration" ]
+];

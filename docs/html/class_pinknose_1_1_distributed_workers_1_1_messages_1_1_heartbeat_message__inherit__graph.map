@@ -1,0 +1,4 @@
+<map id="Pinknose.DistributedWorkers.Messages.HeartbeatMessage" name="Pinknose.DistributedWorkers.Messages.HeartbeatMessage">
+<area shape="rect" id="node1" title=" " alt="" coords="5,204,200,296"/>
+<area shape="rect" id="node2" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_base.html" title="A message which is passed between client and server." alt="" coords="7,5,198,156"/>
+</map>

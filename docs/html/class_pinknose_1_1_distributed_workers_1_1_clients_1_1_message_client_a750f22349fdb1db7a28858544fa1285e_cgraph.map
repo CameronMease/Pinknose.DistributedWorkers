@@ -1,0 +1,8 @@
+<map id="Pinknose.DistributedWorkers.Clients.MessageClient.Connect" name="Pinknose.DistributedWorkers.Clients.MessageClient.Connect">
+<area shape="rect" id="node1" title=" " alt="" coords="5,145,209,186"/>
+<area shape="rect" id="node2" href="$class_pinknose_1_1_distributed_workers_1_1_message_queues_1_1_readable_message_queue.html#a4794a515329eccd4a24cccc81e45bedd" title="Begin consuming messages as they come in (not rate limited)." alt="" coords="257,5,531,61"/>
+<area shape="rect" id="node3" href="$class_pinknose_1_1_distributed_workers_1_1_clients_1_1_message_client_base.html#ac1d7f74700056901cf455a2d3e0a0bd2" title=" " alt="" coords="269,86,519,157"/>
+<area shape="rect" id="node4" href="$class_pinknose_1_1_distributed_workers_1_1_clients_1_1_message_client_base.html#af87b6b124d241c687ba271dec13a595e" title=" " alt="" coords="269,181,519,237"/>
+<area shape="rect" id="node5" href="$class_pinknose_1_1_distributed_workers_1_1_clients_1_1_message_client.html#ad34d844f8b9bbd1d2a29d0f699ffb981" title=" " alt="" coords="275,262,513,303"/>
+<area shape="rect" id="node6" href="$class_pinknose_1_1_distributed_workers_1_1_clients_1_1_message_client_base.html#abed3275764e2fbcd3dfaaa9bf4c301fd" title=" " alt="" coords="579,255,801,311"/>
+</map>

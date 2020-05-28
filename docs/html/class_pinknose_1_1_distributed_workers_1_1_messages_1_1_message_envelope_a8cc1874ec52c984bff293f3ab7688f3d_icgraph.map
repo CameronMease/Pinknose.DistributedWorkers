@@ -1,0 +1,5 @@
+<map id="Pinknose.DistributedWorkers.Messages.MessageEnvelope.WrapMessage" name="Pinknose.DistributedWorkers.Messages.MessageEnvelope.WrapMessage">
+<area shape="rect" id="node1" title=" " alt="" coords="327,53,605,94"/>
+<area shape="rect" id="node2" href="$class_pinknose_1_1_distributed_workers_1_1_clients_1_1_message_client_base.html#afcd53706f33c64b117ac63c4f9ac620a" title="Sends the message to all clients." alt="" coords="5,5,279,61"/>
+<area shape="rect" id="node3" href="$class_pinknose_1_1_distributed_workers_1_1_message_queues_1_1_message_queue.html#afde0d3f338295d6a1d64f8af9df788f2" title=" " alt="" coords="7,85,277,141"/>
+</map>

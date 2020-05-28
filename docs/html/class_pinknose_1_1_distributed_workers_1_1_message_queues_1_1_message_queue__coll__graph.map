@@ -1,0 +1,4 @@
+<map id="Pinknose.DistributedWorkers.MessageQueues.MessageQueue" name="Pinknose.DistributedWorkers.MessageQueues.MessageQueue">
+<area shape="rect" id="node1" title="Abstraction of a RabbitMQ queue. This message queue can be written to, but cannot be read from." alt="" coords="5,131,225,457"/>
+<area shape="rect" id="node2" title=" " alt="" coords="71,5,160,83"/>
+</map>

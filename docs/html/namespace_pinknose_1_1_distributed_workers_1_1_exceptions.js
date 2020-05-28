@@ -1,0 +1,4 @@
+var namespace_pinknose_1_1_distributed_workers_1_1_exceptions =
+[
+    [ "AsynchronousExceptionEventArgs", "class_pinknose_1_1_distributed_workers_1_1_exceptions_1_1_asynchronous_exception_event_args.html", "class_pinknose_1_1_distributed_workers_1_1_exceptions_1_1_asynchronous_exception_event_args" ]
+];
