@@ -1,7 +1,7 @@
 # Pinknose.DistributedWorkers
 *Simple and Secure application messaging*
 
-A library for creating distributed processing applications.  It uses a client/server architecture where the server manages the work that the clients will do.  RabbitMQ is used for client/server communication.
+A library for creating distributed applications.  It uses a client/server architecture where the server manages the work that the clients will do.  RabbitMQ is used for client/server communication.
 ## Who should use this?
 Anyone who:
 * Likes to work in C#
