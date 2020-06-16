@@ -23,10 +23,13 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 using Pinknose.DistributedWorkers.Clients;
+using Pinknose.DistributedWorkers.MessageTags;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Pinknose.DistributedWorkers.Messages
@@ -74,6 +77,8 @@ namespace Pinknose.DistributedWorkers.Messages
         public string RoutingKey { get; private set; }
         public string SenderName { get; private set; }
         public SignatureVerificationStatus SignatureVerificationStatus { get; private set; }
+
+        public MessageTag[] Tags { get; private set; }
 
         #endregion Properties
 
@@ -170,7 +175,7 @@ namespace Pinknose.DistributedWorkers.Messages
                 throw new ArgumentNullException(nameof(e));
             }
 
-            return Deserialize(
+            var envelope = Deserialize(
                 bytes,
                 e.Exchange,
                 e.DeliveryTag,
@@ -178,6 +183,8 @@ namespace Pinknose.DistributedWorkers.Messages
                 e.RoutingKey,
                 e.BasicProperties,
                 messageClient);
+
+            return envelope;
         }
 
         internal static MessageEnvelope Deserialize(byte[] bytes, BasicGetResult result, MessageClientBase messageClient)
@@ -187,7 +194,7 @@ namespace Pinknose.DistributedWorkers.Messages
                 throw new ArgumentNullException(nameof(result));
             }
 
-            return Deserialize(
+            var envelope = Deserialize(
                 bytes,
                 result.Exchange,
                 result.DeliveryTag,
@@ -195,6 +202,8 @@ namespace Pinknose.DistributedWorkers.Messages
                 result.RoutingKey,
                 result.BasicProperties,
                 messageClient);
+
+            return envelope;
         }
 
         /// <summary>
@@ -237,14 +246,14 @@ namespace Pinknose.DistributedWorkers.Messages
 
                 if (signatureLength != SignatureLengthConst)
                 {
-                    throw new NotImplementedException();
+                    throw new NotImplementedException("Signautre length is invalid.");
                 }
 
                 envelope.SignatureVerificationStatus = messageClient.ValidateSignature(bytes[..^signatureLength], signature, envelope.SenderName);
 
                 if (envelope.SignatureVerificationStatus != SignatureVerificationStatus.SignatureValid)
                 {
-                    throw new NotImplementedException();
+                    throw new NotImplementedException(envelope.SignatureVerificationStatus.ToString());
                 }
 
                 // Get the bytes representing the message
@@ -279,6 +288,18 @@ namespace Pinknose.DistributedWorkers.Messages
             envelope.Redelivered = redelivered;
             envelope.RoutingKey = routingKey;
             envelope.BasicProperties = basicProperties;
+
+            if (basicProperties != null && basicProperties.Headers != null)
+            {
+                List<MessageTag> tags = new List<MessageTag>();
+
+                foreach (var key in basicProperties.Headers.Keys)
+                {
+                    tags.Add(MessageTag.DemangleTag(key));
+                }
+
+                envelope.Tags = tags.ToArray();
+            }
 
             return envelope;
         }
