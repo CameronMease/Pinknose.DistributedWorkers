@@ -40,7 +40,7 @@ namespace DistributedWorkersTestApp
 
         #region Properties
 
-        public override Guid MessageTypeGuid => new Guid("{2DD8CDA5-FC5F-41B7-BD01-7F994EC6D257}");
+        //public override Guid MessageTypeGuid => new Guid("{2DD8CDA5-FC5F-41B7-BD01-7F994EC6D257}");
 
         #endregion Properties
     }

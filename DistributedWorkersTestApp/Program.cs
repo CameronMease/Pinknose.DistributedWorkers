@@ -24,6 +24,7 @@
 
 using Pinknose.DistributedWorkers.Clients;
 using Pinknose.DistributedWorkers.Configuration;
+using Pinknose.DistributedWorkers.Extensions;
 using Pinknose.DistributedWorkers.Logging;
 using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.MessageTags;
@@ -47,25 +48,44 @@ namespace DistributedWorkersTestApp
 
             var duhh1 = AesCng.Create();
 
+
+            CngProvider provider = new CngProvider("dumdum");
+
+
+            var random = new Random();
+
+            UInt32 key = random.NextUInt32();
+            UInt32 iv = random.NextUInt32();
+            (var cipherText, var signature) = SimpleCBC.Encode("This is a test!!!!", key, iv);
+
+            var sig = BitConverter.GetBytes(signature);
+
+            var duhh = System.Text.Encoding.UTF8.GetString(cipherText);
+            var message = SimpleCBC.Decode(cipherText, key, iv);
+
+
+            var errorTag = new MessageTagValue("Severity", "Error");
+            var infoTag = new MessageTagValue("Severity", "Info");
+            var debugTag = new MessageTagValue("Severity", "Debug");
+
+
+
+
             using var serverInfo = MessageClientInfo.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
             using var client1Info = MessageClientInfo.CreateClientInfo(systemName, "client1", ECDiffieHellmanCurve.P256);
             using var client2Info = MessageClientInfo.CreateClientInfo(systemName, "client2", ECDiffieHellmanCurve.P256);
             using var client3Info = MessageClientInfo.CreateClientInfo(systemName, "client3", ECDiffieHellmanCurve.P256);
 
-            //serverInfo.GenerateSymmetricKey(client1Info.ECKey);
-            //client1Info.GenerateSymmetricKey(serverInfo.ECKey);
 
-            //Console.WriteLine(serverInfo.SymmetricKey.ToHashedHexString());
-            //Console.WriteLine(client1Info.SymmetricKey.ToHashedHexString());
-
-
-            var server = new MessageServerConfiguration()
+            var server = new MessageServerConfigurationBuilder()
                 .Credentials("guest", "guest")
                 .RabbitMQServer(rabbitMQServerName)
                 .ServerInfo(serverInfo)
                 .AddClientInfo(client1Info)
                 .AddClientInfo(client2Info)
                 .AddClientInfo(client3Info)
+                .AutoDeleteQueuesOnClose(true)
+                .QueuesAreDurable(false)
                 .CreateMessageServer();
 
  
@@ -83,7 +103,7 @@ namespace DistributedWorkersTestApp
 
                 string tag = val % 2 == 0 ? "even" : "odd";
 
-                server.WriteToSubscriptionQueues(message, EncryptionOption.EncryptWithSystemSharedKey, new MessageTagValue("duhh", tag));
+                server.WriteToSubscriptionQueues(message, true, new MessageTagValue("duhh", tag), errorTag, infoTag);
                 val++;
 
                 //server.BroacastToAllClients(message);
@@ -106,11 +126,13 @@ namespace DistributedWorkersTestApp
             var even = new MessageTagValue("duhh", "even");
             var never = new MessageTagValue("duhh", "never");
 
-            MessageClient client1 = new MessageClientConfiguration()
+            MessageClient client1 = new MessageClientConfigurationBuilder()
                 .Credentials("guest", "guest")
                 .RabbitMQServer(rabbitMQServerName)
                 .ServerInfo(serverInfo)
                 .ClientInfo(client1Info)
+                .AutoDeleteQueuesOnClose(true)
+                .QueuesAreDurable(false)
                 .CreateMessageClient();
 
             client1.AsynchronousException += Client_AsynchronousException;
@@ -127,11 +149,13 @@ namespace DistributedWorkersTestApp
             client1.Connect(TimeSpan.FromSeconds(10), odd);
             client1.BeginFullWorkConsume(true);
 
-            MessageClient client2 = new MessageClientConfiguration()
+            MessageClient client2 = new MessageClientConfigurationBuilder()
                 .Credentials("guest", "guest")
                 .RabbitMQServer(rabbitMQServerName)
                 .ServerInfo(serverInfo)
                 .ClientInfo(client2Info)
+                .AutoDeleteQueuesOnClose(true)
+                .QueuesAreDurable(false)
                 .CreateMessageClient();
 
             client2.AsynchronousException += Client_AsynchronousException;
@@ -154,6 +178,8 @@ namespace DistributedWorkersTestApp
                 .RabbitMQServer(rabbitMQServerName)
                 .ServerInfo(serverInfo)
                 .ClientInfo(client3Info)
+                .AutoDeleteQueuesOnClose(true)
+                .QueuesAreDurable(false)
                 .CreateMessageClient();
             client3.MessageReceived += (sender, e) =>
             {
