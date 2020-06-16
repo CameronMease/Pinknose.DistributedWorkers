@@ -56,7 +56,7 @@ namespace Pinknose.DistributedWorkers.Logging
                 logEvent);
 
             //TODO: Need to be able to set encryption type
-            messageClient.WriteToSubscriptionQueues(message, EncryptionOption.None);
+            messageClient.WriteToSubscriptionQueues(message, false);
         }
 
         #endregion Methods
