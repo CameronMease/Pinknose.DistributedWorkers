@@ -55,7 +55,7 @@ public abstract class MessageClientBase<TServerQueue> : MessageClientBase where 
     {
         base.SetupConnections(timeout, subscriptionTags);
 
-        ServerQueue = MessageQueue.CreateMessageQueue<TServerQueue>(this, Channel, ClientName, ServerQueueName);
+        ServerQueue = MessageQueue.CreateMessageQueue<TServerQueue>(this, Channel, ClientName, ServerQueueName, this.QueuesAreDurable, this.AutoDeleteQueuesOnClose);
     }
 
     #endregion Methods

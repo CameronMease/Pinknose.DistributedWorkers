@@ -193,6 +193,16 @@ namespace Pinknose.DistributedWorkers.Clients
             // TODO: Re-enabled BroacastToAllClients(message);
         }
 
+        /// <summary>
+        /// Connects the server's queues to the RabbitMQ server and begins processing of messages.
+        /// </summary>
+        /// <param name="timeout">The maximum amount of milliseconds to wait for a successful connection.  An exception occurs upon timeout.</param>
+        public void Connect(int timeout) => Connect(TimeSpan.FromMilliseconds(timeout));
+
+        /// <summary>
+        /// Connects the server's queues to the RabbitMQ server and begins processing of messages.
+        /// </summary>
+        /// <param name="timeout">The maximum amount of time to wait for a successful connection.  An exception occurs upon timeout.</param>
         public void Connect(TimeSpan timeout)
         {
             SetupConnections(timeout, new MessageTagCollection());

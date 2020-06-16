@@ -76,6 +76,9 @@ namespace Pinknose.DistributedWorkers.Clients
             AutoReset = true
         };
 
+        public bool QueuesAreDurable { get; set; } = true;
+        public bool AutoDeleteQueuesOnClose { get; set; } = false;
+
         #endregion Fields
 
         #region Constructors
@@ -139,7 +142,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
         protected IModel Channel { get; private set; }
 
-        protected MessageClientInfo ClientInfo { get; private set; }
+        public MessageClientInfo ClientInfo { get; private set; }
 
         protected string DedicatedQueueName => NameHelper.GetDedicatedQueueName(SystemName, ClientName);
 
@@ -156,6 +159,7 @@ namespace Pinknose.DistributedWorkers.Clients
         protected ReadableMessageQueue WorkQueue { get; private set; }
 
         protected string WorkQueueName => NameHelper.GetWorkQueueName(SystemName);
+
 
         #endregion Properties
 
@@ -211,37 +215,59 @@ namespace Pinknose.DistributedWorkers.Clients
             // GC.SuppressFinalize(this);
         }
 
-        public async Task<RpcCallWaitInfo> WriteToClient(MessageClientInfo clientInfo, MessageBase message, int waitTime, EncryptionOption encryptionOptions)
+        /// <summary>
+        /// Async method that writes to a client and returns a task that waits for the result.
+        /// </summary>
+        /// <param name="clientInfo"></param>
+        /// <param name="message"></param>
+        /// <param name="waitTime"></param>
+        /// <param name="encryptionOptions"></param>
+        /// <returns></returns>
+        public async Task<RpcCallWaitInfo> WriteToClient(MessageClientInfo clientInfo, MessageBase message, int waitTime, bool encryptMessage)
+        {
+            return await WriteToClient(clientInfo.Name, message, waitTime, encryptMessage).ConfigureAwait(false);
+        }
+
+        public void WriteToClientNoWait(MessageClientInfo clientInfo, MessageBase message, bool encryptMessage)
         {
             if (clientInfo == null)
             {
                 throw new ArgumentNullException(nameof(clientInfo));
             }
 
-            return await WriteToClient(clientInfo.Name, message, waitTime, encryptionOptions).ConfigureAwait(false);
+            WriteToClientNoWait(clientInfo.Name, message, encryptMessage);
         }
 
-        public void WriteToClientNoWait(MessageClientInfo clientInfo, MessageBase message, EncryptionOption encryptionOptions)
+        protected void WriteToClientNoWait(string clientName, MessageBase message, bool encryptMessage)
         {
-            if (clientInfo == null)
+            if (message == null)
             {
-                throw new ArgumentNullException(nameof(clientInfo));
+                throw new ArgumentNullException(nameof(message));
             }
 
-            WriteToClientNoWait(clientInfo.Name, message, encryptionOptions);
+            var encryptionOption = encryptMessage switch
+            {
+                true => EncryptionOption.EncryptWithPrivateKey,
+                false => EncryptionOption.None
+            };
+
+
+            var formattedMessage = ConfigureUnicastMessageForSend(message, clientName, encryptionOption);
+
+            Channel.BasicPublish(
+                exchange: "",
+                routingKey: NameHelper.GetDedicatedQueueName(SystemName, clientName),
+                basicProperties: formattedMessage.BasicProperties,
+                formattedMessage.SignedMessage);
         }
 
-        public void WriteToSubscriptionQueues(MessageBase message, EncryptionOption encryptionOption, params MessageTag[] tags) =>
-            WriteToSubscriptionQueues(message, encryptionOption, new MessageTagCollection(tags));
+        public void WriteToSubscriptionQueues(MessageBase message, bool encryptMessage, params MessageTag[] tags) =>
+            WriteToSubscriptionQueues(message, encryptMessage, new MessageTagCollection(tags));
 
-        public void WriteToSubscriptionQueues(MessageBase message, EncryptionOption encryptionOption, MessageTagCollection tags)
+        public void WriteToSubscriptionQueues(MessageBase message, bool encryptMessage, MessageTagCollection tags)
         {
-            if (encryptionOption == EncryptionOption.EncryptWithPrivateKey)
-            {
-                //TODO: Add message
-                throw new ArgumentOutOfRangeException(nameof(encryptionOption));
-            }
-            SubscriptionQueue.WriteToBoundExchange(message, encryptionOption, tags);
+
+            SubscriptionQueue.WriteToBoundExchange(message, encryptMessage, tags);
         }
 
         protected (byte[] SignedMessage, IBasicProperties BasicProperties) ConfigureUnicastMessageForSend(MessageBase message, string recipientName, EncryptionOption encryptionOptions)
@@ -301,6 +327,11 @@ namespace Pinknose.DistributedWorkers.Clients
 
         protected virtual void SetupConnections(TimeSpan timeout, MessageTagCollection subscriptionTags)
         {
+            if (subscriptionTags is null)
+            {
+                throw new ArgumentNullException(nameof(subscriptionTags));
+            }
+
             ConnectionFactory factory = new ConnectionFactory()
             {
                 HostName = _rabbitMqServerHostName,
@@ -313,7 +344,7 @@ namespace Pinknose.DistributedWorkers.Clients
             connection = factory.CreateConnection();
             Channel = connection.CreateModel();
 
-            WorkQueue = MessageQueue.CreateMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, WorkQueueName);
+            WorkQueue = MessageQueue.CreateMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, WorkQueueName, this.QueuesAreDurable, this.AutoDeleteQueuesOnClose);
             WorkQueue.MessageReceived += Queue_MessageReceived;
             WorkQueue.AsynchronousException += (sender, eventArgs) => this.AsynchronousException?.Invoke(this, eventArgs);
 
@@ -333,10 +364,7 @@ namespace Pinknose.DistributedWorkers.Clients
                 true,
                 new Dictionary<string, object>());
 
-            var tempTags = subscriptionTags.ToList();
-            tempTags.Add(SystemTags.BroadcastTag);
-
-            SubscriptionQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, SubscriptionExchangeName, SubscriptionQueueName, tempTags.ToArray());
+            SubscriptionQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, SubscriptionExchangeName, SubscriptionQueueName, this.QueuesAreDurable, this.AutoDeleteQueuesOnClose,  subscriptionTags);
             SubscriptionQueue.MessageReceived += Queue_MessageReceived;
             SubscriptionQueue.AsynchronousException += (sender, eventArgs) => FireAsynchronousExceptionEvent(sender, eventArgs);
 
@@ -347,14 +375,28 @@ namespace Pinknose.DistributedWorkers.Clients
             heartbeatTimer.Start();
         }
 
-        protected async Task<RpcCallWaitInfo> WriteToClient(string clientName, MessageBase message, int waitTime, EncryptionOption encryptionOptions)
+        /// <summary>
+        /// Async method that writes to a client and returns a task that waits for the result.
+        /// </summary>
+        /// <param name="clientName"></param>
+        /// <param name="message"></param>
+        /// <param name="waitTime"></param>
+        /// <param name="encryptionOptions"></param>
+        /// <returns></returns>
+        protected async Task<RpcCallWaitInfo> WriteToClient(string clientName, MessageBase message, int waitTime, bool encryptMessage)
         {
             if (message == null)
             {
                 throw new ArgumentNullException(nameof(message));
             }
 
-            var formattedMessage = ConfigureUnicastMessageForSend(message, clientName, encryptionOptions);
+            var encryptionOption = encryptMessage switch
+            {
+                true => EncryptionOption.EncryptWithPrivateKey,
+                false => EncryptionOption.None
+            };
+
+            var formattedMessage = ConfigureUnicastMessageForSend(message, clientName, encryptionOption);
 
             Channel.BasicPublish(
                 exchange: "",
@@ -396,21 +438,7 @@ namespace Pinknose.DistributedWorkers.Clients
             return response;
         }
 
-        protected void WriteToClientNoWait(string clientName, MessageBase message, EncryptionOption encryptionOptions)
-        {
-            if (message == null)
-            {
-                throw new ArgumentNullException(nameof(message));
-            }
-
-            var formattedMessage = ConfigureUnicastMessageForSend(message, clientName, encryptionOptions);
-
-            Channel.BasicPublish(
-                exchange: "",
-                routingKey: NameHelper.GetDedicatedQueueName(SystemName, clientName),
-                basicProperties: formattedMessage.BasicProperties,
-                formattedMessage.SignedMessage);
-        }
+        
 
         private void HeartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {

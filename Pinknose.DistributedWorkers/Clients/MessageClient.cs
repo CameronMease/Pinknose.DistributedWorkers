@@ -66,15 +66,32 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Methods
 
+        /// <summary>
+        /// Connects the server's queues to the RabbitMQ server and begins processing of messages.
+        /// </summary>
+        /// <param name="timeout">The maximum amount of milliseconds to wait for a successful connection.  An exception occurs upon timeout.</param>
+        /// <param name="subscriptionTags"></param>
+        public void Connect(int timeout, params MessageTag[] subscriptionTags) => Connect(TimeSpan.FromMilliseconds(timeout), subscriptionTags);
+
+        /// <summary>
+        /// Connects the server's queues to the RabbitMQ server and begins processing of messages.
+        /// </summary>
+        /// <param name="timeout">The maximum amount of milliseconds to wait for a successful connection.  An exception occurs upon timeout.</param>
+        /// <param name="subscriptionTags"></param>
         public void Connect(TimeSpan timeout, params MessageTag[] subscriptionTags) => Connect(timeout, new MessageTagCollection(subscriptionTags));
 
+        /// <summary>
+        /// Connects the server's queues to the RabbitMQ server and begins processing of messages.
+        /// </summary>
+        /// <param name="timeout">The maximum amount of time to wait for a successful connection.  An exception occurs upon timeout.</param>
+        /// <param name="subscriptionTags"></param>
         public void Connect(TimeSpan timeout, MessageTagCollection subscriptionTags)
         {
             //TODO: Add subscription of broadcast tags
 
             SetupConnections(timeout, subscriptionTags);
 
-            DedicatedQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, BroadcastExchangeName, DedicatedQueueName);
+            DedicatedQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, BroadcastExchangeName, DedicatedQueueName, this.QueuesAreDurable, this.AutoDeleteQueuesOnClose);
             DedicatedQueue.MessageReceived += DedicatedQueue_MessageReceived;
             DedicatedQueue.AsynchronousException += (sender, eventArgs) => FireAsynchronousExceptionEvent(this, eventArgs);
 
@@ -83,7 +100,8 @@ namespace Pinknose.DistributedWorkers.Clients
             // Announce client to server
             ClientAnnounceMessage message = new ClientAnnounceMessage(PublicKeystore.ParentClientInfo.ECKey);
 
-            var result = this.WriteToServer(message, (int)timeout.TotalMilliseconds, EncryptionOption.None).Result;
+            //TODO: Encrypt this?
+            var result = this.WriteToServer(message, (int)timeout.TotalMilliseconds, false).Result;
 
             //var result = this.WriteToServer(message, out response, out rawResponse, (int)timeout.TotalMilliseconds);
 
@@ -132,26 +150,21 @@ namespace Pinknose.DistributedWorkers.Clients
             throw new NotImplementedException();
         }
 
-        public async Task<RpcCallWaitInfo> WriteToServer(MessageBase message, int waitTime, EncryptionOption encryptionOptions)
+        public async Task<RpcCallWaitInfo> WriteToServer(MessageBase message, int waitTime, bool encryptMessage)
         {
-            if (encryptionOptions == EncryptionOption.EncryptWithSystemSharedKey)
-            {
-                throw new ArgumentOutOfRangeException(nameof(encryptionOptions));
-            }
-
             return await WriteToClient(
                 NameHelper.GetServerName(),
                 message,
                 waitTime,
-                encryptionOptions);
+                encryptMessage);
         }
 
-        public void WriteToServerNoWait(MessageBase message, EncryptionOption encryptionOptions)
+        public void WriteToServerNoWait(MessageBase message, bool encryptMessage)
         {
             WriteToClientNoWait(
                 NameHelper.GetServerName(),
                 message,
-                encryptionOptions);
+                encryptMessage);
         }
 
         protected sealed override void SendHeartbeat()
@@ -179,7 +192,9 @@ namespace Pinknose.DistributedWorkers.Clients
                 {
                     Log.Information("Server requested reannouncement of clients.");
                     var message = new ClientAnnounceMessage(PublicKeystore.ParentClientInfo.ECKey);
-                    WriteToServerNoWait(message, EncryptionOption.None);
+
+                    //todo: Encrypt?
+                    WriteToServerNoWait(message, false);
                 }
                 else if (e.MessageEnevelope.GetType() == typeof(HeartbeatMessage))
                 {
