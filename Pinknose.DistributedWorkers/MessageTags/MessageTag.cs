@@ -100,6 +100,25 @@ namespace Pinknose.DistributedWorkers.MessageTags
             return $"{tagName}:{tagValue.ToString().ToLower()}";
         }
 
+        internal static MessageTag DemangleTag(string mangledTag)
+        {
+            string[] values = mangledTag.Split(":");
+
+            if (values.Length != 2)
+            {
+                throw new NotImplementedException();
+            }
+
+            if (string.IsNullOrEmpty(values[1]))
+            {
+                return new MessageTag(values[0]);
+            }
+            else
+            {
+                return new MessageTagValue(values[0], values[1]);
+            }
+        }
+
         internal virtual string GetMangledTagAndValue()
         {
             return MangleTag(this.TagName, "");
