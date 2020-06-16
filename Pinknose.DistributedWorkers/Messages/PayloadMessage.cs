@@ -28,11 +28,11 @@ namespace Pinknose.DistributedWorkers.Messages
 {
     /// <summary>
     /// A message that has a strongly-typed payload.  There are a variety of options for compression or serialization
-    /// of the data.  This is good for payload types that cannot be binary serialized.
+    /// of the payload.  This is good for payload types that cannot be binary serialized.
     /// </summary>
-    /// <typeparam name="TPayload"></typeparam>
+    /// <typeparam name="TPayload">The .NET type of the payload.</typeparam>
     [Serializable]
-    public abstract class PayloadMessage<TPayload> : MessageBase
+    public class PayloadMessage<TPayload> : MessageBase
     {
         #region Constructors
 
