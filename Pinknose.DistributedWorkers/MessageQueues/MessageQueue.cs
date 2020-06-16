@@ -110,6 +110,7 @@ namespace Pinknose.DistributedWorkers.MessageQueues
                 hashedMessage);
         }
 
+        /*
         public void Write(MessageBase message, EncryptionOption encryptionOptions, MessageTagCollection tags)
         {
             Write(message, "", encryptionOptions, tags);
@@ -124,19 +125,20 @@ namespace Pinknose.DistributedWorkers.MessageQueues
 
             Write(message, "", basicProperties, encryptionOptions, tags);
         }
+        */
 
-        public void WriteToBoundExchange(MessageBase message, EncryptionOption encryptionOption, MessageTagCollection tags)
+        public void WriteToBoundExchange(MessageBase message, bool encryptMessage, MessageTagCollection tags)
         {
-            if (encryptionOption == EncryptionOption.EncryptWithPrivateKey)
+            var encryptionOption = encryptMessage switch
             {
-                //TODO: Add message text
-                throw new ArgumentOutOfRangeException(nameof(encryptionOption));
-            }
+                true => EncryptionOption.EncryptWithSystemSharedKey,
+                false => EncryptionOption.None
+            };
 
             Write(message, boundExchangeName, encryptionOption, tags);
         }
 
-        internal static TQueueType CreateExchangeBoundMessageQueue<TQueueType>(MessageClientBase parentMessageClient, IModel channel, string clientName, string exchangeName, string queueName, params MessageTag[] subscriptionTags) where TQueueType : MessageQueue, new()
+        internal static TQueueType CreateExchangeBoundMessageQueue<TQueueType>(MessageClientBase parentMessageClient, IModel channel, string clientName, string exchangeName, string queueName, bool durable, bool autoDelete, params MessageTag[] subscriptionTags) where TQueueType : MessageQueue, new()
         {
             return CreateExchangeBoundMessageQueue<TQueueType>(
                 parentMessageClient,
@@ -144,6 +146,8 @@ namespace Pinknose.DistributedWorkers.MessageQueues
                 clientName,
                 exchangeName,
                 queueName,
+                durable,
+                autoDelete,
                 new MessageTagCollection(subscriptionTags));
         }
 
@@ -153,16 +157,16 @@ namespace Pinknose.DistributedWorkers.MessageQueues
         /// </summary>
         /// <param name="channel"></param>
         /// <param name="queueName"></param>
-        internal static TQueueType CreateExchangeBoundMessageQueue<TQueueType>(MessageClientBase parentMessageClient, IModel channel, string clientName, string exchangeName, string queueName, MessageTagCollection subscriptionTags) where TQueueType : MessageQueue, new()
+        internal static TQueueType CreateExchangeBoundMessageQueue<TQueueType>(MessageClientBase parentMessageClient, IModel channel, string clientName, string exchangeName, string queueName, bool durable, bool autoDelete, MessageTagCollection subscriptionTags) where TQueueType : MessageQueue, new()
         {
             var queue = new TQueueType()
             {
                 Channel = channel,
                 queueInfo = channel.QueueDeclare(
                     queue: queueName,
-                    durable: false,
+                    durable: durable,
                     exclusive: true,
-                    autoDelete: false),
+                    autoDelete: autoDelete),
                 _clientName = clientName,
                 ParentMessageClient = parentMessageClient,
                 boundExchangeName = exchangeName
@@ -189,16 +193,16 @@ namespace Pinknose.DistributedWorkers.MessageQueues
             return queue;
         }
 
-        internal static TQueueType CreateMessageQueue<TQueueType>(MessageClientBase parentMessageClient, IModel channel, string clientName, string queueName) where TQueueType : MessageQueue, new()
+        internal static TQueueType CreateMessageQueue<TQueueType>(MessageClientBase parentMessageClient, IModel channel, string clientName, string queueName, bool durable, bool autoDelete) where TQueueType : MessageQueue, new()
         {
             var queue = new TQueueType()
             {
                 Channel = channel,
                 queueInfo = channel.QueueDeclare(
                     queue: queueName,
-                    durable: false,
+                    durable: durable,
                     exclusive: false,
-                    autoDelete: false),
+                    autoDelete: autoDelete),
                 _clientName = clientName,
                 ParentMessageClient = parentMessageClient
             };
@@ -217,7 +221,7 @@ namespace Pinknose.DistributedWorkers.MessageQueues
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
                 // TODO: set large fields to null.
-                Channel.QueueDelete(Name, true, true);
+                //Channel.QueueDelete(Name, true, true);
 
                 disposedValue = true;
             }
