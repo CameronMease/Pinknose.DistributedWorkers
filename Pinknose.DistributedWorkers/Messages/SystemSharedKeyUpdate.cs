@@ -26,6 +26,9 @@ using System;
 
 namespace Pinknose.DistributedWorkers.Messages
 {
+    /// <summary>
+    /// Message sent from the server to alert clients of a new shared encryption key for the system.
+    /// </summary>
     [Serializable]
     public class SystemSharedKeyUpdate : MessageBase
     {
@@ -46,7 +49,7 @@ namespace Pinknose.DistributedWorkers.Messages
         #region Properties
 
         public byte[] AesKey { get; private set; }
-        public override Guid MessageTypeGuid => new Guid("A3AB5084-18F5-4C7F-922A-FAC79142F605");
+
 
         #endregion Properties
     }

@@ -44,7 +44,7 @@ namespace Pinknose.DistributedWorkers.Messages
         #region Properties
 
         public string MessageText { get; set; }
-        public abstract Guid MessageTypeGuid { get; }
+
         //TODO: How to restrict access to set but not break serialization?
         //public string ClientName { get; internal set; }
 

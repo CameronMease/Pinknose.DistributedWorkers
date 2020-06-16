@@ -41,7 +41,6 @@ namespace Pinknose.DistributedWorkers.Messages
 
         #region Properties
 
-        public override Guid MessageTypeGuid => new Guid("B1C8E58E-DBEB-4D13-98F0-D73D4EE9A643");
         public byte[] PublicKey { get; private set; }
 
         #endregion Properties

@@ -48,8 +48,7 @@ namespace Pinknose.DistributedWorkers.Logging
 
         #region Properties
 
-        public override Guid MessageTypeGuid => new Guid("E29E6A36-7D57-4515-B3CA-0ACF288DF8A9");
-
+     
         #endregion Properties
     }
 }

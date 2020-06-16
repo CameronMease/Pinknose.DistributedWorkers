@@ -42,7 +42,7 @@ namespace Pinknose.DistributedWorkers.Messages
         #region Properties
 
         public MessageClientInfo ClientInfo { get; private set; }
-        public override Guid MessageTypeGuid => new Guid("975E14B4-87B8-4B42-889F-A2E40A521BC6");
+
 
         #endregion Properties
     }

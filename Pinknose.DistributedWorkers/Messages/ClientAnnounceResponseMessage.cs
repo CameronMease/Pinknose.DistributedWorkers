@@ -50,7 +50,6 @@ namespace Pinknose.DistributedWorkers.Messages
 
         #region Properties
 
-        public override Guid MessageTypeGuid => new Guid("6B6B9D9B-2B78-425B-91DE-7FCEFADD757C");
 
         public AnnounceResponse Response { get; private set; }
 
