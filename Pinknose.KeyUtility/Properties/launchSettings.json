@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Pinknose.KeyUtility": {
+      "commandName": "Project",
+      "commandLineArgs": "generate-server -s \"dumdum\" --256"
+    }
+  }
+}
