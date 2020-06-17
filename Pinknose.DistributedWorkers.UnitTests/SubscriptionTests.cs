@@ -94,10 +94,10 @@ namespace Pinknose.DistributedWorkers.UnitTests
 
 
             var message = new StringMessage("Test");
-            server.WriteToSubscriptionQueues(message, EncryptionOption.None, Tag1);
-            server.WriteToSubscriptionQueues(message, EncryptionOption.None, Tag2a);
-            server.WriteToSubscriptionQueues(message, EncryptionOption.None, Tag2b);
-            server.WriteToSubscriptionQueues(message, EncryptionOption.None, Tag3);
+            server.WriteToSubscriptionQueues(message, false, Tag1);
+            server.WriteToSubscriptionQueues(message, false, Tag2a);
+            server.WriteToSubscriptionQueues(message, false, Tag2b);
+            server.WriteToSubscriptionQueues(message, false, Tag3);
 
             Thread.Sleep(1000);
             Assert.IsTrue(gotTag1);
@@ -153,10 +153,10 @@ namespace Pinknose.DistributedWorkers.UnitTests
 
 
             var message = new StringMessage("Test");
-            server.WriteToSubscriptionQueues(message, EncryptionOption.None, Tag1);
-            server.WriteToSubscriptionQueues(message, EncryptionOption.None, Tag2a);
-            server.WriteToSubscriptionQueues(message, EncryptionOption.None, Tag2b);
-            server.WriteToSubscriptionQueues(message, EncryptionOption.None, Tag3);
+            server.WriteToSubscriptionQueues(message, false, Tag1);
+            server.WriteToSubscriptionQueues(message, false, Tag2a);
+            server.WriteToSubscriptionQueues(message, false, Tag2b);
+            server.WriteToSubscriptionQueues(message, false, Tag3);
 
             Thread.Sleep(1000);
             Assert.IsTrue(gotTag1);
@@ -212,10 +212,10 @@ namespace Pinknose.DistributedWorkers.UnitTests
 
 
             var message = new StringMessage("Test");
-            server.WriteToSubscriptionQueues(message, EncryptionOption.None, Tag1);
-            server.WriteToSubscriptionQueues(message, EncryptionOption.None, Tag2a);
-            server.WriteToSubscriptionQueues(message, EncryptionOption.None, Tag2b);
-            server.WriteToSubscriptionQueues(message, EncryptionOption.None, Tag3);
+            server.WriteToSubscriptionQueues(message, false, Tag1);
+            server.WriteToSubscriptionQueues(message, false, Tag2a);
+            server.WriteToSubscriptionQueues(message, false, Tag2b);
+            server.WriteToSubscriptionQueues(message, false, Tag3);
 
             Thread.Sleep(1000);
             Assert.IsTrue(gotTag1);
