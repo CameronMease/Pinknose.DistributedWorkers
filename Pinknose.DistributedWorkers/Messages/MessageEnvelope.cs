@@ -29,18 +29,13 @@ using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Pinknose.DistributedWorkers.Messages
 {
     public class MessageEnvelope
     {
-
         #region Fields
-
-        //TODO:  How to calculate this?
-        private const int SignatureLengthConst = 132;
 
         private static readonly int isClientAnnounceMask = BitVector32.CreateMask();
         private static readonly int isClientAnnounceResponseMask = BitVector32.CreateMask(isClientAnnounceMask);
@@ -50,7 +45,7 @@ namespace Pinknose.DistributedWorkers.Messages
         private static readonly BitVector32.Section encryptionOptionSection = BitVector32.CreateSection(7, ivLengthSection);
         private static readonly BitVector32.Section senderNameLengthSection = BitVector32.CreateSection(255, encryptionOptionSection);
         private static readonly BitVector32.Section sharedKeyIdSection = BitVector32.CreateSection(255, senderNameLengthSection);
-        
+
         private EncryptionOption _encryptionOption;
         private MessageClientBase _messageClient = null;
 
@@ -131,7 +126,7 @@ namespace Pinknose.DistributedWorkers.Messages
                 (messageBytes, iv, sharedKeyId) = this._messageClient.EncryptDataWithSystemSharedKey(messageBytes);
             }
 
-            int totalBufferSize = 8 + senderBytes.Length + messageBytes.Length + iv.Length + SignatureLengthConst;
+            int totalBufferSize = 8 + senderBytes.Length + messageBytes.Length + iv.Length + _messageClient.SignatureLength;
 
             byte[] bytes = new byte[totalBufferSize];
 
@@ -143,7 +138,7 @@ namespace Pinknose.DistributedWorkers.Messages
 
             // Load numbers
             var numbers = new BitVector32(0);
-            numbers[signatureLengthSection] = SignatureLengthConst;
+            numbers[signatureLengthSection] = _messageClient.SignatureLength;
             numbers[encryptionOptionSection] = (int)_encryptionOption;
             numbers[senderNameLengthSection] = SenderName.Length;
             numbers[ivLengthSection] = iv.Length;
@@ -155,9 +150,9 @@ namespace Pinknose.DistributedWorkers.Messages
             iv.CopyTo(bytes, 8 + senderBytes.Length);
             messageBytes.CopyTo(bytes, 8 + senderBytes.Length + iv.Length);
 
-            byte[] signature = _messageClient.SignData(bytes, 0, totalBufferSize - SignatureLengthConst);
+            byte[] signature = _messageClient.SignData(bytes, 0, totalBufferSize - _messageClient.SignatureLength);
 
-            if (signature.Length != SignatureLengthConst)
+            if (signature.Length != _messageClient.SignatureLength)
             {
                 // Made bad assumption of signature length!
                 throw new NotImplementedException();
@@ -244,7 +239,7 @@ namespace Pinknose.DistributedWorkers.Messages
 
                 var signature = bytes[^signatureLength..];
 
-                if (signatureLength != SignatureLengthConst)
+                if (signatureLength != messageClient.SignatureLength)
                 {
                     throw new NotImplementedException("Signautre length is invalid.");
                 }
@@ -305,6 +300,5 @@ namespace Pinknose.DistributedWorkers.Messages
         }
 
         #endregion Methods
-
     }
 }
