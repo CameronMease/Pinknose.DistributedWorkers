@@ -78,14 +78,10 @@ namespace DistributedWorkersTestApp
             //using var client3Info = MessageClientInfo.CreateClientInfo(systemName, "client3", ECDiffieHellmanCurve.P256);
 
             using var serverPublicInfo =  MessageClientInfo.Import(@"keys\system-server.pub");
-            using var serverPrivateInfo =  MessageClientInfo.Import(@"keys\system-server.priv");
-
-
+            using var serverPrivateInfo =  MessageClientInfo.Import(@"keys\system-server.priv", "monkey123");
 
             using var client1PublicInfo = MessageClientInfo.Import(@"keys\system-client1.pub");
             using var client1PrivateInfo = MessageClientInfo.Import(@"keys\system-client1.priv");
-
-            var keyTest = MessageClientInfo.CreateClientInfo("system", "hellO", ECDiffieHellmanCurve.P256);
 
             using var client2PublicInfo = MessageClientInfo.Import(@"keys\system-client2.pub");
             using var client2PrivateInfo = MessageClientInfo.Import(@"keys\system-client2.priv");

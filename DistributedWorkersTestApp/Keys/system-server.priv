@@ -2,6 +2,8 @@
   "SystemName": "system",
   "Name": "server",
   "KeySize": 256,
-  "Encrypted": false,
-  "ECKey-Private": "RUNLMgEAAAABAAAAAAAAACAAAAAgAAAAAQAAAAAAAAD/////AAAAAQAAAAAAAAAAAAAAAP////////////////////8AAAABAAAAAAAAAAAAAAAA///////////////8WsY12Ko6k+ez671VdpiGvGUdBrDMU7D2O848PifSYEtrF9Hy4SxCR/i85uVjpEDydwN9gS3rM6D0oTlF2JjClk/jQuL+Gn+bjufrSnwPnhYrzjNXazFezsu2QGg3v1H1/////wAAAAD//////////7zm+q2nF56E87nKwvxjJVEBxAkX6+QkO6C6VfEDXh9oP5yuqCZSwCKRNBQISNOp4F9EnFJd2UW9ISPAjiazt1zRiwC4eXKp4IJtR3qlpOCcWWxm9EGWVmj7OB+jWQ/ceEng4WZOhabRzDfqd4DCxrQw"
+  "Encrypted": true,
+  "Salt": "r3lj7BqPXnY=",
+  "IV": "eGVQ3K2lzzUdZuljKO2hTA==",
+  "ECKey-Private": "2zP6i1HtX9oGm42gBQJrumM0bLT+ZOuEv7zvJ2Ur0e/mYwbUvpz5+Gw+5TP91USy4Bk7BcPDaoOc/XD7w/lxonAsc4hRIWEfXknRfcWUVNrR4rH/t/kjRl/5wSYo5HH7c9/F6kqk8LxUz3l4LeIdYycVM8DSKI9KLkpy0IM+njUlTHI1WO8RfxowH4ablX06mGolmIUwwsR4MMYqkaZAvLajLqDUD2zhesCwMFZKUm42oC/Af5beaE9+vYNmIrUisY9yPAyljsVrw+/djLmtluROYhIBssoQLkywR1Lhc51skKglR98soFjsvl4Hx9JYHj2BugYakeHkqC8AGr0KM55NSvBy6Q6PwwNap4svinpQB+aDclIjMBWVCakc0rgrixatjTY43rYcBCKFk9NPRUMa0YF7408cwynKAP0NbbE8DAnEbYd0UAIRs4rNThnD"
 }
