@@ -22,15 +22,23 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Specialized;
+using System.IO;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace Pinknose.DistributedWorkers.Clients
 {
     [Serializable]
     public class MessageClientInfo : IDisposable, ISerializable
     {
+        private const int SaltSize = 8;
+        private const int KeyDerivationIterations = 1000000;
+
         #region Fields
 
         private bool disposedValue = false;
@@ -90,16 +98,111 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Methods
 
-        public static MessageClientInfo CreateClientInfo(string systemName, string clientName, ECDiffieHellmanCurve privateKeyCurve)
+        public static MessageClientInfo CreateClientInfo(string systemName, string clientName, ECDiffieHellmanCurve privateKeyCurve, bool allowExport=false)
         {
-            var key = MessageClientBase.CreateClientKey(privateKeyCurve);
+            var key = MessageClientBase.CreateClientKey(privateKeyCurve, allowExport);
             return new MessageClientInfo(systemName, clientName, key);
         }
 
-        public static MessageClientInfo CreateServerInfo(string systemName, ECDiffieHellmanCurve privateKeyCurve)
+        public static MessageClientInfo CreateServerInfo(string systemName, ECDiffieHellmanCurve privateKeyCurve, bool allowExport = false)
         {
-            var key = MessageClientBase.CreateClientKey(privateKeyCurve);
+            var key = MessageClientBase.CreateClientKey(privateKeyCurve, allowExport);
             return new MessageClientInfo(systemName, NameHelper.GetServerName(), key);
+        }
+
+        public static MessageClientInfo Import(string keyFilePath, string password="")
+        {
+            var json = File.ReadAllText(keyFilePath);
+
+            JObject jObject = JObject.Parse(json);
+
+            byte[] ecKey;
+
+            var isPrivateKey = jObject.ContainsKey(nameof(ECKey) + "-Private");
+
+            if (isPrivateKey)
+            {
+                 ecKey = Convert.FromBase64String(jObject.Value<string>(nameof(ECKey) + "-Private"));
+            }
+            else
+            {
+                 ecKey = Convert.FromBase64String(jObject.Value<string>(nameof(ECKey) + "-Public"));
+            }
+
+            bool encrypted = jObject.Value<bool>("Encrypted");
+
+            if (encrypted)
+            {
+                using var random = RNGCryptoServiceProvider.Create();
+                byte[] salt = Convert.FromBase64String(jObject.Value<string>("Salt"));
+                byte[] iv = Convert.FromBase64String(jObject.Value<string>("IV"));
+
+                using Rfc2898DeriveBytes deriveBytes = new Rfc2898DeriveBytes(password, salt, KeyDerivationIterations, HashAlgorithmName.SHA512);
+                using AesCng aes = new AesCng();
+                aes.Key = deriveBytes.GetBytes(aes.KeySize / 8);
+                aes.IV = iv;
+
+                using var decryptor = aes.CreateDecryptor();
+                ecKey = decryptor.TransformFinalBlock(ecKey, 0, ecKey.Length);
+            }
+
+            CngKey cngKey = CngKey.Import(ecKey, isPrivateKey ? CngKeyBlobFormat.EccFullPrivateBlob : CngKeyBlobFormat.EccFullPublicBlob);
+
+            return new MessageClientInfo(jObject.Value<string>(nameof(SystemName)), jObject.Value<string>(nameof(Name)), cngKey);
+        }
+
+        public string SerializePublicInfoToJson()
+        {
+            return SerializeToJson(false);
+        }
+
+        public string SerializePrivateInfoToJson(string password=null)
+        {
+            return SerializeToJson(true, password);
+        }
+
+        private string SerializeToJson(bool includePrivateKey=false, string password=null)
+        {
+            var jObject = new JObject();
+            jObject.Add(nameof(SystemName), this.SystemName);
+            jObject.Add(nameof(Name), this.Name);
+            jObject.Add("KeySize", this.ECKey.KeySize);
+            
+            if (includePrivateKey)
+            {
+                var eccKey = this.ECKey.Export(CngKeyBlobFormat.EccFullPrivateBlob);
+
+
+                if (!string.IsNullOrEmpty(password))
+                {
+                    using var random = RNGCryptoServiceProvider.Create();
+                    byte[] salt = new byte[SaltSize];
+                    random.GetBytes(salt);
+
+                    using Rfc2898DeriveBytes deriveBytes = new Rfc2898DeriveBytes(password, salt, KeyDerivationIterations, HashAlgorithmName.SHA512);
+                    using AesCng aes = new AesCng();
+                    aes.Key = deriveBytes.GetBytes(aes.KeySize / 8);
+
+                    jObject.Add("Encrypted", true);
+                    jObject.Add("Salt", salt);
+                    jObject.Add("IV", aes.IV);
+
+                    using var encryptor = aes.CreateEncryptor();
+                    eccKey = encryptor.TransformFinalBlock(eccKey, 0, eccKey.Length);
+                }
+                else
+                {
+                    jObject.Add("Encrypted", false);
+                }
+
+                jObject.Add(nameof(ECKey) + "-Private",eccKey);
+            }
+            else
+            {
+                jObject.Add(nameof(ECKey) + "-Public", this.ECKey.Export(CngKeyBlobFormat.EccFullPublicBlob));
+            }
+
+            return jObject.ToString();
         }
 
         // This code added to correctly implement the disposable pattern.
