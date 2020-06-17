@@ -262,7 +262,12 @@ namespace Pinknose.DistributedWorkers.MessageQueues
 
             foreach (var tag in tags)
             {
-                basicProperties.Headers.Add(tag.GetMangledTagName(), "");
+                string mangledTag = tag.GetMangledTagName();
+
+                if (basicProperties.Headers.ContainsKey(mangledTag))
+                {
+                    basicProperties.Headers.Add(mangledTag, "");
+                }
 
                 // If this is a tag with a value (not just a tag)
                 if (tag.GetType() != typeof(MessageTag))
