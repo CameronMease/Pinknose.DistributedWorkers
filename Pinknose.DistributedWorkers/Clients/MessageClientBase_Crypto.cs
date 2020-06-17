@@ -22,6 +22,7 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using System;
 using System.Security.Cryptography;
 
 namespace Pinknose.DistributedWorkers.Clients
@@ -32,22 +33,43 @@ namespace Pinknose.DistributedWorkers.Clients
     {
         #region Properties
 
+        internal int SignatureLength
+        {
+            get
+            {
+                var length = this.ClientInfo.Dsa.KeySize switch
+                {
+                    256 => 64,
+                    384 => 96,
+                    521 => 132,
+                    _ => throw new NotImplementedException()
+                };
+
+                return length;
+            }
+        }
+
         private static RandomNumberGenerator RandomNumberGenerator { get; } = RNGCryptoServiceProvider.Create();
 
         #endregion Properties
 
         #region Methods
 
-        public static CngKey CreateClientKey(ECDiffieHellmanCurve curve)
+        public static CngKey CreateClientKey(ECDiffieHellmanCurve curve, bool allowExport = false)
         {
             CngAlgorithm algorithm = curve switch
             {
-                ECDiffieHellmanCurve.P256 => CngAlgorithm.ECDiffieHellmanP521,
+                ECDiffieHellmanCurve.P256 => CngAlgorithm.ECDiffieHellmanP256,
                 ECDiffieHellmanCurve.P384 => CngAlgorithm.ECDiffieHellmanP384,
                 ECDiffieHellmanCurve.P521 => CngAlgorithm.ECDiffieHellmanP521
             };
 
-            return CngKey.Create(algorithm);
+            CngKeyCreationParameters parameters = new CngKeyCreationParameters()
+            {
+                ExportPolicy = allowExport ? CngExportPolicies.AllowPlaintextExport : CngExportPolicies.None
+            };
+
+            return CngKey.Create(algorithm, null, parameters);
         }
 
         public static byte[] GetRandomBytes(int length)
