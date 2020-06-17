@@ -16,8 +16,8 @@ namespace Pinknose.KeyUtility.CommandLineOptions
         [Option(longName: "384", Group = "Key Size", HelpText = "Use key size of 384 bits.")]
         public bool KeySize384 { get; set; } = false;
 
-        [Option(longName: "512", Group = "Key Size", HelpText = "Use key size of 512 bits.")]
-        public bool KeySize512 { get; set; } = false;
+        [Option(longName: "521", Group = "Key Size", HelpText = "Use key size of 512 bits.")]
+        public bool KeySize521 { get; set; } = false;
 
         [Option(shortName: 'd', longName:"dir", HelpText = "Directory to store the key files.")]
         public string Directory { get; set; } = null;

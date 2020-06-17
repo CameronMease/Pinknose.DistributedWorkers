@@ -30,9 +30,9 @@ namespace Pinknose.KeyUtility
                 }
                 else
                 {
-                    if (Directory.Exists(generateClientOptions.Directory))
+                    if (Directory.Exists(generateOptionsBase.Directory))
                     {
-                        Console.WriteLine($"{generateClientOptions.Directory} is not a valid directory.");
+                        Console.WriteLine($"{generateOptionsBase.Directory} is not a valid directory.");
                     }
                 }
 
@@ -47,7 +47,7 @@ namespace Pinknose.KeyUtility
                 {
                     curve = ECDiffieHellmanCurve.P384;
                 }
-                else if (generateOptionsBase.KeySize512)
+                else if (generateOptionsBase.KeySize521)
                 {
                     curve = ECDiffieHellmanCurve.P521;
                 }
@@ -62,6 +62,8 @@ namespace Pinknose.KeyUtility
                 }
 
                 string path = Path.Combine(generateOptionsBase.Directory, clientInfo.SystemName + "-" + clientInfo.Name);
+
+                bool encrypted = false;
 
                 Console.Write("Do you want to encrypt the private key (highly recommended!)? (Y/N): ");
 
@@ -79,6 +81,8 @@ namespace Pinknose.KeyUtility
 
                 if (keyInfo.Key == ConsoleKey.Y)
                 {
+                    encrypted = true;
+
                     do      
                     {
                         do
@@ -100,10 +104,22 @@ namespace Pinknose.KeyUtility
                     } while (!match);
                 }
 
+                string privateFile = path + ".priv";
+                string publicFile = path + ".pub"; 
 
-                File.WriteAllText(path + ".priv", clientInfo.SerializePrivateInfoToJson(password));
-                File.WriteAllText(path + ".pub", clientInfo.SerializePublicInfoToJson());               
+                Console.WriteLine("\nCreating Client Key");
+                Console.WriteLine($"   Diffie-Hellman Elliptic Curve: {curve}");
+                Console.WriteLine($"   System Name:                   {clientInfo.SystemName}");
+                Console.WriteLine($"   Client Name:                   {clientInfo.Name}");
+                Console.WriteLine($"   Encrypted Private Key:         {encrypted}");
+                Console.WriteLine($"   Public Key File:               {publicFile}");
+                Console.WriteLine($"   Private Key File:              {privateFile}");
 
+                File.WriteAllText(privateFile, clientInfo.SerializePrivateInfoToJson(password));
+                File.WriteAllText(publicFile, clientInfo.SerializePublicInfoToJson());
+
+                var duhh = MessageClientInfo.Import(privateFile, password);
+                var duhh1 = MessageClientInfo.Import(publicFile);
             }
         }
     }

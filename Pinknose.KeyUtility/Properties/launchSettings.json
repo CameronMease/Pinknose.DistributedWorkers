@@ -2,7 +2,7 @@
   "profiles": {
     "Pinknose.KeyUtility": {
       "commandName": "Project",
-      "commandLineArgs": "generate-server -s \"dumdum\" --256"
+      "commandLineArgs": "generate-client -s \"dumdum\" -n \"dumdum\" --256"
     }
   }
 }
