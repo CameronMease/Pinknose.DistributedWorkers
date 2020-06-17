@@ -24,6 +24,7 @@
 
 using Pinknose.DistributedWorkers.Clients;
 using Pinknose.DistributedWorkers.Configuration;
+using Pinknose.DistributedWorkers.Crypto;
 using Pinknose.DistributedWorkers.Extensions;
 using Pinknose.DistributedWorkers.Logging;
 using Pinknose.DistributedWorkers.MessageQueues;
@@ -71,19 +72,34 @@ namespace DistributedWorkersTestApp
 
 
 
-            using var serverInfo = MessageClientInfo.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
-            using var client1Info = MessageClientInfo.CreateClientInfo(systemName, "client1", ECDiffieHellmanCurve.P256);
-            using var client2Info = MessageClientInfo.CreateClientInfo(systemName, "client2", ECDiffieHellmanCurve.P256);
-            using var client3Info = MessageClientInfo.CreateClientInfo(systemName, "client3", ECDiffieHellmanCurve.P256);
+            //using var serverInfo = MessageClientInfo.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
+            //using var client1Info = MessageClientInfo.CreateClientInfo(systemName, "client1", ECDiffieHellmanCurve.P256);
+            //using var client2Info = MessageClientInfo.CreateClientInfo(systemName, "client2", ECDiffieHellmanCurve.P256);
+            //using var client3Info = MessageClientInfo.CreateClientInfo(systemName, "client3", ECDiffieHellmanCurve.P256);
 
+            using var serverPublicInfo =  MessageClientInfo.Import(@"keys\system-server.pub");
+            using var serverPrivateInfo =  MessageClientInfo.Import(@"keys\system-server.priv");
+
+
+
+            using var client1PublicInfo = MessageClientInfo.Import(@"keys\system-client1.pub");
+            using var client1PrivateInfo = MessageClientInfo.Import(@"keys\system-client1.priv");
+
+            var keyTest = MessageClientInfo.CreateClientInfo("system", "hellO", ECDiffieHellmanCurve.P256);
+
+            using var client2PublicInfo = MessageClientInfo.Import(@"keys\system-client2.pub");
+            using var client2PrivateInfo = MessageClientInfo.Import(@"keys\system-client2.priv");
+
+            using var client3PublicInfo = MessageClientInfo.Import(@"keys\system-client3.pub");
+            using var client3PrivateInfo = MessageClientInfo.Import(@"keys\system-client3.priv");
 
             var server = new MessageServerConfigurationBuilder()
                 .Credentials("guest", "guest")
                 .RabbitMQServer(rabbitMQServerName)
-                .ServerInfo(serverInfo)
-                .AddClientInfo(client1Info)
-                .AddClientInfo(client2Info)
-                .AddClientInfo(client3Info)
+                .ServerInfo(serverPrivateInfo)
+                .AddClientInfo(client1PublicInfo)
+                //.AddClientInfo(client2PublicInfo)
+                //.AddClientInfo(client3PublicInfo)
                 .AutoDeleteQueuesOnClose(true)
                 .QueuesAreDurable(false)
                 .CreateMessageServer();
@@ -129,8 +145,8 @@ namespace DistributedWorkersTestApp
             MessageClient client1 = new MessageClientConfigurationBuilder()
                 .Credentials("guest", "guest")
                 .RabbitMQServer(rabbitMQServerName)
-                .ServerInfo(serverInfo)
-                .ClientInfo(client1Info)
+                .ServerInfo(serverPublicInfo)
+                .ClientInfo(client1PrivateInfo)
                 .AutoDeleteQueuesOnClose(true)
                 .QueuesAreDurable(false)
                 .CreateMessageClient();
@@ -152,8 +168,8 @@ namespace DistributedWorkersTestApp
             MessageClient client2 = new MessageClientConfigurationBuilder()
                 .Credentials("guest", "guest")
                 .RabbitMQServer(rabbitMQServerName)
-                .ServerInfo(serverInfo)
-                .ClientInfo(client2Info)
+                .ServerInfo(serverPublicInfo)
+                .ClientInfo(client2PrivateInfo)
                 .AutoDeleteQueuesOnClose(true)
                 .QueuesAreDurable(false)
                 .CreateMessageClient();
@@ -168,8 +184,8 @@ namespace DistributedWorkersTestApp
                     Console.WriteLine($"Client 2: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
                 }
             };
-            client2.Connect(TimeSpan.FromSeconds(10), even);
-            client2.BeginFullWorkConsume(true);
+            //client2.Connect(TimeSpan.FromSeconds(10), even);
+            //client2.BeginFullWorkConsume(true);
 
 #if false
 
