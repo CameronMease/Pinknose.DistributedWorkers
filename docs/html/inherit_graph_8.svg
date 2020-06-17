@@ -9,8 +9,8 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 95.5)">
 <title>Graphical Class Hierarchy</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-95.5 317,-95.5 317,4 -4,4"/>
-<!-- Node38 -->
-<g id="node1" class="node"><title>Node38</title>
+<!-- Node42 -->
+<g id="node1" class="node"><title>Node42</title>
 <g id="a_node1"><a xlink:title=" ">
 <polygon fill="white" stroke="#bfbfbf" points="0,-33 0,-52 61,-52 61,-33 0,-33"/>
 <text text-anchor="middle" x="30.5" y="-40" font-family="Helvetica,sans-Serif" font-size="10.00">EventArgs</text>
@@ -27,13 +27,13 @@
 </a>
 </g>
 </g>
-<!-- Node38&#45;&gt;Node0 -->
-<g id="edge1" class="edge"><title>Node38&#45;&gt;Node0</title>
+<!-- Node42&#45;&gt;Node0 -->
+<g id="edge1" class="edge"><title>Node42&#45;&gt;Node0</title>
 <path fill="none" stroke="midnightblue" d="M71.369,-48.9715C85.3694,-51.244 101.691,-53.8932 118,-56.5405"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="71.5854,-45.4609 61.1538,-47.3134 70.4638,-52.3705 71.5854,-45.4609"/>
 </g>
-<!-- Node40 -->
-<g id="node3" class="node"><title>Node40</title>
+<!-- Node44 -->
+<g id="node3" class="node"><title>Node44</title>
 <g id="a_node3"><a xlink:href="class_pinknose_1_1_distributed_workers_1_1_message_queues_1_1_message_received_event_args.html" target="_top" xlink:title=" ">
 <polygon fill="white" stroke="black" points="97,-0.5 97,-30.5 313,-30.5 313,-0.5 97,-0.5"/>
 <text text-anchor="start" x="105" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00">Pinknose.DistributedWorkers.</text>
@@ -41,8 +41,8 @@
 </a>
 </g>
 </g>
-<!-- Node38&#45;&gt;Node40 -->
-<g id="edge2" class="edge"><title>Node38&#45;&gt;Node40</title>
+<!-- Node42&#45;&gt;Node44 -->
+<g id="edge2" class="edge"><title>Node42&#45;&gt;Node44</title>
 <path fill="none" stroke="midnightblue" d="M71.339,-36.2643C82.4718,-34.5218 95.0738,-32.5493 107.971,-30.5306"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="70.4923,-32.8542 61.1538,-37.8585 71.5748,-39.77 70.4923,-32.8542"/>
 </g>

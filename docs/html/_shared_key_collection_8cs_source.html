@@ -85,7 +85,7 @@ $(document).ready(function(){initNavTree('_shared_key_collection_8cs_source.html
 <div class="title">SharedKeyCollection.cs</div>  </div>
 </div><!--header-->
 <div class="contents">
-<a href="_shared_key_collection_8cs.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// MIT License</span></div>
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// MIT License</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Copyright(c) 2020 Cameron Mease</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">//</span></div>
@@ -123,18 +123,18 @@ $(document).ready(function(){initNavTree('_shared_key_collection_8cs_source.html
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="preprocessor">        #region Properties</span></div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="class_pinknose_1_1_distributed_workers_1_1_keystore_1_1_shared_key_collection.html#a1e77f3f193db6fb88b41fbc67d0ae2ac">   41</a></span>&#160;        <span class="keyword">public</span> <span class="keywordtype">int</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_keystore_1_1_shared_key_collection.html#a1e77f3f193db6fb88b41fbc67d0ae2ac">MaxKeyId</a> { <span class="keyword">get</span>; <span class="keyword">set</span>; } = Int32.MaxValue;</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        <span class="keyword">public</span> <span class="keywordtype">int</span> MaxKeyId { <span class="keyword">get</span>; <span class="keyword">set</span>; } = Int32.MaxValue;</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">        #endregion Properties</span></div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor">        #region Indexers</span></div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
-<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="class_pinknose_1_1_distributed_workers_1_1_keystore_1_1_shared_key_collection.html#a380ec3e4410a587a1e2b3e18141880bd">   47</a></span>&#160;        <span class="keyword">public</span> <span class="keywordtype">byte</span>[] <span class="keyword">this</span>[<span class="keywordtype">int</span> keyId]</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        <span class="keyword">public</span> <span class="keywordtype">byte</span>[] <span class="keyword">this</span>[<span class="keywordtype">int</span> keyId]</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        {</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;            <span class="keyword">get</span> =&gt; _dictionary[keyId].Key;</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;            <span class="keyword">set</span></div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;            {</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;                <span class="keywordflow">if</span> (keyId &gt; <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_keystore_1_1_shared_key_collection.html#a1e77f3f193db6fb88b41fbc67d0ae2ac">MaxKeyId</a>)</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;                <span class="keywordflow">if</span> (keyId &gt; MaxKeyId)</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                {</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                    <span class="keywordflow">throw</span> <span class="keyword">new</span> ArgumentOutOfRangeException(nameof(keyId));</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;                }</div>
@@ -146,7 +146,7 @@ $(document).ready(function(){initNavTree('_shared_key_collection_8cs_source.html
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="preprocessor">        #region Methods</span></div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
-<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="class_pinknose_1_1_distributed_workers_1_1_keystore_1_1_shared_key_collection.html#ac0b03bd7ebd09c9fbd1538c526bdc6b6">   64</a></span>&#160;        <span class="keyword">public</span> IEnumerator&lt;byte[]&gt; <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_keystore_1_1_shared_key_collection.html#ac0b03bd7ebd09c9fbd1538c526bdc6b6">GetEnumerator</a>()</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <span class="keyword">public</span> IEnumerator&lt;byte[]&gt; GetEnumerator()</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        {</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;            <span class="keywordflow">throw</span> <span class="keyword">new</span> NotImplementedException();</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        }</div>
@@ -162,13 +162,11 @@ $(document).ready(function(){initNavTree('_shared_key_collection_8cs_source.html
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <div class="ttc" id="anamespace_pinknose_1_1_distributed_workers_1_1_keystore_html"><div class="ttname"><a href="namespace_pinknose_1_1_distributed_workers_1_1_keystore.html">Pinknose.DistributedWorkers.Keystore</a></div><div class="ttdef"><b>Definition:</b> <a href="_public_keystore_8cs_source.html#l00033">PublicKeystore.cs:34</a></div></div>
-<div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_keystore_1_1_shared_key_collection_html_ac0b03bd7ebd09c9fbd1538c526bdc6b6"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_keystore_1_1_shared_key_collection.html#ac0b03bd7ebd09c9fbd1538c526bdc6b6">Pinknose.DistributedWorkers.Keystore.SharedKeyCollection.GetEnumerator</a></div><div class="ttdeci">IEnumerator&lt; byte[]&gt; GetEnumerator()</div><div class="ttdef"><b>Definition:</b> <a href="_shared_key_collection_8cs_source.html#l00064">SharedKeyCollection.cs:64</a></div></div>
-<div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_keystore_1_1_shared_key_collection_html_a1e77f3f193db6fb88b41fbc67d0ae2ac"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_keystore_1_1_shared_key_collection.html#a1e77f3f193db6fb88b41fbc67d0ae2ac">Pinknose.DistributedWorkers.Keystore.SharedKeyCollection.MaxKeyId</a></div><div class="ttdeci">int MaxKeyId</div><div class="ttdef"><b>Definition:</b> <a href="_shared_key_collection_8cs_source.html#l00041">SharedKeyCollection.cs:41</a></div></div>
 <div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_keystore_1_1_shared_key_collection_html"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_keystore_1_1_shared_key_collection.html">Pinknose.DistributedWorkers.Keystore.SharedKeyCollection</a></div><div class="ttdef"><b>Definition:</b> <a href="_shared_key_collection_8cs_source.html#l00031">SharedKeyCollection.cs:32</a></div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_dbf17ce18ab10b79e29a7e2b11645231.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_dae5959f0420bd10a2df55c7473e0440.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_859f74d24caa0fada63fe425c3ab26d0.html">Keystore</a></li><li class="navelem"><a class="el" href="_shared_key_collection_8cs.html">SharedKeyCollection.cs</a></li>
+    <li class="navelem"><a class="el" href="dir_dbf17ce18ab10b79e29a7e2b11645231.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_dae5959f0420bd10a2df55c7473e0440.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_859f74d24caa0fada63fe425c3ab26d0.html">Keystore</a></li><li class="navelem"><b>SharedKeyCollection.cs</b></li>
     <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>

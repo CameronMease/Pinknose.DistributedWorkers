@@ -1,0 +1,3 @@
+<map id="Pinknose.DistributedWorkers.Clients.MessageClientBase.WriteToClient" name="Pinknose.DistributedWorkers.Clients.MessageClientBase.WriteToClient">
+<area shape="rect" id="node1" title="Async method that writes to a client and returns a task that waits for the result." alt="" coords="5,29,223,85"/>
+</map>

@@ -85,7 +85,7 @@ $(document).ready(function(){initNavTree('_payload_message_8cs_source.html','');
 <div class="title">PayloadMessage.cs</div>  </div>
 </div><!--header-->
 <div class="contents">
-<a href="_payload_message_8cs.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// MIT License</span></div>
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// MIT License</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Copyright(c) 2020 Cameron Mease</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">//</span></div>
@@ -116,21 +116,21 @@ $(document).ready(function(){initNavTree('_payload_message_8cs_source.html','');
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    {</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">        #region Constructors</span></div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html#af585fe72d634a9f918c832bbf8c1198f">   39</a></span>&#160;        <span class="keyword">public</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html#af585fe72d634a9f918c832bbf8c1198f">PayloadMessage</a>(TPayload payload, <span class="keywordtype">bool</span> compressPayload, <span class="keywordtype">bool</span> serializePayloadToJson, <span class="keywordtype">bool</span> dataIsAlreadyCompressed = <span class="keyword">false</span>) : base()</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        <span class="keyword">public</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html">PayloadMessage</a>(TPayload payload, <span class="keywordtype">bool</span> compressPayload, <span class="keywordtype">bool</span> serializePayloadToJson, <span class="keywordtype">bool</span> dataIsAlreadyCompressed = <span class="keyword">false</span>) : base()</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        {</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;            <span class="keywordflow">if</span> (payload != <span class="keyword">null</span>)</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;            {</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                <span class="keywordflow">if</span> ((serializePayloadToJson &amp;&amp; compressPayload) &amp; !dataIsAlreadyCompressed)</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;                {</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;                    PayloadInternal = SerializationHelpers.SerializeToJsonAndGZip(payload);</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;                    PayloadInternal = <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_serialization_helpers.html">SerializationHelpers</a>.SerializeToJsonAndGZip(payload);</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;                }</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;                <span class="keywordflow">else</span> <span class="keywordflow">if</span> (serializePayloadToJson)</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;                {</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;                    PayloadInternal = SerializationHelpers.SerializeToJson(payload);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;                    PayloadInternal = <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_serialization_helpers.html">SerializationHelpers</a>.SerializeToJson(payload);</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                }</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;                <span class="keywordflow">else</span> <span class="keywordflow">if</span> (compressPayload &amp; !dataIsAlreadyCompressed)</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;                {</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                    PayloadInternal = SerializationHelpers.GZip((<span class="keywordtype">byte</span>[])(<span class="keywordtype">object</span>)payload);</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                    PayloadInternal = <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_serialization_helpers.html">SerializationHelpers</a>.GZip((<span class="keywordtype">byte</span>[])(<span class="keywordtype">object</span>)payload);</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                }</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;                <span class="keywordflow">else</span></div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;                {</div>
@@ -141,7 +141,7 @@ $(document).ready(function(){initNavTree('_payload_message_8cs_source.html','');
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                PayloadIsJsonSerialized = serializePayloadToJson;</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                KeepPayloadCompressed = dataIsAlreadyCompressed;</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;                <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html#ae9ddd9dea5fe465b9bf17d53a5804615">PayloadTypeName</a> = payload.GetType().FullName;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;                PayloadTypeName = payload.GetType().FullName;</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;            }</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        }</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
@@ -149,7 +149,7 @@ $(document).ready(function(){initNavTree('_payload_message_8cs_source.html','');
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="preprocessor">        #region Properties</span></div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160; </div>
-<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html#a947cdcdfd65815840cc1aa23cebec3de">   72</a></span>&#160;        <span class="keyword">public</span> TPayload <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html#a947cdcdfd65815840cc1aa23cebec3de">Payload</a></div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        <span class="keyword">public</span> TPayload Payload</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        {</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            <span class="keyword">get</span></div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;            {</div>
@@ -159,15 +159,15 @@ $(document).ready(function(){initNavTree('_payload_message_8cs_source.html','');
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                }</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                <span class="keywordflow">else</span> <span class="keywordflow">if</span> (!PayloadIsCompressed &amp;&amp; PayloadIsJsonSerialized)</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                {</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                    <span class="keywordflow">return</span> (TPayload)SerializationHelpers.DeserializeFromJson((<span class="keywordtype">string</span>)PayloadInternal, typeof(TPayload));</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                    <span class="keywordflow">return</span> (TPayload)<a class="code" href="class_pinknose_1_1_distributed_workers_1_1_serialization_helpers.html">SerializationHelpers</a>.DeserializeFromJson((<span class="keywordtype">string</span>)PayloadInternal, typeof(TPayload));</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                }</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                <span class="keywordflow">else</span> <span class="keywordflow">if</span> (PayloadIsCompressed &amp;&amp; !PayloadIsJsonSerialized)</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                {</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;                    <span class="keywordflow">return</span> (TPayload)(object)SerializationHelpers.GUnzip((<span class="keywordtype">byte</span>[])PayloadInternal);</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;                    <span class="keywordflow">return</span> (TPayload)(object)<a class="code" href="class_pinknose_1_1_distributed_workers_1_1_serialization_helpers.html">SerializationHelpers</a>.<a class="code" href="class_pinknose_1_1_distributed_workers_1_1_serialization_helpers.html#a02cf0c6d53225734cb577ce30a705dce">GUnzip</a>((<span class="keywordtype">byte</span>[])PayloadInternal);</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;                }</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;                <span class="keywordflow">else</span> <span class="keywordflow">if</span> (PayloadIsCompressed &amp;&amp; PayloadIsJsonSerialized)</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                {</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;                    <span class="keywordflow">return</span> (TPayload)SerializationHelpers.DeserializeFromGZippedJson((<span class="keywordtype">byte</span>[])PayloadInternal, typeof(TPayload));</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;                    <span class="keywordflow">return</span> (TPayload)<a class="code" href="class_pinknose_1_1_distributed_workers_1_1_serialization_helpers.html">SerializationHelpers</a>.DeserializeFromGZippedJson((<span class="keywordtype">byte</span>[])PayloadInternal, typeof(TPayload));</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;                }</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;                <span class="keywordflow">else</span></div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                {</div>
@@ -176,7 +176,7 @@ $(document).ready(function(){initNavTree('_payload_message_8cs_source.html','');
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;            }</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;        }</div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160; </div>
-<div class="line"><a name="l00099"></a><span class="lineno"><a class="line" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html#ae9ddd9dea5fe465b9bf17d53a5804615">   99</a></span>&#160;        <span class="keyword">public</span> <span class="keywordtype">string</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html#ae9ddd9dea5fe465b9bf17d53a5804615">PayloadTypeName</a> { <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; }</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;        <span class="keyword">public</span> <span class="keywordtype">string</span> PayloadTypeName { <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; }</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160; </div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        <span class="keyword">private</span> <span class="keywordtype">bool</span> KeepPayloadCompressed { <span class="keyword">get</span>; <span class="keyword">set</span>; } = <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;        <span class="keyword">private</span> <span class="keywordtype">object</span> PayloadInternal { <span class="keyword">get</span>; <span class="keyword">set</span>; } = <span class="keyword">null</span>;</div>
@@ -190,16 +190,15 @@ $(document).ready(function(){initNavTree('_payload_message_8cs_source.html','');
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;}</div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
+<div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_serialization_helpers_html_a02cf0c6d53225734cb577ce30a705dce"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_serialization_helpers.html#a02cf0c6d53225734cb577ce30a705dce">Pinknose.DistributedWorkers.SerializationHelpers.GUnzip</a></div><div class="ttdeci">static byte[] GUnzip(byte[] data)</div><div class="ttdoc">Decompresses byte array using GZip.</div><div class="ttdef"><b>Definition:</b> <a href="_serialization_helpers_8cs_source.html#l00062">SerializationHelpers.cs:62</a></div></div>
 <div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_base_html"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_base.html">Pinknose.DistributedWorkers.Messages.MessageBase</a></div><div class="ttdoc">A message which is passed between client and server.</div><div class="ttdef"><b>Definition:</b> <a href="_message_base_8cs_source.html#l00034">MessageBase.cs:35</a></div></div>
 <div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message_html"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html">Pinknose.DistributedWorkers.Messages.PayloadMessage</a></div><div class="ttdoc">A message that has a strongly-typed payload. There are a variety of options for compression or serial...</div><div class="ttdef"><b>Definition:</b> <a href="_payload_message_8cs_source.html#l00035">PayloadMessage.cs:36</a></div></div>
 <div class="ttc" id="anamespace_pinknose_1_1_distributed_workers_1_1_messages_html"><div class="ttname"><a href="namespace_pinknose_1_1_distributed_workers_1_1_messages.html">Pinknose.DistributedWorkers.Messages</a></div><div class="ttdef"><b>Definition:</b> <a href="_client_announce_message_8cs_source.html#l00028">ClientAnnounceMessage.cs:29</a></div></div>
-<div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message_html_ae9ddd9dea5fe465b9bf17d53a5804615"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html#ae9ddd9dea5fe465b9bf17d53a5804615">Pinknose.DistributedWorkers.Messages.PayloadMessage.PayloadTypeName</a></div><div class="ttdeci">string PayloadTypeName</div><div class="ttdef"><b>Definition:</b> <a href="_payload_message_8cs_source.html#l00099">PayloadMessage.cs:99</a></div></div>
-<div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message_html_a947cdcdfd65815840cc1aa23cebec3de"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html#a947cdcdfd65815840cc1aa23cebec3de">Pinknose.DistributedWorkers.Messages.PayloadMessage.Payload</a></div><div class="ttdeci">TPayload Payload</div><div class="ttdef"><b>Definition:</b> <a href="_payload_message_8cs_source.html#l00072">PayloadMessage.cs:73</a></div></div>
-<div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message_html_af585fe72d634a9f918c832bbf8c1198f"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html#af585fe72d634a9f918c832bbf8c1198f">Pinknose.DistributedWorkers.Messages.PayloadMessage.PayloadMessage</a></div><div class="ttdeci">PayloadMessage(TPayload payload, bool compressPayload, bool serializePayloadToJson, bool dataIsAlreadyCompressed=false)</div><div class="ttdef"><b>Definition:</b> <a href="_payload_message_8cs_source.html#l00039">PayloadMessage.cs:39</a></div></div>
+<div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_serialization_helpers_html"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_serialization_helpers.html">Pinknose.DistributedWorkers.SerializationHelpers</a></div><div class="ttdef"><b>Definition:</b> <a href="_serialization_helpers_8cs_source.html#l00032">SerializationHelpers.cs:33</a></div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_dbf17ce18ab10b79e29a7e2b11645231.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_dae5959f0420bd10a2df55c7473e0440.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_b17720afa935eecc0c1f70eb05c461ba.html">Messages</a></li><li class="navelem"><a class="el" href="_payload_message_8cs.html">PayloadMessage.cs</a></li>
+    <li class="navelem"><a class="el" href="dir_dbf17ce18ab10b79e29a7e2b11645231.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_dae5959f0420bd10a2df55c7473e0440.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_b17720afa935eecc0c1f70eb05c461ba.html">Messages</a></li><li class="navelem"><b>PayloadMessage.cs</b></li>
     <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>

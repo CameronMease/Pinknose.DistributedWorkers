@@ -1,6 +1,6 @@
 <map id="Pinknose.DistributedWorkers.Messages.PayloadMessage&lt; TPayload &gt;" name="Pinknose.DistributedWorkers.Messages.PayloadMessage&lt; TPayload &gt;">
-<area shape="rect" id="node1" title="A message that has a strongly&#45;typed payload. There are a variety of options for compression or serial..." alt="" coords="6,205,201,385"/>
-<area shape="rect" id="node3" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html" title=" " alt="" coords="6,448,201,628"/>
-<area shape="rect" id="node2" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_base.html" title="A message which is passed between client and server." alt="" coords="8,5,199,156"/>
-<area shape="rect" id="node4" href="$class_pinknose_1_1_distributed_workers_1_1_logging_1_1_serilog_event_message.html" title=" " alt="" coords="5,677,201,769"/>
+<area shape="rect" id="node1" title="A message that has a strongly&#45;typed payload. There are a variety of options for compression or serial..." alt="" coords="6,81,201,137"/>
+<area shape="rect" id="node3" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html" title=" " alt="" coords="6,200,201,256"/>
+<area shape="rect" id="node2" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_base.html" title="A message which is passed between client and server." alt="" coords="51,5,156,32"/>
+<area shape="rect" id="node4" href="$class_pinknose_1_1_distributed_workers_1_1_logging_1_1_serilog_event_message.html" title=" " alt="" coords="5,305,201,347"/>
 </map>

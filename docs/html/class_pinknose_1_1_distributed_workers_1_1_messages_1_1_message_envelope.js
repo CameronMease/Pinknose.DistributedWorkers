@@ -1,6 +1,7 @@
 var class_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_envelope =
 [
     [ "Serialize", "class_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_envelope.html#a46bb595543bfc2a7c3e68cb92bd1619d", null ],
+    [ "WrapMessage", "class_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_envelope.html#a8cc1874ec52c984bff293f3ab7688f3d", null ],
     [ "BasicProperties", "class_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_envelope.html#ac803a6b2a7621f32ade6b87fda94a9c1", null ],
     [ "DeliveryTag", "class_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_envelope.html#ac504d571383e2e42fc37d46122bd6844", null ],
     [ "Exchange", "class_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_envelope.html#a76698f1082c6b38cad428d964d8949a2", null ],

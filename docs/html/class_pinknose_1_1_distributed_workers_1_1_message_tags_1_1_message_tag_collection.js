@@ -7,5 +7,6 @@ var class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_coll
     [ "AddRange", "class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_collection.html#aed046f0bcb53545769e417eb13ff872c", null ],
     [ "ContainsTag", "class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_collection.html#a30f8ed1def316588a84eb6b11efc5dda", null ],
     [ "GetEnumerator", "class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_collection.html#a7cf1e1bad2bb25cb9ac72cc00ef36688", null ],
-    [ "GetObjectData", "class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_collection.html#ad68a06ca9253e4581da884e1b641af49", null ]
+    [ "GetObjectData", "class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_collection.html#ad68a06ca9253e4581da884e1b641af49", null ],
+    [ "operator|", "class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_collection.html#a77fe7cadb5c0b1b1dbe115fad30f0645", null ]
 ];

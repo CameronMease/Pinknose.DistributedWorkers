@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['basicproperties_434',['BasicProperties',['../class_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_envelope.html#ac803a6b2a7621f32ade6b87fda94a9c1',1,'Pinknose::DistributedWorkers::Messages::MessageEnvelope']]]
+  ['serverqueue_121',['ServerQueue',['../class_message_client_base.html#a5c2fa1c01587b1677ee42dae6610ece4',1,'MessageClientBase']]]
 ];

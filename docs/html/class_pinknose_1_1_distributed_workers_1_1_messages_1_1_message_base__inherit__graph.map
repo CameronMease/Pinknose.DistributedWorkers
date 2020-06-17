@@ -1,12 +1,12 @@
 <map id="Pinknose.DistributedWorkers.Messages.MessageBase" name="Pinknose.DistributedWorkers.Messages.MessageBase">
-<area shape="rect" id="node1" title="A message which is passed between client and server." alt="" coords="801,5,995,171"/>
-<area shape="rect" id="node2" title=" " alt="" coords="5,257,236,363"/>
-<area shape="rect" id="node3" title=" " alt="" coords="260,235,504,385"/>
-<area shape="rect" id="node4" title=" " alt="" coords="529,257,777,363"/>
-<area shape="rect" id="node5" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_heartbeat_message.html" title=" " alt="" coords="801,264,995,356"/>
-<area shape="rect" id="node6" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html" title="A message that has a strongly&#45;typed payload. There are a variety of options for compression or serial..." alt="" coords="1019,220,1214,400"/>
-<area shape="rect" id="node9" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_public_key_update.html" title=" " alt="" coords="1238,257,1433,363"/>
-<area shape="rect" id="node10" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html" title=" " alt="" coords="1457,257,1693,363"/>
-<area shape="rect" id="node7" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html" title=" " alt="" coords="1019,463,1214,643"/>
-<area shape="rect" id="node8" href="$class_pinknose_1_1_distributed_workers_1_1_logging_1_1_serilog_event_message.html" title=" " alt="" coords="1019,692,1215,784"/>
+<area shape="rect" id="node1" title="A message which is passed between client and server." alt="" coords="5,232,200,273"/>
+<area shape="rect" id="node2" title=" " alt="" coords="253,5,484,47"/>
+<area shape="rect" id="node3" title=" " alt="" coords="251,71,486,127"/>
+<area shape="rect" id="node4" title=" " alt="" coords="249,151,488,207"/>
+<area shape="rect" id="node5" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_heartbeat_message.html" title=" " alt="" coords="271,232,466,273"/>
+<area shape="rect" id="node6" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html" title="A message that has a strongly&#45;typed payload. There are a variety of options for compression or serial..." alt="" coords="271,298,466,354"/>
+<area shape="rect" id="node9" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_public_key_update.html" title=" " alt="" coords="271,379,466,420"/>
+<area shape="rect" id="node10" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html" title=" " alt="" coords="251,444,487,485"/>
+<area shape="rect" id="node7" href="$class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html" title=" " alt="" coords="617,298,812,354"/>
+<area shape="rect" id="node8" href="$class_pinknose_1_1_distributed_workers_1_1_logging_1_1_serilog_event_message.html" title=" " alt="" coords="861,305,1057,347"/>
 </map>

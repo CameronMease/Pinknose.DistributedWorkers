@@ -85,7 +85,7 @@ $(document).ready(function(){initNavTree('_system_tags_8cs_source.html',''); ini
 <div class="title">SystemTags.cs</div>  </div>
 </div><!--header-->
 <div class="contents">
-<a href="_system_tags_8cs.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// MIT License</span></div>
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// MIT License</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Copyright(c) 2020 Cameron Mease</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">//</span></div>
@@ -111,7 +111,7 @@ $(document).ready(function(){initNavTree('_system_tags_8cs_source.html',''); ini
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespace_pinknose_1_1_distributed_workers_1_1_message_tags.html">Pinknose.DistributedWorkers.MessageTags</a></div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;{</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class </span>SystemTags</div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_system_tags.html">   29</a></span>&#160;    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class </span><a class="code" href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_system_tags.html">SystemTags</a></div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    {</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">        #region Fields</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
@@ -121,25 +121,25 @@ $(document).ready(function(){initNavTree('_system_tags_8cs_source.html',''); ini
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">        #region Properties</span></div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> MessageTag SerilogAllEvents =&gt; <span class="keyword">new</span> MessageTag(SerilogTagName);</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag.html">MessageTag</a> SerilogAllEvents =&gt; <span class="keyword">new</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag.html">MessageTag</a>(SerilogTagName);</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> MessageTagValue SerilogDebugEvent =&gt; SerilogEvent(LogEventLevel.Debug);</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_value.html">MessageTagValue</a> SerilogDebugEvent =&gt; SerilogEvent(LogEventLevel.Debug);</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> MessageTagValue SerilogErrorEvent =&gt; SerilogEvent(LogEventLevel.Error);</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_value.html">MessageTagValue</a> SerilogErrorEvent =&gt; SerilogEvent(LogEventLevel.Error);</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> MessageTagValue SerilogFatalEvent =&gt; SerilogEvent(LogEventLevel.Fatal);</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_value.html">MessageTagValue</a> SerilogFatalEvent =&gt; SerilogEvent(LogEventLevel.Fatal);</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> MessageTagValue SerilogInformationEvent =&gt; SerilogEvent(LogEventLevel.Information);</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_value.html">MessageTagValue</a> SerilogInformationEvent =&gt; SerilogEvent(LogEventLevel.Information);</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> MessageTagValue SerilogVerboseEvent =&gt; SerilogEvent(LogEventLevel.Verbose);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_value.html">MessageTagValue</a> SerilogVerboseEvent =&gt; SerilogEvent(LogEventLevel.Verbose);</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160; </div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> MessageTagValue SerilogWarningEvent =&gt; SerilogEvent(LogEventLevel.Warning);</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_value.html">MessageTagValue</a> SerilogWarningEvent =&gt; SerilogEvent(LogEventLevel.Warning);</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">        #endregion Properties</span></div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">        #region Methods</span></div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> MessageTagValue SerilogEvent(LogEventLevel eventLevel) =&gt; <span class="keyword">new</span> MessageTagValue(SerilogTagName, eventLevel);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        <span class="keyword">public</span> <span class="keyword">static</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_value.html">MessageTagValue</a> SerilogEvent(LogEventLevel eventLevel) =&gt; <span class="keyword">new</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_value.html">MessageTagValue</a>(SerilogTagName, eventLevel);</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor">        #endregion Methods</span></div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    }</div>
@@ -147,10 +147,13 @@ $(document).ready(function(){initNavTree('_system_tags_8cs_source.html',''); ini
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <div class="ttc" id="anamespace_pinknose_1_1_distributed_workers_1_1_message_tags_html"><div class="ttname"><a href="namespace_pinknose_1_1_distributed_workers_1_1_message_tags.html">Pinknose.DistributedWorkers.MessageTags</a></div><div class="ttdef"><b>Definition:</b> <a href="_message_sender_tag_8cs_source.html#l00025">MessageSenderTag.cs:26</a></div></div>
+<div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_html"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag.html">Pinknose.DistributedWorkers.MessageTags.MessageTag</a></div><div class="ttdoc">Represents a tag that can be used to subscribe to certain messages.</div><div class="ttdef"><b>Definition:</b> <a href="_message_tag_8cs_source.html#l00035">MessageTag.cs:36</a></div></div>
+<div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_value_html"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag_value.html">Pinknose.DistributedWorkers.MessageTags.MessageTagValue</a></div><div class="ttdef"><b>Definition:</b> <a href="_message_tag_value_8cs_source.html#l00030">MessageTagValue.cs:31</a></div></div>
+<div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_system_tags_html"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_system_tags.html">Pinknose.DistributedWorkers.MessageTags.SystemTags</a></div><div class="ttdef"><b>Definition:</b> <a href="_system_tags_8cs_source.html#l00029">SystemTags.cs:30</a></div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_dbf17ce18ab10b79e29a7e2b11645231.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_dae5959f0420bd10a2df55c7473e0440.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_5dd3015f74151eb9182436e39238449c.html">MessageTags</a></li><li class="navelem"><a class="el" href="_system_tags_8cs.html">SystemTags.cs</a></li>
+    <li class="navelem"><a class="el" href="dir_dbf17ce18ab10b79e29a7e2b11645231.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_dae5959f0420bd10a2df55c7473e0440.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_5dd3015f74151eb9182436e39238449c.html">MessageTags</a></li><li class="navelem"><b>SystemTags.cs</b></li>
     <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>

@@ -1,6 +1,6 @@
 <map id="Pinknose.DistributedWorkers.MessageTags.MessageTagValue" name="Pinknose.DistributedWorkers.MessageTags.MessageTagValue">
-<area shape="rect" id="node1" title=" " alt="" coords="9,432,224,539"/>
-<area shape="rect" id="node4" href="$class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_sender_tag.html" title=" " alt="" coords="5,587,228,679"/>
-<area shape="rect" id="node2" href="$class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag.html" title="Represents a tag that can be used to subscribe to certain messages." alt="" coords="22,131,211,384"/>
-<area shape="rect" id="node3" title=" " alt="" coords="26,5,207,83"/>
+<area shape="rect" id="node1" title=" " alt="" coords="9,155,224,196"/>
+<area shape="rect" id="node4" href="$class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_sender_tag.html" title=" " alt="" coords="5,244,228,285"/>
+<area shape="rect" id="node2" href="$class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_message_tag.html" title="Represents a tag that can be used to subscribe to certain messages." alt="" coords="69,80,165,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="26,5,207,32"/>
 </map>

@@ -107,151 +107,32 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:a8d1335118f7e65dbc8d76ed4543d820d"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a8d1335118f7e65dbc8d76ed4543d820d">EncryptionOption</a> { <a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a8d1335118f7e65dbc8d76ed4543d820da6adf97f83acf6453d4a6a4b1070f3754">EncryptionOption.None</a> = 0, 
-<a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a8d1335118f7e65dbc8d76ed4543d820dad007c3cfefba82b1430eb04998e3c84b">EncryptionOption.EncryptWithPrivateKey</a> = 1, 
-<a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a8d1335118f7e65dbc8d76ed4543d820dadf4abecc49663a07ff847c281c37c0a4">EncryptionOption.EncryptWithSystemSharedKey</a> = 2
+<tr class="memitem:a8d1335118f7e65dbc8d76ed4543d820d"><td class="memItemLeft" align="right" valign="top"><a id="a8d1335118f7e65dbc8d76ed4543d820d"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>EncryptionOption</b> { <b>None</b> = 0, 
+<b>EncryptWithPrivateKey</b> = 1, 
+<b>EncryptWithSystemSharedKey</b> = 2
  }</td></tr>
 <tr class="separator:a8d1335118f7e65dbc8d76ed4543d820d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a57d57466c214baf654c42f975564e9f1"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a57d57466c214baf654c42f975564e9f1">RpcCallResult</a> { <a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a57d57466c214baf654c42f975564e9f1a505a83f220c02df2f85c3810cd9ceb38">RpcCallResult.Success</a>, 
-<a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a57d57466c214baf654c42f975564e9f1ac85a251cc457840f1e032f1b733e9398">RpcCallResult.Timeout</a>, 
-<a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a57d57466c214baf654c42f975564e9f1acf220632b6c3b4876d924d00ac2fee54">RpcCallResult.BadSignature</a>
+<tr class="memitem:a57d57466c214baf654c42f975564e9f1"><td class="memItemLeft" align="right" valign="top"><a id="a57d57466c214baf654c42f975564e9f1"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>RpcCallResult</b> { <b>Success</b>, 
+<b>Timeout</b>, 
+<b>BadSignature</b>
  }</td></tr>
 <tr class="separator:a57d57466c214baf654c42f975564e9f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2dceb253fc5d7c7692da08bd97fbebdf"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a2dceb253fc5d7c7692da08bd97fbebdf">SignatureVerificationStatus</a> { <br />
-&#160;&#160;<a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a2dceb253fc5d7c7692da08bd97fbebdfa1a496ed98f336d7df32b13e64314b18f">SignatureVerificationStatus.SignatureValid</a>, 
-<a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a2dceb253fc5d7c7692da08bd97fbebdfa8d6348439d85e3058b44b7df757a9326">SignatureVerificationStatus.SignatureValidButUntrusted</a>, 
-<a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a2dceb253fc5d7c7692da08bd97fbebdfac6fa482edbcc3788b7a94983799d5ef2">SignatureVerificationStatus.SignatureNotValid</a>, 
-<a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a2dceb253fc5d7c7692da08bd97fbebdfa04d4bbd048b54c99a2c96d95d8bd49e3">SignatureVerificationStatus.NoValidClientInfo</a>, 
+<tr class="memitem:a2dceb253fc5d7c7692da08bd97fbebdf"><td class="memItemLeft" align="right" valign="top"><a id="a2dceb253fc5d7c7692da08bd97fbebdf"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>SignatureVerificationStatus</b> { <br />
+&#160;&#160;<b>SignatureValid</b>, 
+<b>SignatureValidButUntrusted</b>, 
+<b>SignatureNotValid</b>, 
+<b>NoValidClientInfo</b>, 
 <br />
-&#160;&#160;<a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a2dceb253fc5d7c7692da08bd97fbebdfa04b1972983a2829ab16723c1985606d0">SignatureVerificationStatus.SignatureUnverified</a>
+&#160;&#160;<b>SignatureUnverified</b>
 <br />
  }</td></tr>
 <tr class="separator:a2dceb253fc5d7c7692da08bd97fbebdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22d465721b35a32d4470cde2d9936807"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a22d465721b35a32d4470cde2d9936807">ECDiffieHellmanCurve</a> { <a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a22d465721b35a32d4470cde2d9936807a5a58e013b8be81aa9f018b73d30268a4">ECDiffieHellmanCurve.P256</a>, 
-<a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a22d465721b35a32d4470cde2d9936807a3cea8ed3c6226cd8ec430230adce234b">ECDiffieHellmanCurve.P384</a>, 
-<a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a22d465721b35a32d4470cde2d9936807ace03519be813c038b5c442094f090777">ECDiffieHellmanCurve.P521</a>
+<tr class="memitem:a22d465721b35a32d4470cde2d9936807"><td class="memItemLeft" align="right" valign="top"><a id="a22d465721b35a32d4470cde2d9936807"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>ECDiffieHellmanCurve</b> { <b>P256</b>, 
+<b>P384</b>, 
+<b>P521</b>
  }</td></tr>
 <tr class="separator:a22d465721b35a32d4470cde2d9936807"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Enumeration Type Documentation</h2>
-<a id="a22d465721b35a32d4470cde2d9936807"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a22d465721b35a32d4470cde2d9936807">&#9670;&nbsp;</a></span>ECDiffieHellmanCurve</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">enum <a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a22d465721b35a32d4470cde2d9936807">Pinknose.DistributedWorkers.Clients.ECDiffieHellmanCurve</a></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a22d465721b35a32d4470cde2d9936807a5a58e013b8be81aa9f018b73d30268a4"></a>P256&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a22d465721b35a32d4470cde2d9936807a3cea8ed3c6226cd8ec430230adce234b"></a>P384&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a22d465721b35a32d4470cde2d9936807ace03519be813c038b5c442094f090777"></a>P521&#160;</td><td class="fielddoc"></td></tr>
-</table>
-
-<p class="definition">Definition at line <a class="el" href="_message_client_base___crypto_8cs_source.html#l00029">29</a> of file <a class="el" href="_message_client_base___crypto_8cs_source.html">MessageClientBase_Crypto.cs</a>.</p>
-
-</div>
-</div>
-<a id="a8d1335118f7e65dbc8d76ed4543d820d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8d1335118f7e65dbc8d76ed4543d820d">&#9670;&nbsp;</a></span>EncryptionOption</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">enum <a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a8d1335118f7e65dbc8d76ed4543d820d">Pinknose.DistributedWorkers.Clients.EncryptionOption</a></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a8d1335118f7e65dbc8d76ed4543d820da6adf97f83acf6453d4a6a4b1070f3754"></a>None&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a8d1335118f7e65dbc8d76ed4543d820dad007c3cfefba82b1430eb04998e3c84b"></a>EncryptWithPrivateKey&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a8d1335118f7e65dbc8d76ed4543d820dadf4abecc49663a07ff847c281c37c0a4"></a>EncryptWithSystemSharedKey&#160;</td><td class="fielddoc"></td></tr>
-</table>
-
-<p class="definition">Definition at line <a class="el" href="_message_client_base_8cs_source.html#l00041">41</a> of file <a class="el" href="_message_client_base_8cs_source.html">MessageClientBase.cs</a>.</p>
-
-</div>
-</div>
-<a id="a57d57466c214baf654c42f975564e9f1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a57d57466c214baf654c42f975564e9f1">&#9670;&nbsp;</a></span>RpcCallResult</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">enum <a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a57d57466c214baf654c42f975564e9f1">Pinknose.DistributedWorkers.Clients.RpcCallResult</a></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a57d57466c214baf654c42f975564e9f1a505a83f220c02df2f85c3810cd9ceb38"></a>Success&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a57d57466c214baf654c42f975564e9f1ac85a251cc457840f1e032f1b733e9398"></a>Timeout&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a57d57466c214baf654c42f975564e9f1acf220632b6c3b4876d924d00ac2fee54"></a>BadSignature&#160;</td><td class="fielddoc"></td></tr>
-</table>
-
-<p class="definition">Definition at line <a class="el" href="_message_client_base_8cs_source.html#l00043">43</a> of file <a class="el" href="_message_client_base_8cs_source.html">MessageClientBase.cs</a>.</p>
-
-</div>
-</div>
-<a id="a2dceb253fc5d7c7692da08bd97fbebdf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2dceb253fc5d7c7692da08bd97fbebdf">&#9670;&nbsp;</a></span>SignatureVerificationStatus</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">enum <a class="el" href="namespace_pinknose_1_1_distributed_workers_1_1_clients.html#a2dceb253fc5d7c7692da08bd97fbebdf">Pinknose.DistributedWorkers.Clients.SignatureVerificationStatus</a></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a2dceb253fc5d7c7692da08bd97fbebdfa1a496ed98f336d7df32b13e64314b18f"></a>SignatureValid&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a2dceb253fc5d7c7692da08bd97fbebdfa8d6348439d85e3058b44b7df757a9326"></a>SignatureValidButUntrusted&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a2dceb253fc5d7c7692da08bd97fbebdfac6fa482edbcc3788b7a94983799d5ef2"></a>SignatureNotValid&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a2dceb253fc5d7c7692da08bd97fbebdfa04d4bbd048b54c99a2c96d95d8bd49e3"></a>NoValidClientInfo&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a2dceb253fc5d7c7692da08bd97fbebdfa04b1972983a2829ab16723c1985606d0"></a>SignatureUnverified&#160;</td><td class="fielddoc"></td></tr>
-</table>
-
-<p class="definition">Definition at line <a class="el" href="_message_client_base_8cs_source.html#l00045">45</a> of file <a class="el" href="_message_client_base_8cs_source.html">MessageClientBase.cs</a>.</p>
-
-</div>
-</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

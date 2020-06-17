@@ -1,5 +1,5 @@
 <map id="MessageClientBase&lt; TServerQueue &gt;" name="MessageClientBase&lt; TServerQueue &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="52,945,209,1052"/>
-<area shape="rect" id="node2" href="$class_pinknose_1_1_distributed_workers_1_1_clients_1_1_message_client_base.html" title="The base class for message clients and servers." alt="" coords="5,131,256,897"/>
-<area shape="rect" id="node3" title=" " alt="" coords="86,5,175,83"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,155,152,196"/>
+<area shape="rect" id="node2" href="$class_pinknose_1_1_distributed_workers_1_1_clients_1_1_message_client_base.html" title="The base class for message clients and servers." alt="" coords="9,80,148,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="34,5,123,32"/>
 </map>

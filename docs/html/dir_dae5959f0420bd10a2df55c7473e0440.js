@@ -10,10 +10,8 @@ var dir_dae5959f0420bd10a2df55c7473e0440 =
     [ "Messages", "dir_b17720afa935eecc0c1f70eb05c461ba.html", "dir_b17720afa935eecc0c1f70eb05c461ba" ],
     [ "MessageTags", "dir_5dd3015f74151eb9182436e39238449c.html", "dir_5dd3015f74151eb9182436e39238449c" ],
     [ "obj", "dir_c35ed9f9d7164333885cd43dd3585ca2.html", "dir_c35ed9f9d7164333885cd43dd3585ca2" ],
-    [ "GZipExtensions.cs", "_g_zip_extensions_8cs.html", null ],
-    [ "JsonShouldSerializeContractResolver.cs", "_json_should_serialize_contract_resolver_8cs.html", [
-      [ "JsonShouldSerializeContractResolver", "class_pinknose_1_1_distributed_workers_1_1_json_should_serialize_contract_resolver.html", "class_pinknose_1_1_distributed_workers_1_1_json_should_serialize_contract_resolver" ]
-    ] ],
-    [ "NameHelper.cs", "_name_helper_8cs.html", null ],
-    [ "SerializationHelpers.cs", "_serialization_helpers_8cs.html", null ]
+    [ "GZipExtensions.cs", "_g_zip_extensions_8cs_source.html", null ],
+    [ "JsonShouldSerializeContractResolver.cs", "_json_should_serialize_contract_resolver_8cs_source.html", null ],
+    [ "NameHelper.cs", "_name_helper_8cs_source.html", null ],
+    [ "SerializationHelpers.cs", "_serialization_helpers_8cs_source.html", null ]
 ];

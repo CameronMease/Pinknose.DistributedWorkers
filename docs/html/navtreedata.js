@@ -26,11 +26,7 @@ var NAVTREE =
 [
   [ "Pinknose.DistributedWorkers", "index.html", [
     [ "Packages", "namespaces.html", [
-      [ "Packages", "namespaces.html", "namespaces_dup" ],
-      [ "Package Functions", "namespacemembers.html", [
-        [ "All", "namespacemembers.html", null ],
-        [ "Enumerations", "namespacemembers_enum.html", null ]
-      ] ]
+      [ "Packages", "namespaces.html", "namespaces_dup" ]
     ] ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
@@ -40,8 +36,7 @@ var NAVTREE =
         [ "All", "functions.html", null ],
         [ "Functions", "functions_func.html", null ],
         [ "Variables", "functions_vars.html", null ],
-        [ "Properties", "functions_prop.html", null ],
-        [ "Events", "functions_evnt.html", null ]
+        [ "Properties", "functions_prop.html", null ]
       ] ]
     ] ],
     [ "Files", "files.html", [
@@ -52,8 +47,8 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"_8_n_e_t_core_app_00_version_0av3_81_8_assembly_attributes_8cs.html",
-"class_pinknose_1_1_distributed_workers_1_1_message_queues_1_1_readable_message_queue.html#a4794a515329eccd4a24cccc81e45bedd"
+"_8_n_e_t_core_app_00_version_0av3_81_8_assembly_attributes_8cs_source.html",
+"class_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_envelope.html#a1ddee0d9892aa1112aa8fc0993e8f668"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -1,5 +1,7 @@
 var hierarchy =
 [
+    [ "Pinknose.DistributedWorkers.Extensions.ArrayExtensions", "class_pinknose_1_1_distributed_workers_1_1_extensions_1_1_array_extensions.html", null ],
+    [ "Pinknose.DistributedWorkers.Extensions.CngKeyExtensions", "class_pinknose_1_1_distributed_workers_1_1_extensions_1_1_cng_key_extensions.html", null ],
     [ "DefaultContractResolver", null, [
       [ "Pinknose.DistributedWorkers.JsonShouldSerializeContractResolver", "class_pinknose_1_1_distributed_workers_1_1_json_should_serialize_contract_resolver.html", null ]
     ] ],
@@ -10,6 +12,7 @@ var hierarchy =
     [ "Exception", null, [
       [ "Pinknose.DistributedWorkers.Clients.ConnectionException", "class_pinknose_1_1_distributed_workers_1_1_clients_1_1_connection_exception.html", null ]
     ] ],
+    [ "Pinknose.DistributedWorkers.GZipExtensions", "class_pinknose_1_1_distributed_workers_1_1_g_zip_extensions.html", null ],
     [ "IDisposable", null, [
       [ "Pinknose.DistributedWorkers.Clients.MessageClientBase", "class_pinknose_1_1_distributed_workers_1_1_clients_1_1_message_client_base.html", [
         [ "MessageClientBase< TServerQueue >", "class_message_client_base.html", null ]
@@ -63,5 +66,8 @@ var hierarchy =
     [ "Pinknose.DistributedWorkers.Messages.PayloadMessage< LogEvent >", "class_pinknose_1_1_distributed_workers_1_1_messages_1_1_payload_message.html", [
       [ "Pinknose.DistributedWorkers.Logging.SerilogEventMessage", "class_pinknose_1_1_distributed_workers_1_1_logging_1_1_serilog_event_message.html", null ]
     ] ],
-    [ "Pinknose.DistributedWorkers.Clients.RpcCallWaitInfo", "class_pinknose_1_1_distributed_workers_1_1_clients_1_1_rpc_call_wait_info.html", null ]
+    [ "Pinknose.DistributedWorkers.Clients.RpcCallWaitInfo", "class_pinknose_1_1_distributed_workers_1_1_clients_1_1_rpc_call_wait_info.html", null ],
+    [ "Pinknose.DistributedWorkers.SerializationHelpers", "class_pinknose_1_1_distributed_workers_1_1_serialization_helpers.html", null ],
+    [ "Pinknose.DistributedWorkers.Logging.SerilogSinkExtensions", "class_pinknose_1_1_distributed_workers_1_1_logging_1_1_serilog_sink_extensions.html", null ],
+    [ "Pinknose.DistributedWorkers.MessageTags.SystemTags", "class_pinknose_1_1_distributed_workers_1_1_message_tags_1_1_system_tags.html", null ]
 ];

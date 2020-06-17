@@ -85,7 +85,7 @@ $(document).ready(function(){initNavTree('_system_shared_key_update_8cs_source.h
 <div class="title">SystemSharedKeyUpdate.cs</div>  </div>
 </div><!--header-->
 <div class="contents">
-<a href="_system_shared_key_update_8cs.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// MIT License</span></div>
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// MIT License</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Copyright(c) 2020 Cameron Mease</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">//</span></div>
@@ -116,22 +116,22 @@ $(document).ready(function(){initNavTree('_system_shared_key_update_8cs_source.h
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    {</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">        #region Constructors</span></div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html#a8f9a5cca4bbb8b7a6ea4ca4587b1ecff">   34</a></span>&#160;        <span class="keyword">public</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html#a8f9a5cca4bbb8b7a6ea4ca4587b1ecff">SystemSharedKeyUpdate</a>(<span class="keywordtype">byte</span>[] key) : base()</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;        <span class="keyword">public</span> <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html">SystemSharedKeyUpdate</a>(<span class="keywordtype">byte</span>[] key) : base()</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        {</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;            <span class="keywordflow">if</span> (key is <span class="keyword">null</span>)</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;            {</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;                <span class="keywordflow">throw</span> <span class="keyword">new</span> ArgumentNullException(nameof(key));</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;            }</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;            <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html#a06871a4c42ee7d430e524d924d23b108">AesKey</a> = key;</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;            AesKey = key;</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;        }</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor">        #endregion Constructors</span></div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160; </div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="preprocessor">        #region Properties</span></div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
-<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html#a06871a4c42ee7d430e524d924d23b108">   48</a></span>&#160;        <span class="keyword">public</span> <span class="keywordtype">byte</span>[] <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html#a06871a4c42ee7d430e524d924d23b108">AesKey</a> { <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; }</div>
-<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html#a1b335a1d3186b55b866b379b74563199">   49</a></span>&#160;        <span class="keyword">public</span> <span class="keyword">override</span> Guid <a class="code" href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html#a1b335a1d3186b55b866b379b74563199">MessageTypeGuid</a> =&gt; <span class="keyword">new</span> Guid(<span class="stringliteral">&quot;A3AB5084-18F5-4C7F-922A-FAC79142F605&quot;</span>);</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <span class="keyword">public</span> <span class="keywordtype">byte</span>[] AesKey { <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; }</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        <span class="keyword">public</span> <span class="keyword">override</span> Guid MessageTypeGuid =&gt; <span class="keyword">new</span> Guid(<span class="stringliteral">&quot;A3AB5084-18F5-4C7F-922A-FAC79142F605&quot;</span>);</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160; </div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">        #endregion Properties</span></div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    }</div>
@@ -139,15 +139,12 @@ $(document).ready(function(){initNavTree('_system_shared_key_update_8cs_source.h
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update_html"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html">Pinknose.DistributedWorkers.Messages.SystemSharedKeyUpdate</a></div><div class="ttdef"><b>Definition:</b> <a href="_system_shared_key_update_8cs_source.html#l00030">SystemSharedKeyUpdate.cs:31</a></div></div>
-<div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update_html_a06871a4c42ee7d430e524d924d23b108"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html#a06871a4c42ee7d430e524d924d23b108">Pinknose.DistributedWorkers.Messages.SystemSharedKeyUpdate.AesKey</a></div><div class="ttdeci">byte[] AesKey</div><div class="ttdef"><b>Definition:</b> <a href="_system_shared_key_update_8cs_source.html#l00048">SystemSharedKeyUpdate.cs:48</a></div></div>
 <div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_base_html"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_message_base.html">Pinknose.DistributedWorkers.Messages.MessageBase</a></div><div class="ttdoc">A message which is passed between client and server.</div><div class="ttdef"><b>Definition:</b> <a href="_message_base_8cs_source.html#l00034">MessageBase.cs:35</a></div></div>
-<div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update_html_a8f9a5cca4bbb8b7a6ea4ca4587b1ecff"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html#a8f9a5cca4bbb8b7a6ea4ca4587b1ecff">Pinknose.DistributedWorkers.Messages.SystemSharedKeyUpdate.SystemSharedKeyUpdate</a></div><div class="ttdeci">SystemSharedKeyUpdate(byte[] key)</div><div class="ttdef"><b>Definition:</b> <a href="_system_shared_key_update_8cs_source.html#l00034">SystemSharedKeyUpdate.cs:34</a></div></div>
-<div class="ttc" id="aclass_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update_html_a1b335a1d3186b55b866b379b74563199"><div class="ttname"><a href="class_pinknose_1_1_distributed_workers_1_1_messages_1_1_system_shared_key_update.html#a1b335a1d3186b55b866b379b74563199">Pinknose.DistributedWorkers.Messages.SystemSharedKeyUpdate.MessageTypeGuid</a></div><div class="ttdeci">override Guid MessageTypeGuid</div><div class="ttdef"><b>Definition:</b> <a href="_system_shared_key_update_8cs_source.html#l00049">SystemSharedKeyUpdate.cs:49</a></div></div>
 <div class="ttc" id="anamespace_pinknose_1_1_distributed_workers_1_1_messages_html"><div class="ttname"><a href="namespace_pinknose_1_1_distributed_workers_1_1_messages.html">Pinknose.DistributedWorkers.Messages</a></div><div class="ttdef"><b>Definition:</b> <a href="_client_announce_message_8cs_source.html#l00028">ClientAnnounceMessage.cs:29</a></div></div>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_dbf17ce18ab10b79e29a7e2b11645231.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_dae5959f0420bd10a2df55c7473e0440.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_b17720afa935eecc0c1f70eb05c461ba.html">Messages</a></li><li class="navelem"><a class="el" href="_system_shared_key_update_8cs.html">SystemSharedKeyUpdate.cs</a></li>
+    <li class="navelem"><a class="el" href="dir_dbf17ce18ab10b79e29a7e2b11645231.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_dae5959f0420bd10a2df55c7473e0440.html">Pinknose.DistributedWorkers</a></li><li class="navelem"><a class="el" href="dir_b17720afa935eecc0c1f70eb05c461ba.html">Messages</a></li><li class="navelem"><b>SystemSharedKeyUpdate.cs</b></li>
     <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>
