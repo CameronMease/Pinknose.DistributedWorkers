@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ServerTest": {
+      "commandName": "Project",
+      "commandLineArgs": "ServerConfig.json"
+    }
+  }
+}

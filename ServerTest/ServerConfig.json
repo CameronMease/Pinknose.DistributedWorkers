@@ -1,0 +1,30 @@
+{
+  "RabbitMQServer": {
+    "UserName": "guest",
+    "Password": "guest",
+    "HostName": "localhost"
+  },
+  "ServerIdentity": {
+    "SystemName": "system",
+    "Name": "server",
+    "KeySize": 256,
+    "Encrypted": true,
+    "Salt": "r3lj7BqPXnY=",
+    "IV": "eGVQ3K2lzzUdZuljKO2hTA==",
+    "ECKey-Private": "2zP6i1HtX9oGm42gBQJrumM0bLT+ZOuEv7zvJ2Ur0e/mYwbUvpz5+Gw+5TP91USy4Bk7BcPDaoOc/XD7w/lxonAsc4hRIWEfXknRfcWUVNrR4rH/t/kjRl/5wSYo5HH7c9/F6kqk8LxUz3l4LeIdYycVM8DSKI9KLkpy0IM+njUlTHI1WO8RfxowH4ablX06mGolmIUwwsR4MMYqkaZAvLajLqDUD2zhesCwMFZKUm42oC/Af5beaE9+vYNmIrUisY9yPAyljsVrw+/djLmtluROYhIBssoQLkywR1Lhc51skKglR98soFjsvl4Hx9JYHj2BugYakeHkqC8AGr0KM55NSvBy6Q6PwwNap4svinpQB+aDclIjMBWVCakc0rgrixatjTY43rYcBCKFk9NPRUMa0YF7408cwynKAP0NbbE8DAnEbYd0UAIRs4rNThnD"
+  },
+  "ClientIdentities": [
+    {
+      "SystemName": "system",
+      "Name": "client1",
+      "KeySize": 256,
+      "ECKey-Public": "RUNLMQEAAAABAAAAAAAAACAAAAAgAAAAAQAAAAAAAAD/////AAAAAQAAAAAAAAAAAAAAAP////////////////////8AAAABAAAAAAAAAAAAAAAA///////////////8WsY12Ko6k+ez671VdpiGvGUdBrDMU7D2O848PifSYEtrF9Hy4SxCR/i85uVjpEDydwN9gS3rM6D0oTlF2JjClk/jQuL+Gn+bjufrSnwPnhYrzjNXazFezsu2QGg3v1H1/////wAAAAD//////////7zm+q2nF56E87nKwvxjJVEBhc6srBg3ps5zx98zhHKJFimZlELkwLZ2+OFmE7EvnXZbccWRuc568pLfyA9G+71pI7JcsJnuNYWxj/3Omokh7g=="
+    },
+    {
+      "SystemName": "system",
+      "Name": "client2",
+      "KeySize": 256,
+      "ECKey-Public": "RUNLMQEAAAABAAAAAAAAACAAAAAgAAAAAQAAAAAAAAD/////AAAAAQAAAAAAAAAAAAAAAP////////////////////8AAAABAAAAAAAAAAAAAAAA///////////////8WsY12Ko6k+ez671VdpiGvGUdBrDMU7D2O848PifSYEtrF9Hy4SxCR/i85uVjpEDydwN9gS3rM6D0oTlF2JjClk/jQuL+Gn+bjufrSnwPnhYrzjNXazFezsu2QGg3v1H1/////wAAAAD//////////7zm+q2nF56E87nKwvxjJVEBaZ8IoXji6m89XsWnMvFxK9vlaB5XiP+KeL6HhvvioMv6Obaybd9sKbpeSSx3ICY1LypIkR2jPrxVjfcEIaq4sg=="
+    }
+  ]
+}
