@@ -113,7 +113,7 @@ namespace Pinknose.DistributedWorkers.Clients
             return EncryptDataWithClientKey(data, PublicKeystore[clientName]);
         }
 
-        internal (byte[] CipherText, byte[] IV) EncryptDataWithClientKey(byte[] data, MessageClientInfo clientInfo)
+        internal (byte[] CipherText, byte[] IV) EncryptDataWithClientKey(byte[] data, MessageClientIdentity clientInfo)
         {
             return EncryptData(data, this.PublicKeystore.GetSymmetricKey(clientInfo));
         }

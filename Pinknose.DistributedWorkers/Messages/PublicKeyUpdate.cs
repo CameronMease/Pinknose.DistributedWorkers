@@ -32,7 +32,7 @@ namespace Pinknose.DistributedWorkers.Messages
     {
         #region Constructors
 
-        public PublicKeyUpdate(MessageClientInfo clientInfo) : base()
+        public PublicKeyUpdate(MessageClientIdentity clientInfo) : base()
         {
             ClientInfo = clientInfo;
         }
@@ -41,7 +41,7 @@ namespace Pinknose.DistributedWorkers.Messages
 
         #region Properties
 
-        public MessageClientInfo ClientInfo { get; private set; }
+        public MessageClientIdentity ClientInfo { get; private set; }
 
 
         #endregion Properties

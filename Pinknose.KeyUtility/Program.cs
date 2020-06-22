@@ -21,7 +21,7 @@ namespace Pinknose.KeyUtility
 
             if (generateClientOptions != null || generateServerOptions != null)
             {
-                MessageClientInfo clientInfo = null;
+                MessageClientIdentity clientInfo = null;
                 GenerateOptionsBase generateOptionsBase = generateClientOptions != null ? (GenerateOptionsBase)generateClientOptions: (GenerateOptionsBase)generateServerOptions;
 
                 if (string.IsNullOrEmpty(generateOptionsBase.Directory))
@@ -54,11 +54,11 @@ namespace Pinknose.KeyUtility
 
                 if (generateClientOptions != null)
                 {
-                    clientInfo = MessageClientInfo.CreateClientInfo(generateClientOptions.SystemName, generateClientOptions.ClientName, curve, true);
+                    clientInfo = MessageClientIdentity.CreateClientInfo(generateClientOptions.SystemName, generateClientOptions.ClientName, curve, true);
                 }
                 else if (generateServerOptions != null)
                 {
-                    clientInfo = MessageClientInfo.CreateServerInfo(generateServerOptions.SystemName, curve, true);
+                    clientInfo = MessageClientIdentity.CreateServerInfo(generateServerOptions.SystemName, curve, true);
                 }
 
                 string path = Path.Combine(generateOptionsBase.Directory, clientInfo.SystemName + "-" + clientInfo.Name);
@@ -118,8 +118,8 @@ namespace Pinknose.KeyUtility
                 File.WriteAllText(privateFile, clientInfo.SerializePrivateInfoToJson(password));
                 File.WriteAllText(publicFile, clientInfo.SerializePublicInfoToJson());
 
-                var duhh = MessageClientInfo.Import(privateFile, password);
-                var duhh1 = MessageClientInfo.Import(publicFile);
+                var duhh = MessageClientIdentity.Import(privateFile, password);
+                var duhh1 = MessageClientIdentity.Import(publicFile);
             }
         }
     }

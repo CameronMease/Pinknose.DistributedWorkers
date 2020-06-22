@@ -33,11 +33,11 @@ using System.Security.Cryptography;
 namespace Pinknose.DistributedWorkers.Keystore
 {
     [Serializable]
-    public sealed class PublicKeystore : IEnumerable<MessageClientInfo>
+    public sealed class PublicKeystore : IEnumerable<MessageClientIdentity>
     {
         #region Fields
 
-        private Dictionary<string, MessageClientInfo> dictionary = new Dictionary<string, MessageClientInfo>();
+        private Dictionary<string, MessageClientIdentity> dictionary = new Dictionary<string, MessageClientIdentity>();
 
         private Dictionary<(CngKey PrivateKey, CngKey PublicKey), byte[]> symmetricKeys = new Dictionary<(CngKey PrivateKey, CngKey PublicKey), byte[]>();
 
@@ -45,7 +45,7 @@ namespace Pinknose.DistributedWorkers.Keystore
 
         #region Constructors
 
-        public PublicKeystore(MessageClientInfo parentClientInfo)
+        public PublicKeystore(MessageClientIdentity parentClientInfo)
         {
             ParentClientInfo = parentClientInfo;
         }
@@ -56,7 +56,7 @@ namespace Pinknose.DistributedWorkers.Keystore
 
         public int CurrentSharedKeyId { get; set; } = 0;
 
-        public MessageClientInfo ParentClientInfo { get; private set; }
+        public MessageClientIdentity ParentClientInfo { get; private set; }
 
         public SharedKeyCollection SystemSharedKeys { get; } = new SharedKeyCollection();
 
@@ -66,7 +66,7 @@ namespace Pinknose.DistributedWorkers.Keystore
 
         #region Indexers
 
-        public MessageClientInfo this[string key]
+        public MessageClientIdentity this[string key]
         {
             get => AddSymmetricKeyIfNotExist(dictionary[key]);
             //set => throw new NotImplementedException();
@@ -85,15 +85,15 @@ namespace Pinknose.DistributedWorkers.Keystore
         public void Add(string systemName, string clientName, byte[] publicKeyBlob, CngKeyBlobFormat format)
         {
             var key = CngKey.Import(publicKeyBlob, format);
-            dictionary.Add(clientName, AddSymmetricKeyIfNotExist(new MessageClientInfo(systemName, clientName, publicKeyBlob, format)));
+            dictionary.Add(clientName, AddSymmetricKeyIfNotExist(new MessageClientIdentity(systemName, clientName, publicKeyBlob, format)));
         }
 
         public void Add(string systemName, string clientName, CngKey key)
         {
-            dictionary.Add(clientName, AddSymmetricKeyIfNotExist(new MessageClientInfo(systemName, clientName, key)));
+            dictionary.Add(clientName, AddSymmetricKeyIfNotExist(new MessageClientIdentity(systemName, clientName, key)));
         }
 
-        public void Add(MessageClientInfo clientInfo)
+        public void Add(MessageClientIdentity clientInfo)
         {
             if (clientInfo is null)
             {
@@ -103,7 +103,7 @@ namespace Pinknose.DistributedWorkers.Keystore
             dictionary.Add(clientInfo.Name, AddSymmetricKeyIfNotExist(clientInfo));
         }
 
-        public void AddRange(IEnumerable<MessageClientInfo> clientInfos)
+        public void AddRange(IEnumerable<MessageClientIdentity> clientInfos)
         {
             foreach (var clientInfo in clientInfos)
             {
@@ -121,7 +121,7 @@ namespace Pinknose.DistributedWorkers.Keystore
             return symmetricKeys[(ParentClientInfo.ECKey, this[clientName].ECKey)];
         }
 
-        public byte[] GetSymmetricKey(MessageClientInfo clientInfo)
+        public byte[] GetSymmetricKey(MessageClientIdentity clientInfo)
         {
             return symmetricKeys[(ParentClientInfo.ECKey, clientInfo.ECKey)];
         }
@@ -142,12 +142,12 @@ namespace Pinknose.DistributedWorkers.Keystore
             return dictionary.Remove(clientName);
         }
 
-        public bool Remove(KeyValuePair<string, MessageClientInfo> item)
+        public bool Remove(KeyValuePair<string, MessageClientIdentity> item)
         {
             throw new NotImplementedException();
         }
 
-        public bool TryGetValue(string key, [MaybeNullWhen(false)] out MessageClientInfo value)
+        public bool TryGetValue(string key, [MaybeNullWhen(false)] out MessageClientIdentity value)
         {
             return dictionary.TryGetValue(key, out value);
         }
@@ -157,7 +157,7 @@ namespace Pinknose.DistributedWorkers.Keystore
             return dictionary.Values.GetEnumerator();
         }
 
-        IEnumerator<MessageClientInfo> IEnumerable<MessageClientInfo>.GetEnumerator()
+        IEnumerator<MessageClientIdentity> IEnumerable<MessageClientIdentity>.GetEnumerator()
         {
             return dictionary.Values.GetEnumerator();
         }
@@ -170,7 +170,7 @@ namespace Pinknose.DistributedWorkers.Keystore
             return ecdh.DeriveKeyMaterial(publicKey);
         }
 
-        private MessageClientInfo AddSymmetricKeyIfNotExist(MessageClientInfo clientInfo)
+        private MessageClientIdentity AddSymmetricKeyIfNotExist(MessageClientIdentity clientInfo)
         {
             var key = (ParentClientInfo.ECKey, clientInfo.ECKey);
 

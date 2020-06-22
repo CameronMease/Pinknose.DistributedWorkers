@@ -37,7 +37,7 @@ namespace Pinknose.DistributedWorkers.Clients
     {
         public event EventHandler<MessageReceivedEventArgs> RpcMessageReceived;
 
-        internal MessageServer(MessageClientInfo serverInfo, string rabbitMqServerHostName, string userName, string password, params MessageClientInfo[] clientInfos) :
+        internal MessageServer(MessageClientIdentity serverInfo, string rabbitMqServerHostName, string userName, string password, params MessageClientIdentity[] clientInfos) :
             base(serverInfo, rabbitMqServerHostName, userName, password)
         {
             if (serverInfo is null)
@@ -76,7 +76,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
                     timeoutTimer.Elapsed += TimeoutTimer_Elapsed;
 
-                    var clientInfo = new MessageClientInfo(this.SystemName, e.MessageEnevelope.SenderName, ((ClientAnnounceMessage)e.MessageEnevelope.Message).PublicKey, CngKeyBlobFormat.EccFullPublicBlob);
+                    var clientInfo = new MessageClientIdentity(this.SystemName, e.MessageEnevelope.SenderName, ((ClientAnnounceMessage)e.MessageEnevelope.Message).PublicKey, CngKeyBlobFormat.EccFullPublicBlob);
 
                     //e.MessageEnevelope.ReverifySignature(clientInfo.Dsa);
 

@@ -83,7 +83,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Constructors
 
-        protected MessageClientBase(MessageClientInfo clientInfo, string rabbitMqServerHostName, string userName, string password)
+        protected MessageClientBase(MessageClientIdentity clientInfo, string rabbitMqServerHostName, string userName, string password)
         {
             if (clientInfo is null)
             {
@@ -142,7 +142,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
         protected IModel Channel { get; private set; }
 
-        public MessageClientInfo ClientInfo { get; private set; }
+        public MessageClientIdentity ClientInfo { get; private set; }
 
         protected string DedicatedQueueName => NameHelper.GetDedicatedQueueName(SystemName, ClientName);
 
@@ -223,12 +223,12 @@ namespace Pinknose.DistributedWorkers.Clients
         /// <param name="waitTime"></param>
         /// <param name="encryptionOptions"></param>
         /// <returns></returns>
-        public async Task<RpcCallWaitInfo> WriteToClient(MessageClientInfo clientInfo, MessageBase message, int waitTime, bool encryptMessage)
+        public async Task<RpcCallWaitInfo> WriteToClient(MessageClientIdentity clientInfo, MessageBase message, int waitTime, bool encryptMessage)
         {
             return await WriteToClient(clientInfo.Name, message, waitTime, encryptMessage).ConfigureAwait(false);
         }
 
-        public void WriteToClientNoWait(MessageClientInfo clientInfo, MessageBase message, bool encryptMessage)
+        public void WriteToClientNoWait(MessageClientIdentity clientInfo, MessageBase message, bool encryptMessage)
         {
             if (clientInfo == null)
             {

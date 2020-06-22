@@ -14,14 +14,14 @@ namespace ServerTest
             // Assuming first argument is the JSON Configuration file name
             JObject config = JObject.Parse(File.ReadAllText(args[0]));
 
-            var serverIdentity = MessageClientInfo.Import(config["ServerIdentity"].ToString(), "monkey123");
+            var serverIdentity = MessageClientIdentity.Import(config["ServerIdentity"].ToString(), "monkey123");
 
             var clientsJArray = (JArray)config["ClientIdentities"];
-            List<MessageClientInfo> clients = new List<MessageClientInfo>();
+            List<MessageClientIdentity> clients = new List<MessageClientIdentity>();
 
             foreach (var item in clientsJArray)
             {
-                clients.Add(MessageClientInfo.Import(item.ToString()));
+                clients.Add(MessageClientIdentity.Import(item.ToString()));
             }
 
             var server = new MessageServerConfigurationBuilder()

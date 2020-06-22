@@ -34,7 +34,7 @@ using System.Text.Json;
 namespace Pinknose.DistributedWorkers.Clients
 {
     [Serializable]
-    public class MessageClientInfo : IDisposable, ISerializable
+    public class MessageClientIdentity : IDisposable, ISerializable
     {
         private const int SaltSize = 8;
         private const int KeyDerivationIterations = 1000000;
@@ -47,7 +47,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Constructors
 
-        internal MessageClientInfo(string systemName, string clientName, CngKey publicKey)
+        internal MessageClientIdentity(string systemName, string clientName, CngKey publicKey)
         {
             SystemName = systemName;
             Name = clientName;
@@ -55,7 +55,7 @@ namespace Pinknose.DistributedWorkers.Clients
             Dsa = new ECDsaCng(publicKey);
         }
 
-        internal MessageClientInfo(string systemName, string clientName, byte[] publicKeyBytes, CngKeyBlobFormat format)
+        internal MessageClientIdentity(string systemName, string clientName, byte[] publicKeyBytes, CngKeyBlobFormat format)
         {
             SystemName = systemName;
             Name = clientName;
@@ -63,7 +63,7 @@ namespace Pinknose.DistributedWorkers.Clients
             Dsa = new ECDsaCng(ECKey);
         }
 
-        protected MessageClientInfo(SerializationInfo info, StreamingContext context)
+        protected MessageClientIdentity(SerializationInfo info, StreamingContext context)
         {
             if (info == null)
             {
@@ -98,22 +98,27 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Methods
 
-        public static MessageClientInfo CreateClientInfo(string systemName, string clientName, ECDiffieHellmanCurve privateKeyCurve, bool allowExport=false)
+        public static MessageClientIdentity CreateClientInfo(string systemName, string clientName, ECDiffieHellmanCurve privateKeyCurve, bool allowExport=false)
         {
             var key = MessageClientBase.CreateClientKey(privateKeyCurve, allowExport);
-            return new MessageClientInfo(systemName, clientName, key);
+            return new MessageClientIdentity(systemName, clientName, key);
         }
 
-        public static MessageClientInfo CreateServerInfo(string systemName, ECDiffieHellmanCurve privateKeyCurve, bool allowExport = false)
+        public static MessageClientIdentity CreateServerInfo(string systemName, ECDiffieHellmanCurve privateKeyCurve, bool allowExport = false)
         {
             var key = MessageClientBase.CreateClientKey(privateKeyCurve, allowExport);
-            return new MessageClientInfo(systemName, NameHelper.GetServerName(), key);
+            return new MessageClientIdentity(systemName, NameHelper.GetServerName(), key);
         }
 
-        public static MessageClientInfo Import(string keyFilePath, string password="")
+        public static MessageClientIdentity ImportFromFile(string keyFilePath, string password = "")
         {
             var json = File.ReadAllText(keyFilePath);
 
+            return Import(json, password);
+        }
+
+        public static MessageClientIdentity Import(string json, string password="")
+        {
             JObject jObject = JObject.Parse(json);
 
             byte[] ecKey;
@@ -148,7 +153,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
             CngKey cngKey = CngKey.Import(ecKey, isPrivateKey ? CngKeyBlobFormat.EccFullPrivateBlob : CngKeyBlobFormat.EccFullPublicBlob);
 
-            return new MessageClientInfo(jObject.Value<string>(nameof(SystemName)), jObject.Value<string>(nameof(Name)), cngKey);
+            return new MessageClientIdentity(jObject.Value<string>(nameof(SystemName)), jObject.Value<string>(nameof(Name)), cngKey);
         }
 
         public string SerializePublicInfoToJson()

@@ -33,7 +33,7 @@ public abstract class MessageClientBase<TServerQueue> : MessageClientBase where 
 
     #region Constructors
 
-    protected MessageClientBase(MessageClientInfo clientInfo, string rabbitMqServerHostName, string userName, string password) :
+    protected MessageClientBase(MessageClientIdentity clientInfo, string rabbitMqServerHostName, string userName, string password) :
                 base(clientInfo, rabbitMqServerHostName, userName, password)
     {
     }

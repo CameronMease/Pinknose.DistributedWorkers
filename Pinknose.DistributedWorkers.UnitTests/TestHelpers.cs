@@ -38,27 +38,27 @@ namespace Pinknose.DistributedWorkers.UnitTests
     {
         #region Methods
 
-        public static MessageClient CreateClient(string clientName, MessageClientInfo serverInfo, [CallerMemberName] string systemName = "")
+        public static MessageClient CreateClient(string clientName, MessageClientIdentity serverInfo, [CallerMemberName] string systemName = "")
         {
             return new MessageClientConfigurationBuilder()
-                .ClientInfo(MessageClientInfo.CreateClientInfo(systemName, clientName, ECDiffieHellmanCurve.P256))
+                .ClientInfo(MessageClientIdentity.CreateClientInfo(systemName, clientName, ECDiffieHellmanCurve.P256))
                 .ServerInfo(serverInfo)
-                .RabbitMQServer(Properties.Resources.RabbitMQServerName)
-                .Credentials(Properties.Resources.Username, Properties.Resources.Password)
+                .RabbitMQServerHostName(Properties.Resources.RabbitMQServerName)
+                .RabbitMQCredentials(Properties.Resources.Username, Properties.Resources.Password)
                 .QueuesAreDurable(false)
                 .AutoDeleteQueuesOnClose(true)
                 .CreateMessageClient();
          }
 
-        public static (MessageServer messageServer, MessageClientInfo serverInfo) CreateServer(string serverName, CngKey key, [CallerMemberName] string systemName = "", params MessageClientInfo[] clientInfo)
+        public static (MessageServer messageServer, MessageClientIdentity serverInfo) CreateServer(string serverName, CngKey key, [CallerMemberName] string systemName = "", params MessageClientIdentity[] clientInfo)
         {
-            var serverInfo = MessageClientInfo.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
+            var serverInfo = MessageClientIdentity.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
 
             return (new MessageServerConfigurationBuilder()
                 .ServerInfo(serverInfo)
                 .AddClientInfoRange(clientInfo)
-                .RabbitMQServer(Properties.Resources.RabbitMQServerName)
-                .Credentials(Properties.Resources.Username, Properties.Resources.Password)
+                .RabbitMQServerHostName(Properties.Resources.RabbitMQServerName)
+                .RabbitMQCredentials(Properties.Resources.Username, Properties.Resources.Password)
                 .QueuesAreDurable(false)
                 .AutoDeleteQueuesOnClose(true)
                 .CreateMessageServer(), serverInfo);
@@ -66,19 +66,19 @@ namespace Pinknose.DistributedWorkers.UnitTests
 
         public static (MessageServer messageServer, IEnumerable<MessageClient> clients) CreateClientsAndServer([CallerMemberName] string systemName = "", params string[] clientNames)
         {
-            MessageClientInfo serverInfo = MessageClientInfo.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
-            MessageClientInfo[] clientsInfo = new MessageClientInfo[clientNames.Count()];
+            MessageClientIdentity serverInfo = MessageClientIdentity.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
+            MessageClientIdentity[] clientsInfo = new MessageClientIdentity[clientNames.Count()];
             MessageClient[] messageClients = new MessageClient[clientNames.Count()];
 
             for (int i = 0; i < clientNames.Count(); i++)
             {
-                clientsInfo[i] = MessageClientInfo.CreateClientInfo(systemName, clientNames[i], ECDiffieHellmanCurve.P256);
+                clientsInfo[i] = MessageClientIdentity.CreateClientInfo(systemName, clientNames[i], ECDiffieHellmanCurve.P256);
 
                 messageClients[i] = new MessageClientConfigurationBuilder()
                                         .ClientInfo(clientsInfo[i])
                                         .ServerInfo(serverInfo)
-                                        .RabbitMQServer(Properties.Resources.RabbitMQServerName)
-                                        .Credentials(Properties.Resources.Username, Properties.Resources.Password)
+                                        .RabbitMQServerHostName(Properties.Resources.RabbitMQServerName)
+                                        .RabbitMQCredentials(Properties.Resources.Username, Properties.Resources.Password)
                                         .QueuesAreDurable(false)
                                         .AutoDeleteQueuesOnClose(true)
                                         .CreateMessageClient();
@@ -87,8 +87,8 @@ namespace Pinknose.DistributedWorkers.UnitTests
             var messageServer = new MessageServerConfigurationBuilder()
                                     .ServerInfo(serverInfo)
                                     .AddClientInfoRange(clientsInfo)
-                                    .RabbitMQServer(Properties.Resources.RabbitMQServerName)
-                                    .Credentials(Properties.Resources.Username, Properties.Resources.Password)
+                                    .RabbitMQServerHostName(Properties.Resources.RabbitMQServerName)
+                                    .RabbitMQCredentials(Properties.Resources.Username, Properties.Resources.Password)
                                     .QueuesAreDurable(false)
                                     .AutoDeleteQueuesOnClose(true)
                                     .CreateMessageServer();

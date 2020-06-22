@@ -30,21 +30,21 @@ namespace Pinknose.DistributedWorkers.Configuration
     {
         #region Fields
 
-        private MessageClientInfo _clientInfo = null;
-        private MessageClientInfo _serverInfo = null;
+        private MessageClientIdentity _clientInfo = null;
+        private MessageClientIdentity _serverInfo = null;
 
         #endregion Fields
 
         #region Methods
 
-        public MessageClientConfigurationBuilder ClientInfo(MessageClientInfo clientInfo)
+        public MessageClientConfigurationBuilder ClientInfo(MessageClientIdentity clientInfo)
         {
             _clientInfo = clientInfo;
 
             return this;
         }
 
-        public MessageClientConfigurationBuilder ServerInfo(MessageClientInfo serverInfo)
+        public MessageClientConfigurationBuilder ServerInfo(MessageClientIdentity serverInfo)
         {
             _serverInfo = serverInfo;
 

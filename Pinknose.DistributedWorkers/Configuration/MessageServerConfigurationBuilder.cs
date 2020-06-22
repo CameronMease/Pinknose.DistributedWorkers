@@ -32,21 +32,21 @@ namespace Pinknose.DistributedWorkers.Configuration
     {
         #region Fields
 
-        private HashSet<MessageClientInfo> _clientInfos = new HashSet<MessageClientInfo>();
-        private MessageClientInfo _serverInfo = null;
+        private HashSet<MessageClientIdentity> _clientInfos = new HashSet<MessageClientIdentity>();
+        private MessageClientIdentity _serverInfo = null;
 
         #endregion Fields
 
         #region Methods
 
-        public MessageServerConfigurationBuilder AddClientInfo(MessageClientInfo clientInfo)
+        public MessageServerConfigurationBuilder AddClientInfo(MessageClientIdentity clientInfo)
         {
             _clientInfos.Add(clientInfo);
 
             return this;
         }
 
-        public MessageServerConfigurationBuilder AddClientInfoRange(IEnumerable<MessageClientInfo> clientsInfo)
+        public MessageServerConfigurationBuilder AddClientInfoRange(IEnumerable<MessageClientIdentity> clientsInfo)
         {
             foreach (var info in clientsInfo)
             {
@@ -56,7 +56,7 @@ namespace Pinknose.DistributedWorkers.Configuration
             return this;
         }
 
-        public MessageServerConfigurationBuilder ServerInfo(MessageClientInfo serverInfo)
+        public MessageServerConfigurationBuilder ServerInfo(MessageClientIdentity serverInfo)
         {
             _serverInfo = serverInfo;
 

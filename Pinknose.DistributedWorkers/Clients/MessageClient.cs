@@ -50,7 +50,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Constructors
 
-        internal MessageClient(MessageClientInfo clientInfo, MessageClientInfo serverInfo, string rabbitMqServerHostName, string userName, string password) :
+        internal MessageClient(MessageClientIdentity clientInfo, MessageClientIdentity serverInfo, string rabbitMqServerHostName, string userName, string password) :
             base(clientInfo, rabbitMqServerHostName, userName, password)
         {
             this.PublicKeystore.Add(serverInfo);

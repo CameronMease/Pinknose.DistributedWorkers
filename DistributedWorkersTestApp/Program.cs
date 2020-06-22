@@ -57,12 +57,12 @@ namespace DistributedWorkersTestApp
 
             UInt32 key = random.NextUInt32();
             UInt32 iv = random.NextUInt32();
-            (var cipherText, var signature) = SimpleCBC.Encode("This is a test!!!!", key, iv);
+            (var cipherText, var signature) = SimpleCBC.Encode("Hi", key, iv, 2);
 
             var sig = BitConverter.GetBytes(signature);
 
             var duhh = System.Text.Encoding.UTF8.GetString(cipherText);
-            var message = SimpleCBC.Decode(cipherText, key, iv);
+            var message = SimpleCBC.Decode(cipherText, key, iv, 2);
 
 
             var errorTag = new MessageTagValue("Severity", "Error");
@@ -77,21 +77,21 @@ namespace DistributedWorkersTestApp
             //using var client2Info = MessageClientInfo.CreateClientInfo(systemName, "client2", ECDiffieHellmanCurve.P256);
             //using var client3Info = MessageClientInfo.CreateClientInfo(systemName, "client3", ECDiffieHellmanCurve.P256);
 
-            using var serverPublicInfo =  MessageClientInfo.Import(@"keys\system-server.pub");
-            using var serverPrivateInfo =  MessageClientInfo.Import(@"keys\system-server.priv", "monkey123");
+            using var serverPublicInfo =  MessageClientIdentity.Import(@"keys\system-server.pub");
+            using var serverPrivateInfo =  MessageClientIdentity.Import(@"keys\system-server.priv", "monkey123");
 
-            using var client1PublicInfo = MessageClientInfo.Import(@"keys\system-client1.pub");
-            using var client1PrivateInfo = MessageClientInfo.Import(@"keys\system-client1.priv");
+            using var client1PublicInfo = MessageClientIdentity.Import(@"keys\system-client1.pub");
+            using var client1PrivateInfo = MessageClientIdentity.Import(@"keys\system-client1.priv");
 
-            using var client2PublicInfo = MessageClientInfo.Import(@"keys\system-client2.pub");
-            using var client2PrivateInfo = MessageClientInfo.Import(@"keys\system-client2.priv");
+            using var client2PublicInfo = MessageClientIdentity.Import(@"keys\system-client2.pub");
+            using var client2PrivateInfo = MessageClientIdentity.Import(@"keys\system-client2.priv");
 
-            using var client3PublicInfo = MessageClientInfo.Import(@"keys\system-client3.pub");
-            using var client3PrivateInfo = MessageClientInfo.Import(@"keys\system-client3.priv");
+            using var client3PublicInfo = MessageClientIdentity.Import(@"keys\system-client3.pub");
+            using var client3PrivateInfo = MessageClientIdentity.Import(@"keys\system-client3.priv");
 
             var server = new MessageServerConfigurationBuilder()
-                .Credentials("guest", "guest")
-                .RabbitMQServer(rabbitMQServerName)
+                .RabbitMQCredentials("guest", "guest")
+                .RabbitMQServerHostName("127.0.0.1")
                 .ServerInfo(serverPrivateInfo)
                 .AddClientInfo(client1PublicInfo)
                 //.AddClientInfo(client2PublicInfo)
@@ -139,8 +139,8 @@ namespace DistributedWorkersTestApp
             var never = new MessageTagValue("duhh", "never");
 
             MessageClient client1 = new MessageClientConfigurationBuilder()
-                .Credentials("guest", "guest")
-                .RabbitMQServer(rabbitMQServerName)
+                .RabbitMQCredentials("guest", "guest")
+                .RabbitMQServerHostName(rabbitMQServerName)
                 .ServerInfo(serverPublicInfo)
                 .ClientInfo(client1PrivateInfo)
                 .AutoDeleteQueuesOnClose(true)
@@ -162,8 +162,8 @@ namespace DistributedWorkersTestApp
             client1.BeginFullWorkConsume(true);
 
             MessageClient client2 = new MessageClientConfigurationBuilder()
-                .Credentials("guest", "guest")
-                .RabbitMQServer(rabbitMQServerName)
+                .RabbitMQCredentials("guest", "guest")
+                .RabbitMQServerHostName(rabbitMQServerName)
                 .ServerInfo(serverPublicInfo)
                 .ClientInfo(client2PrivateInfo)
                 .AutoDeleteQueuesOnClose(true)
