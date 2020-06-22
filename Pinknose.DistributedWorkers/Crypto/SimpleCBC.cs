@@ -23,6 +23,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 using System;
+using System.Diagnostics;
 using System.Security.Authentication;
 using System.Text;
 
@@ -36,68 +37,69 @@ namespace Pinknose.DistributedWorkers.Crypto
     {
         #region Methods
 
-        public static (byte[] CipherText, UInt32 Signature) Encode(string plaintext, UInt32 key, UInt32 iv)
+        public static (byte[] CipherText, UInt32 Signature) Encode(string plaintext, UInt32 key, UInt32 iv, int rounds=1)
         {
             if (plaintext == null)
             {
                 throw new ArgumentNullException(nameof(plaintext));
             }
 
-            int blockLength = plaintext.Length + 4 - (plaintext.Length % 4);
+            if (rounds <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(rounds));
+            }
 
-            byte[] bytes = new byte[blockLength];
+            int plaintextLength = plaintext.Length + 4 - (plaintext.Length % 4);
+
+            byte[] bytes = new byte[plaintextLength];
             Encoding.UTF8.GetBytes(plaintext).CopyTo(bytes, 0);
 
             UInt32 currentBlock;
-            UInt32 previousBlock = 0;
+            UInt32 previousBlock = iv;
 
-            for (int i = 0; i < blockLength; i += 4)
+            for (int round = 0; round < rounds; round++)
             {
-                currentBlock = BitConverter.ToUInt32(bytes, i);
+                for (int i = 0; i < plaintextLength; i += 4)
+                {
+                    currentBlock = BitConverter.ToUInt32(bytes, i);
 
-                if (i == 0)
-                {
-                    currentBlock ^= iv;
-                }
-                else
-                {
                     currentBlock ^= previousBlock;
+                    currentBlock ^= key;
+
+                    BitConverter.GetBytes(currentBlock).CopyTo(bytes, i);
+                    previousBlock = currentBlock;
                 }
-
-                currentBlock ^= key;
-
-                BitConverter.GetBytes(currentBlock).CopyTo(bytes, i);
-                previousBlock = currentBlock;
             }
 
             return (bytes, BitConverter.ToUInt32(bytes[^4..]));
         }
 
-        public static string Decode(byte[] bytes, UInt32 key, UInt32 iv)
+        public static string Decode(byte[] bytes, UInt32 key, UInt32 iv, int rounds=1)
         {
+            if (rounds <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(rounds));
+            }
+
             byte[] tempBytes = new byte[bytes.Length];
+            bytes.CopyTo(tempBytes, 0);
 
             UInt32 currentBlock;
-            UInt32 previousBlock = 0;
+            UInt32 previousBlock = iv;
 
-            for (int i = 0; i < bytes.Length; i += 4)
+            for (int round = 0; round < rounds; round++)
             {
-                currentBlock = BitConverter.ToUInt32(bytes, i);
-                var previousBlockTemp = currentBlock;
-
-                currentBlock ^= key;
-
-                if (i == 0)
+                for (int i = 0; i < bytes.Length; i += 4)
                 {
-                    currentBlock ^= iv;
-                }
-                else
-                {
+                    currentBlock = BitConverter.ToUInt32(tempBytes, i);
+                    var previousBlockTemp = currentBlock;
+
+                    currentBlock ^= key;
                     currentBlock ^= previousBlock;
-                }
 
-                BitConverter.GetBytes(currentBlock).CopyTo(tempBytes, i);
-                previousBlock = previousBlockTemp;
+                    BitConverter.GetBytes(currentBlock).CopyTo(tempBytes, i);
+                    previousBlock = previousBlockTemp;
+                }
             }
 
             return Encoding.UTF8.GetString(tempBytes).Trim('\0');
