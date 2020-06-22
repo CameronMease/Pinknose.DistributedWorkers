@@ -77,17 +77,17 @@ namespace DistributedWorkersTestApp
             //using var client2Info = MessageClientInfo.CreateClientInfo(systemName, "client2", ECDiffieHellmanCurve.P256);
             //using var client3Info = MessageClientInfo.CreateClientInfo(systemName, "client3", ECDiffieHellmanCurve.P256);
 
-            using var serverPublicInfo =  MessageClientIdentity.Import(@"keys\system-server.pub");
-            using var serverPrivateInfo =  MessageClientIdentity.Import(@"keys\system-server.priv", "monkey123");
+            using var serverPublicInfo =  MessageClientIdentity.ImportFromFile(@"keys\system-server.pub");
+            using var serverPrivateInfo =  MessageClientIdentity.ImportFromFile(@"keys\system-server.priv", "monkey123");
 
-            using var client1PublicInfo = MessageClientIdentity.Import(@"keys\system-client1.pub");
-            using var client1PrivateInfo = MessageClientIdentity.Import(@"keys\system-client1.priv");
+            using var client1PublicInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client1.pub");
+            using var client1PrivateInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client1.priv");
 
-            using var client2PublicInfo = MessageClientIdentity.Import(@"keys\system-client2.pub");
-            using var client2PrivateInfo = MessageClientIdentity.Import(@"keys\system-client2.priv");
+            using var client2PublicInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client2.pub");
+            using var client2PrivateInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client2.priv");
 
-            using var client3PublicInfo = MessageClientIdentity.Import(@"keys\system-client3.pub");
-            using var client3PrivateInfo = MessageClientIdentity.Import(@"keys\system-client3.priv");
+            using var client3PublicInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client3.pub");
+            using var client3PrivateInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client3.priv");
 
             var server = new MessageServerConfigurationBuilder()
                 .RabbitMQCredentials("guest", "guest")
