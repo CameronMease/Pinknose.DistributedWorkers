@@ -35,7 +35,7 @@ namespace Pinknose.DistributedWorkers.Configuration
         protected string _userName = "";
         protected string _password = "";
 
-        protected string _rabbitMQServerName = "";
+        protected string _rabbitMQServerHostName = "";
 
         protected bool _queuesAreDurable = true;
         protected bool _autoDeleteQueuesOnClose = false;
@@ -44,7 +44,7 @@ namespace Pinknose.DistributedWorkers.Configuration
 
         #region Methods
 
-        public TConfigType Credentials(string userName, string password)
+        public TConfigType RabbitMQCredentials(string userName, string password)
         {
             _userName = userName;
             _password = password;
@@ -52,9 +52,14 @@ namespace Pinknose.DistributedWorkers.Configuration
             return (TConfigType)(object)this;
         }
 
-        public TConfigType RabbitMQServer(string serverName)
+        /// <summary>
+        /// The hostname or IP address of the computer running the RabbitMQ Server
+        /// </summary>
+        /// <param name="hostName"></param>
+        /// <returns></returns>
+        public TConfigType RabbitMQServerHostName(string hostName)
         {
-            _rabbitMQServerName = serverName;
+            _rabbitMQServerHostName = hostName;
 
             return (TConfigType)(object)this;
         }

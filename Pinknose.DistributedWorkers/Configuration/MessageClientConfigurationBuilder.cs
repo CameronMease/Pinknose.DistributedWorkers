@@ -56,7 +56,7 @@ namespace Pinknose.DistributedWorkers.Configuration
             return new MessageClient(
                 _clientInfo,
                 _serverInfo,
-                this._rabbitMQServerName,
+                this._rabbitMQServerHostName,
                 this._userName,
                 this._password)
             {
