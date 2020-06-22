@@ -228,7 +228,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
         private void ServerHeartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            Log.Warning("Server timeout.");
+            //TODO: Get timeouts working Log.Warning("Server timeout.");
         }
 
         #endregion Methods
