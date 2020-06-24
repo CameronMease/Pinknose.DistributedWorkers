@@ -63,7 +63,7 @@ namespace Pinknose.DistributedWorkers.UnitTests
 
             for (int i = 0; i < messageCountTarget; i++)
             {
-                server.WriteToClientNoWait(receiver.ClientInfo,  message, true);
+                server.WriteToClientNoWait(receiver.Identity,  message, true);
                 sendCount++;
                 //Thread.Sleep(msBetweenSends);
             }

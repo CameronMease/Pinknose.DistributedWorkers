@@ -22,6 +22,9 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using Pinknose.DistributedWorkers.Clients;
+using System.Collections.Generic;
+
 namespace Pinknose.DistributedWorkers.Configuration
 {
     public abstract class MessageClientConfigurationBuilderBase
@@ -32,13 +35,15 @@ namespace Pinknose.DistributedWorkers.Configuration
     {
         #region Fields
 
-        protected string _userName = "";
-        protected string _password = "";
+        protected string _userName = "guest";
+        protected string _password = "guest";
 
-        protected string _rabbitMQServerHostName = "";
+        protected string _rabbitMQServerHostName = "localhost";
 
         protected bool _queuesAreDurable = true;
         protected bool _autoDeleteQueuesOnClose = false;
+
+        protected HashSet<MessageClientIdentity> _clientIdentities = new HashSet<MessageClientIdentity>();
 
         #endregion Fields
 
@@ -73,6 +78,23 @@ namespace Pinknose.DistributedWorkers.Configuration
         public TConfigType QueuesAreDurable(bool value)
         {
             _queuesAreDurable = value;
+            return (TConfigType)(object)this;
+        }
+
+        public TConfigType AddClientIdentity(MessageClientIdentity clientIdentity)
+        {
+            _clientIdentities.Add(clientIdentity);
+
+            return (TConfigType)(object)this;
+        }
+
+        public TConfigType AddClientInfoRange(IEnumerable<MessageClientIdentity> clientIdentity)
+        {
+            foreach (var info in clientIdentity)
+            {
+                _clientIdentities.Add(info);
+            }
+
             return (TConfigType)(object)this;
         }
 

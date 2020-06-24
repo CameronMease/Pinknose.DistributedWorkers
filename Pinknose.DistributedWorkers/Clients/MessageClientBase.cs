@@ -54,7 +54,7 @@ namespace Pinknose.DistributedWorkers.Clients
         /// <summary>
         /// Heartbeat time between clients/server in milliseconds;
         /// </summary>
-        protected const int HeartbeatTime = 10000;
+        //protected const int HeartbeatTime = 10;
 
         protected static readonly int SharedKeyByteSize = 32;
 
@@ -69,12 +69,6 @@ namespace Pinknose.DistributedWorkers.Clients
         private IConnection connection;
 
         private bool disposedValue = false;
-
-        private System.Timers.Timer heartbeatTimer = new System.Timers.Timer()
-        {
-            Interval = HeartbeatTime,
-            AutoReset = true
-        };
 
         public bool QueuesAreDurable { get; set; } = true;
         public bool AutoDeleteQueuesOnClose { get; set; } = false;
@@ -105,7 +99,7 @@ namespace Pinknose.DistributedWorkers.Clients
                 throw new ArgumentNullException(nameof(password));
             }
 
-            ClientInfo = clientInfo;
+            Identity = clientInfo;
 
             PublicKeystore = new PublicKeystore(clientInfo);
 
@@ -130,19 +124,19 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Properties
 
-        public string ClientName => ClientInfo.Name;
+        public string ClientName => Identity.Name;
 
         public string InternalId { get; private set; }
 
         public bool IsConnected { get; protected set; } = false;
 
-        public string SystemName => ClientInfo.SystemName;
+        public string SystemName => Identity.SystemName;
 
         protected string BroadcastExchangeName => NameHelper.GetBroadcastExchangeName(SystemName);
 
         protected IModel Channel { get; private set; }
 
-        public MessageClientIdentity ClientInfo { get; private set; }
+        public MessageClientIdentity Identity { get; private set; }
 
         protected string DedicatedQueueName => NameHelper.GetDedicatedQueueName(SystemName, ClientName);
 
@@ -173,13 +167,8 @@ namespace Pinknose.DistributedWorkers.Clients
         /// Sends the message to all clients.
         /// </summary>
         /// <param name="message"></param>
-        public void BroadcastToAllClients(MessageBase message, EncryptionOption encryptionOption)
+        public void BroadcastToAllClients(MessageBase message, bool encryptMessage)
         {
-            if (encryptionOption == EncryptionOption.EncryptWithPrivateKey)
-            {
-                throw new ArgumentOutOfRangeException(nameof(encryptionOption), "Broadcast messages cannot be encrypted with private keys.");
-            }
-
             if (message == null)
             {
                 throw new ArgumentNullException(nameof(message));
@@ -187,16 +176,21 @@ namespace Pinknose.DistributedWorkers.Clients
 
             //message.ClientName = this.ClientName;
 
+            var encryptionOption = encryptMessage ? EncryptionOption.EncryptWithSystemSharedKey : EncryptionOption.None;
+
             var wrapper = MessageEnvelope.WrapMessage(message, "", this, encryptionOption);
 
             try
             {
-                Channel.BasicPublish(
-                    exchange: BroadcastExchangeName,
-                    routingKey: "",
-                    mandatory: true,
-                    basicProperties: null,
-                    body: wrapper.Serialize());
+                lock (Channel)
+                {
+                    Channel.BasicPublish(
+                        exchange: BroadcastExchangeName,
+                        routingKey: "",
+                        mandatory: true,
+                        basicProperties: null,
+                        body: wrapper.Serialize());
+                }
             }
             catch (AlreadyClosedException e)
             {
@@ -218,24 +212,24 @@ namespace Pinknose.DistributedWorkers.Clients
         /// <summary>
         /// Async method that writes to a client and returns a task that waits for the result.
         /// </summary>
-        /// <param name="clientInfo"></param>
+        /// <param name="clientIdentity"></param>
         /// <param name="message"></param>
         /// <param name="waitTime"></param>
         /// <param name="encryptionOptions"></param>
         /// <returns></returns>
-        public async Task<RpcCallWaitInfo> WriteToClient(MessageClientIdentity clientInfo, MessageBase message, int waitTime, bool encryptMessage)
+        public async Task<RpcCallWaitInfo> WriteToClient(MessageClientIdentity clientIdentity, MessageBase message, int waitTime, bool encryptMessage)
         {
-            return await WriteToClient(clientInfo.Name, message, waitTime, encryptMessage).ConfigureAwait(false);
+            return await WriteToClient(clientIdentity.Name, message, waitTime, encryptMessage).ConfigureAwait(false);
         }
 
-        public void WriteToClientNoWait(MessageClientIdentity clientInfo, MessageBase message, bool encryptMessage)
+        public void WriteToClientNoWait(MessageClientIdentity clientIdentity, MessageBase message, bool encryptMessage)
         {
-            if (clientInfo == null)
+            if (clientIdentity == null)
             {
-                throw new ArgumentNullException(nameof(clientInfo));
+                throw new ArgumentNullException(nameof(clientIdentity));
             }
 
-            WriteToClientNoWait(clientInfo.Name, message, encryptMessage);
+            WriteToClientNoWait(clientIdentity.Name, message, encryptMessage);
         }
 
         protected void WriteToClientNoWait(string clientName, MessageBase message, bool encryptMessage)
@@ -254,11 +248,14 @@ namespace Pinknose.DistributedWorkers.Clients
 
             var formattedMessage = ConfigureUnicastMessageForSend(message, clientName, encryptionOption);
 
-            Channel.BasicPublish(
-                exchange: "",
-                routingKey: NameHelper.GetDedicatedQueueName(SystemName, clientName),
-                basicProperties: formattedMessage.BasicProperties,
-                formattedMessage.SignedMessage);
+            lock (Channel)
+            {
+                Channel.BasicPublish(
+                    exchange: "",
+                    routingKey: NameHelper.GetDedicatedQueueName(SystemName, clientName),
+                    basicProperties: formattedMessage.BasicProperties,
+                    formattedMessage.SignedMessage);
+            }
         }
 
         public void WriteToSubscriptionQueues(MessageBase message, bool encryptMessage, params MessageTag[] tags) =>
@@ -304,7 +301,6 @@ namespace Pinknose.DistributedWorkers.Clients
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects).
-                    heartbeatTimer?.Dispose();
                     connection?.Dispose();
                 }
 
@@ -344,6 +340,15 @@ namespace Pinknose.DistributedWorkers.Clients
             connection = factory.CreateConnection();
             Channel = connection.CreateModel();
 
+            Channel.BasicAcks += Channel_BasicAcks;
+            Channel.BasicNacks += Channel_BasicNacks;
+            Channel.BasicRecoverOk += Channel_BasicRecoverOk;
+            Channel.BasicReturn += Channel_BasicReturn;
+            Channel.CallbackException += Channel_CallbackException;
+            Channel.FlowControl += Channel_FlowControl;
+            Channel.ModelShutdown += Channel_ModelShutdown;
+
+
             WorkQueue = MessageQueue.CreateMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, WorkQueueName, this.QueuesAreDurable, this.AutoDeleteQueuesOnClose);
             WorkQueue.MessageReceived += Queue_MessageReceived;
             WorkQueue.AsynchronousException += (sender, eventArgs) => this.AsynchronousException?.Invoke(this, eventArgs);
@@ -370,9 +375,43 @@ namespace Pinknose.DistributedWorkers.Clients
 
             //TODO: SHould ACK be required?
             SubscriptionQueue.BeginFullConsume(false);
+        }
 
-            heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
-            heartbeatTimer.Start();
+        private void Channel_ModelShutdown(object sender, ShutdownEventArgs e)
+        {
+            var duhh = this;
+
+            throw new NotImplementedException();
+        }
+
+        private void Channel_FlowControl(object sender, RabbitMQ.Client.Events.FlowControlEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Channel_CallbackException(object sender, RabbitMQ.Client.Events.CallbackExceptionEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Channel_BasicReturn(object sender, RabbitMQ.Client.Events.BasicReturnEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Channel_BasicRecoverOk(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Channel_BasicNacks(object sender, RabbitMQ.Client.Events.BasicNackEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Channel_BasicAcks(object sender, RabbitMQ.Client.Events.BasicAckEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -398,11 +437,14 @@ namespace Pinknose.DistributedWorkers.Clients
 
             var formattedMessage = ConfigureUnicastMessageForSend(message, clientName, encryptionOption);
 
-            Channel.BasicPublish(
-                exchange: "",
-                routingKey: NameHelper.GetDedicatedQueueName(SystemName, clientName),
-                basicProperties: formattedMessage.BasicProperties,
-                formattedMessage.SignedMessage);
+            lock (Channel)
+            {
+                Channel.BasicPublish(
+                    exchange: "",
+                    routingKey: NameHelper.GetDedicatedQueueName(SystemName, clientName),
+                    basicProperties: formattedMessage.BasicProperties,
+                    formattedMessage.SignedMessage);
+            }
 
             RpcCallWaitInfo response = new RpcCallWaitInfo();
             response.WaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);

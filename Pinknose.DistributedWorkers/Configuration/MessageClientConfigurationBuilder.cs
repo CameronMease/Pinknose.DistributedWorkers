@@ -23,6 +23,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 using Pinknose.DistributedWorkers.Clients;
+using System.Linq;
 
 namespace Pinknose.DistributedWorkers.Configuration
 {
@@ -30,38 +31,47 @@ namespace Pinknose.DistributedWorkers.Configuration
     {
         #region Fields
 
-        private MessageClientIdentity _clientInfo = null;
-        private MessageClientIdentity _serverInfo = null;
+        private MessageClientIdentity _thisIdentity = null;
+        private MessageClientIdentity _serverIdentity = null;
+        private int _heartbeatInterval = 1000;
 
         #endregion Fields
 
         #region Methods
 
-        public MessageClientConfigurationBuilder ClientInfo(MessageClientIdentity clientInfo)
+        public MessageClientConfigurationBuilder Identity(MessageClientIdentity identity)
         {
-            _clientInfo = clientInfo;
+            _thisIdentity = identity;
 
             return this;
         }
 
-        public MessageClientConfigurationBuilder ServerInfo(MessageClientIdentity serverInfo)
+        public MessageClientConfigurationBuilder ServerIdentity(MessageClientIdentity serverIdentity)
         {
-            _serverInfo = serverInfo;
+            _serverIdentity = serverIdentity;
 
+            return this;
+        }
+
+        public MessageClientConfigurationBuilder HeartbeatInterval(int interval)
+        {
+            _heartbeatInterval = interval;
             return this;
         }
 
         public MessageClient CreateMessageClient()
         {
             return new MessageClient(
-                _clientInfo,
-                _serverInfo,
+                _thisIdentity,
+                _serverIdentity,
                 this._rabbitMQServerHostName,
                 this._userName,
-                this._password)
+                this._password,
+                this._clientIdentities.ToArray())
             {
                 QueuesAreDurable = _queuesAreDurable,
-                AutoDeleteQueuesOnClose = _autoDeleteQueuesOnClose
+                AutoDeleteQueuesOnClose = _autoDeleteQueuesOnClose,
+                HeartbeatInterval = _heartbeatInterval
             };
         }
 

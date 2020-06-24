@@ -23,7 +23,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 using Pinknose.DistributedWorkers.Clients;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Pinknose.DistributedWorkers.Configuration
@@ -32,33 +31,15 @@ namespace Pinknose.DistributedWorkers.Configuration
     {
         #region Fields
 
-        private HashSet<MessageClientIdentity> _clientInfos = new HashSet<MessageClientIdentity>();
-        private MessageClientIdentity _serverInfo = null;
+        private MessageClientIdentity _serverIdentity = null;
 
         #endregion Fields
 
         #region Methods
 
-        public MessageServerConfigurationBuilder AddClientInfo(MessageClientIdentity clientInfo)
+        public MessageServerConfigurationBuilder Identity(MessageClientIdentity identity)
         {
-            _clientInfos.Add(clientInfo);
-
-            return this;
-        }
-
-        public MessageServerConfigurationBuilder AddClientInfoRange(IEnumerable<MessageClientIdentity> clientsInfo)
-        {
-            foreach (var info in clientsInfo)
-            {
-                _clientInfos.Add(info);
-            }
-
-            return this;
-        }
-
-        public MessageServerConfigurationBuilder ServerInfo(MessageClientIdentity serverInfo)
-        {
-            _serverInfo = serverInfo;
+            _serverIdentity = identity;
 
             return this;
         }
@@ -66,11 +47,11 @@ namespace Pinknose.DistributedWorkers.Configuration
         public MessageServer CreateMessageServer()
         {
             return new MessageServer(
-                _serverInfo,
+                _serverIdentity,
                 this._rabbitMQServerHostName,
                 this._userName,
                 this._password,
-                _clientInfos.ToArray())
+                _clientIdentities.ToArray())
             {
                 QueuesAreDurable = _queuesAreDurable,
                 AutoDeleteQueuesOnClose = _autoDeleteQueuesOnClose

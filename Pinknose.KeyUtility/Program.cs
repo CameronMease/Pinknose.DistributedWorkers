@@ -6,9 +6,11 @@ using System.IO;
 
 namespace Pinknose.KeyUtility
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        #region Methods
+
+        private static void Main(string[] args)
         {
             GenerateClientOptions generateClientOptions = null;
             GenerateServerOptions generateServerOptions = null;
@@ -18,11 +20,10 @@ namespace Pinknose.KeyUtility
                 .WithParsed<GenerateServerOptions>(opts => generateServerOptions = opts)
                 .WithNotParsed(errors => Environment.Exit(-1));
 
-
             if (generateClientOptions != null || generateServerOptions != null)
             {
                 MessageClientIdentity clientInfo = null;
-                GenerateOptionsBase generateOptionsBase = generateClientOptions != null ? (GenerateOptionsBase)generateClientOptions: (GenerateOptionsBase)generateServerOptions;
+                GenerateOptionsBase generateOptionsBase = generateClientOptions != null ? (GenerateOptionsBase)generateClientOptions : (GenerateOptionsBase)generateServerOptions;
 
                 if (string.IsNullOrEmpty(generateOptionsBase.Directory))
                 {
@@ -83,7 +84,7 @@ namespace Pinknose.KeyUtility
                 {
                     encrypted = true;
 
-                    do      
+                    do
                     {
                         do
                         {
@@ -105,7 +106,7 @@ namespace Pinknose.KeyUtility
                 }
 
                 string privateFile = path + ".priv";
-                string publicFile = path + ".pub"; 
+                string publicFile = path + ".pub";
 
                 Console.WriteLine("\nCreating Client Key");
                 Console.WriteLine($"   Diffie-Hellman Elliptic Curve: {curve}");
@@ -122,5 +123,7 @@ namespace Pinknose.KeyUtility
                 var duhh1 = MessageClientIdentity.Import(publicFile);
             }
         }
+
+        #endregion Methods
     }
 }

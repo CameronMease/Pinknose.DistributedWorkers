@@ -37,7 +37,7 @@ namespace Pinknose.DistributedWorkers.Clients
         {
             get
             {
-                var length = this.ClientInfo.Dsa.KeySize switch
+                var length = this.Identity.Dsa.KeySize switch
                 {
                     256 => 64,
                     384 => 96,
@@ -61,7 +61,8 @@ namespace Pinknose.DistributedWorkers.Clients
             {
                 ECDiffieHellmanCurve.P256 => CngAlgorithm.ECDiffieHellmanP256,
                 ECDiffieHellmanCurve.P384 => CngAlgorithm.ECDiffieHellmanP384,
-                ECDiffieHellmanCurve.P521 => CngAlgorithm.ECDiffieHellmanP521
+                ECDiffieHellmanCurve.P521 => CngAlgorithm.ECDiffieHellmanP521,
+                _ => throw new ArgumentOutOfRangeException(nameof(curve))
             };
 
             CngKeyCreationParameters parameters = new CngKeyCreationParameters()
@@ -69,7 +70,9 @@ namespace Pinknose.DistributedWorkers.Clients
                 ExportPolicy = allowExport ? CngExportPolicies.AllowPlaintextExport : CngExportPolicies.None
             };
 
-            return CngKey.Create(algorithm, null, parameters);
+            CngKey key = CngKey.Create(algorithm, null, parameters);
+
+            return key;
         }
 
         public static byte[] GetRandomBytes(int length)
@@ -126,12 +129,12 @@ namespace Pinknose.DistributedWorkers.Clients
 
         internal byte[] SignData(byte[] data)
         {
-            return this.ClientInfo.Dsa.SignData(data);
+            return this.Identity.Dsa.SignData(data);
         }
 
         internal byte[] SignData(byte[] data, int offset, int count)
         {
-            return this.ClientInfo.Dsa.SignData(data, offset, count);
+            return this.Identity.Dsa.SignData(data, offset, count);
         }
 
         internal SignatureVerificationStatus ValidateSignature(byte[] message, byte[] signature, string clientName)

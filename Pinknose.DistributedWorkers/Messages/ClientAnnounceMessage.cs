@@ -43,6 +43,8 @@ namespace Pinknose.DistributedWorkers.Messages
 
         public byte[] PublicKey { get; private set; }
 
+        public int HeartbeatInterval { get; internal set; }
+
         #endregion Properties
     }
 }

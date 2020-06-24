@@ -27,7 +27,7 @@ namespace ServerTest
             var server = new MessageServerConfigurationBuilder()
                 .RabbitMQCredentials(config["RabbitMQServer"]["UserName"].Value<string>(), config["RabbitMQServer"]["Password"].Value<string>())
                 .RabbitMQServerHostName(config["RabbitMQServer"]["HostName"].Value<string>())
-                .ServerInfo(serverIdentity)
+                .Identity(serverIdentity)
                 .AddClientInfoRange(clients)
                 .AutoDeleteQueuesOnClose(true)
                 .QueuesAreDurable(false)

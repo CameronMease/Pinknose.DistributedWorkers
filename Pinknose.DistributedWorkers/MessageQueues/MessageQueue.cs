@@ -103,11 +103,14 @@ namespace Pinknose.DistributedWorkers.MessageQueues
             var envelope = MessageEnvelope.WrapMessage(responseMessage, originalMessageEnvelope.SenderName, this.ParentMessageClient, encryptionOption);
             byte[] hashedMessage = envelope.Serialize();
 
-            Channel.BasicPublish(
-                exchange: exchangeName,
-                routingKey: routingKey,
-                basicProperties: basicProperties,
-                hashedMessage);
+            lock (Channel)
+            {
+                Channel.BasicPublish(
+                    exchange: exchangeName,
+                    routingKey: routingKey,
+                    basicProperties: basicProperties,
+                    hashedMessage);
+            }
         }
 
         /*
@@ -276,11 +279,14 @@ namespace Pinknose.DistributedWorkers.MessageQueues
                 }
             }
 
-            Channel.BasicPublish(
-                exchange: exchangeName,
-                routingKey: queueInfo.QueueName,
-                basicProperties: basicProperties,
-                hashedMessage);
+            lock (Channel)
+            {
+                Channel.BasicPublish(
+                    exchange: exchangeName,
+                    routingKey: queueInfo.QueueName,
+                    basicProperties: basicProperties,
+                    hashedMessage);
+            }
         }
 
         #endregion Methods

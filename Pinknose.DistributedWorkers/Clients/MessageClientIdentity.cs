@@ -27,8 +27,11 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace Pinknose.DistributedWorkers.Clients
@@ -79,6 +82,38 @@ namespace Pinknose.DistributedWorkers.Clients
         #endregion Constructors
 
         #region Properties
+
+        public string IdentityHash 
+        {
+            get
+            {
+                byte[] nameBytes = Encoding.UTF8.GetBytes(SystemName + ":" + Name);
+                byte[] keyBytes = ECKey.Export(CngKeyBlobFormat.EccPublicBlob);
+                byte[] allBytes = new byte[nameBytes.Length + keyBytes.Length];
+                nameBytes.CopyTo(allBytes, 0);
+                keyBytes.CopyTo(allBytes, nameBytes.Length);
+
+                using var sha2 = SHA256.Create();
+
+                var hash = sha2.ComputeHash(allBytes);
+
+                StringBuilder sb = new StringBuilder();
+                const int blockSize = 4;
+
+                for (int i = 0; i < hash.Length; i+= 1)
+                {
+                    sb.AppendFormat("{0:X}", hash[i]);
+
+                    if ((i + 1) % blockSize == 0 && i != (hash.Length - 1))
+                    {
+                        sb.Append("-");
+                    }
+                }
+
+                return sb.ToString();
+
+            }
+        }
 
         public ECDsaCng Dsa { get; private set; }
 

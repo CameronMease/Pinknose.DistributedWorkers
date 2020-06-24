@@ -66,17 +66,36 @@ namespace Pinknose.DistributedWorkers.Clients
             {
                 if (!clients.ContainsKey(e.MessageEnevelope.SenderName))
                 {
-                    ReusableThreadSafeTimer timeoutTimer = new ReusableThreadSafeTimer()
+                    var tempMessage = (ClientAnnounceMessage)e.MessageEnevelope.Message;
+
+                    ReusableThreadSafeTimer timeoutTimer = null;
+                    ReusableThreadSafeTimer heartbeatSendTimer = null;
+
+                    if (tempMessage.HeartbeatInterval > 0)
                     {
-                        AutoReset = false,
-                        Interval = HeartbeatTime * 2,
-                        Enabled = true,
-                        Tag = e.MessageEnevelope.SenderName
-                    };
+                        timeoutTimer = new ReusableThreadSafeTimer()
+                        {
+                            AutoReset = false,
+                            Interval = tempMessage.HeartbeatInterval * 2,
+                            Enabled = true,
+                            Tag = e.MessageEnevelope.SenderName
+                        };
 
-                    timeoutTimer.Elapsed += TimeoutTimer_Elapsed;
+                        timeoutTimer.Elapsed += TimeoutTimer_Elapsed;
 
-                    var clientInfo = new MessageClientIdentity(this.SystemName, e.MessageEnevelope.SenderName, ((ClientAnnounceMessage)e.MessageEnevelope.Message).PublicKey, CngKeyBlobFormat.EccFullPublicBlob);
+                        heartbeatSendTimer = new ReusableThreadSafeTimer()
+                        {
+                            AutoReset = true,
+                            Interval = tempMessage.HeartbeatInterval,
+                            Enabled = true,
+                            Tag = e.MessageEnevelope.SenderName
+                        };
+
+                        heartbeatSendTimer.Elapsed += HeartbeatSendTimer_Elapsed;
+                    }                    
+
+                    //TODO:  This won't work if the system name is different.  Maybe just serialize the identity and send to server?
+                    var clientInfo = new MessageClientIdentity(this.SystemName, e.MessageEnevelope.SenderName, tempMessage.PublicKey, CngKeyBlobFormat.EccFullPublicBlob);
 
                     //e.MessageEnevelope.ReverifySignature(clientInfo.Dsa);
 
@@ -87,7 +106,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
                         Log.Information($"Client '{e.MessageEnevelope.SenderName}' announced and accepted.");
                         message = "";
-                        clients.Add(e.MessageEnevelope.SenderName, (DateTime.Now, DateTime.Now, "duhh", timeoutTimer));
+                        clients.Add(e.MessageEnevelope.SenderName, (DateTime.Now, DateTime.Now, "duhh", timeoutTimer, heartbeatSendTimer));
 
                         //PublicKeystore[e.MessageEnevelope.SenderName] = clientInfo;
 
@@ -157,7 +176,7 @@ namespace Pinknose.DistributedWorkers.Clients
                         clients.Clear();
 
                         //TODO: How to determine when to encyrpt
-                        BroadcastToAllClients(new ClientReannounceRequestMessage(false), EncryptionOption.None);
+                        BroadcastToAllClients(new ClientReannounceRequestMessage(false), false);
                     }
                     else
                     {
@@ -171,6 +190,11 @@ namespace Pinknose.DistributedWorkers.Clients
                     RpcMessageReceived?.Invoke(this, e);
                 }
             }
+        }
+
+        private void HeartbeatSendTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            this.WriteToClientNoWait((string)((ReusableThreadSafeTimer)sender).Tag, new HeartbeatMessage(), false);
         }
 
         private void TimeoutTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -190,7 +214,7 @@ namespace Pinknose.DistributedWorkers.Clients
         {
             var message = new HeartbeatMessage();
 
-            // TODO: Re-enabled BroacastToAllClients(message);
+            BroadcastToAllClients(message, false);
         }
 
         /// <summary>
@@ -221,7 +245,7 @@ namespace Pinknose.DistributedWorkers.Clients
             throw new NotImplementedException();
         }
 
-        private Dictionary<string, (DateTime AnnouncementTime, DateTime LastSeen, string PrivateQueueName, ReusableThreadSafeTimer TimeoutTimer)> clients =
-            new Dictionary<string, (DateTime AnnouncementTime, DateTime LastSeen, string PrivateQueueName, ReusableThreadSafeTimer TimeoutTimer)>();
+        private Dictionary<string, (DateTime AnnouncementTime, DateTime LastSeen, string PrivateQueueName, ReusableThreadSafeTimer TimeoutTimer, ReusableThreadSafeTimer HeatbeatSendTiemr)> clients =
+            new Dictionary<string, (DateTime AnnouncementTime, DateTime LastSeen, string PrivateQueueName, ReusableThreadSafeTimer TimeoutTimer, ReusableThreadSafeTimer HeatbeatSendTiemr)>();
     }
 }

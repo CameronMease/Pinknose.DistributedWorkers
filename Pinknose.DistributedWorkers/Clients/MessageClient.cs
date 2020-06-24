@@ -37,23 +37,38 @@ namespace Pinknose.DistributedWorkers.Clients
     {
         #region Fields
 
+        /// <summary>
+        /// The hearbteat send/receive interval in milliseconds.
+        /// </summary>
+        public int HeartbeatInterval { get; internal set; } = 1000;
+
         private bool clientServerHandshakeComplete = false;
         //private string serverName = "server";
 
         private ReusableThreadSafeTimer serverHeartbeatTimer = new ReusableThreadSafeTimer()
         {
-            Interval = HeartbeatTime,
             AutoReset = false
+        };
+
+        private ReusableThreadSafeTimer heartbeatSendTimer = new ReusableThreadSafeTimer()
+        {
+            AutoReset = true
         };
 
         #endregion Fields
 
         #region Constructors
 
-        internal MessageClient(MessageClientIdentity clientInfo, MessageClientIdentity serverInfo, string rabbitMqServerHostName, string userName, string password) :
-            base(clientInfo, rabbitMqServerHostName, userName, password)
+        internal MessageClient(MessageClientIdentity identity, MessageClientIdentity serverIdentity, string rabbitMqServerHostName, string userName, string password, params MessageClientIdentity[] clientInfos) :
+             base(identity, rabbitMqServerHostName, userName, password)
         {
-            this.PublicKeystore.Add(serverInfo);
+            this.PublicKeystore.Add(serverIdentity);
+            this.PublicKeystore.AddRange(clientInfos);
+        }
+
+        internal MessageClient(MessageClientIdentity identity, MessageClientIdentity serverIdentity, string rabbitMqServerHostName, string userName, string password) :
+            this(identity, serverIdentity, rabbitMqServerHostName, userName, password, Array.Empty<MessageClientIdentity>())
+        {
         }
 
         #endregion Constructors
@@ -138,11 +153,24 @@ namespace Pinknose.DistributedWorkers.Clients
                 //PublicKeystore.Merge(((ClientAnnounceResponseMessage)result.ResponseMessageEnvelope.Message).PublicKeystore);
                 //TODO: Fix PublicKeystore[result.ResponseMessageEnvelope.SenderName].Iv = ((ClientAnnounceResponseMessage)result.ResponseMessageEnvelope.Message).Iv;
 
-                serverHeartbeatTimer.Elapsed += ServerHeartbeatTimer_Elapsed;
-                serverHeartbeatTimer.Start();
+                if (HeartbeatInterval > 0)
+                {
+                    serverHeartbeatTimer.Interval = HeartbeatInterval * 2;
+                    serverHeartbeatTimer.Elapsed += ServerHeartbeatTimer_Elapsed;
+                    serverHeartbeatTimer.Start();
+
+                    heartbeatSendTimer.Interval = HeartbeatInterval;
+                    heartbeatSendTimer.Elapsed += HeartbeatSendTimer_Elapsed;
+                    heartbeatSendTimer.Start();
+                }
             }
 
             IsConnected = true;
+        }
+
+        private void HeartbeatSendTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            SendHeartbeat();
         }
 
         public override void Disconnect()
@@ -169,14 +197,12 @@ namespace Pinknose.DistributedWorkers.Clients
 
         protected sealed override void SendHeartbeat()
         {
-            //todo: reenable  this.WriteRpcCallNoWait(new HeartbeatMessage(false));
+            this.WriteToClientNoWait(NameHelper.GetServerName(), new HeartbeatMessage(), false);
         }
 
         private void DedicatedQueue_MessageReceived(object sender, MessageReceivedEventArgs e)
         {
             //var signatureIsValid = clientServerHandshakeComplete && SignatureIsValid(e.RawData, PublicKeystore[e.Message.ClientName].Dsa);
-
-            Log.Verbose(e.MessageEnevelope.GetType().ToString());
 
             if (e.MessageEnevelope.BasicProperties.CorrelationId != null &&
                 rpcCallWaitInfo.ContainsKey(e.MessageEnevelope.BasicProperties.CorrelationId))
@@ -188,7 +214,7 @@ namespace Pinknose.DistributedWorkers.Clients
             }
             else if (e.MessageEnevelope.SignatureVerificationStatus == SignatureVerificationStatus.SignatureValid)
             {
-                if (e.MessageEnevelope.GetType() == typeof(ClientReannounceRequestMessage))
+                if (e.MessageEnevelope.Message.GetType() == typeof(ClientReannounceRequestMessage))
                 {
                     Log.Information("Server requested reannouncement of clients.");
                     var message = new ClientAnnounceMessage(PublicKeystore.ParentClientInfo.ECKey);
@@ -196,7 +222,7 @@ namespace Pinknose.DistributedWorkers.Clients
                     //todo: Encrypt?
                     WriteToServerNoWait(message, false);
                 }
-                else if (e.MessageEnevelope.GetType() == typeof(HeartbeatMessage))
+                else if (e.MessageEnevelope.Message.GetType() == typeof(HeartbeatMessage))
                 {
                     if (!serverHeartbeatTimer.Enabled)
                     {
@@ -205,7 +231,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
                     serverHeartbeatTimer.Restart();
                 }
-                else if (e.MessageEnevelope.GetType() == typeof(PublicKeyUpdate))
+                else if (e.MessageEnevelope.Message.GetType() == typeof(PublicKeyUpdate))
                 {
                     var tempMessage = (PublicKeyUpdate)e.MessageEnevelope.Message;
                     PublicKeystore.Add(tempMessage.ClientInfo);
