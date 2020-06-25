@@ -22,6 +22,7 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using Pinknose.Utilities;
 using System;
 using System.Diagnostics;
 using System.Security.Authentication;
@@ -71,7 +72,8 @@ namespace Pinknose.DistributedWorkers.Crypto
                 }
             }
 
-            return (bytes, BitConverter.ToUInt32(bytes[^4..]));
+            // return (bytes, BitConverter.ToUInt32(bytes[^4..]));
+            return (bytes, BitConverter.ToUInt32(bytes.RangeFromEnd(4), 0));
         }
 
         public static string Decode(byte[] bytes, UInt32 key, UInt32 iv, int rounds=1)

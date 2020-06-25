@@ -32,7 +32,6 @@ using RabbitMQ.Client.Exceptions;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -49,29 +48,20 @@ namespace Pinknose.DistributedWorkers.Clients
     /// </summary>
     public abstract partial class MessageClientBase : IDisposable
     {
-        #region Fields
-
         /// <summary>
         /// Heartbeat time between clients/server in milliseconds;
         /// </summary>
         //protected const int HeartbeatTime = 10;
 
+        #region Fields
+
         protected static readonly int SharedKeyByteSize = 32;
 
-        protected readonly Dictionary<string, RpcCallWaitInfo> rpcCallWaitInfo = new Dictionary<string, RpcCallWaitInfo>();
-
         private string _password;
-
         private string _rabbitMqServerHostName;
-
         private string _userName;
-
         private IConnection connection;
-
         private bool disposedValue = false;
-
-        public bool QueuesAreDurable { get; set; } = true;
-        public bool AutoDeleteQueuesOnClose { get; set; } = false;
 
         #endregion Fields
 
@@ -124,20 +114,17 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Properties
 
+        public bool QueuesAreDurable { get; set; } = true;
+        public bool AutoDeleteQueuesOnClose { get; set; } = false;
         public string ClientName => Identity.Name;
-
         public string InternalId { get; private set; }
-
         public bool IsConnected { get; protected set; } = false;
-
+        public MessageClientIdentity Identity { get; private set; }
         public string SystemName => Identity.SystemName;
-
+        protected Dictionary<string, RpcCallWaitInfo> RpcCallWaitInfo { get; } = new Dictionary<string, RpcCallWaitInfo>();
         protected string BroadcastExchangeName => NameHelper.GetBroadcastExchangeName(SystemName);
 
         protected IModel Channel { get; private set; }
-
-        public MessageClientIdentity Identity { get; private set; }
-
         protected string DedicatedQueueName => NameHelper.GetDedicatedQueueName(SystemName, ClientName);
 
         protected PublicKeystore PublicKeystore { get; }
@@ -153,7 +140,6 @@ namespace Pinknose.DistributedWorkers.Clients
         protected ReadableMessageQueue WorkQueue { get; private set; }
 
         protected string WorkQueueName => NameHelper.GetWorkQueueName(SystemName);
-
 
         #endregion Properties
 
@@ -219,6 +205,11 @@ namespace Pinknose.DistributedWorkers.Clients
         /// <returns></returns>
         public async Task<RpcCallWaitInfo> WriteToClient(MessageClientIdentity clientIdentity, MessageBase message, int waitTime, bool encryptMessage)
         {
+            if (clientIdentity is null)
+            {
+                throw new ArgumentNullException(nameof(clientIdentity));
+            }
+
             return await WriteToClient(clientIdentity.Name, message, waitTime, encryptMessage).ConfigureAwait(false);
         }
 
@@ -230,6 +221,14 @@ namespace Pinknose.DistributedWorkers.Clients
             }
 
             WriteToClientNoWait(clientIdentity.Name, message, encryptMessage);
+        }
+
+        public void WriteToSubscriptionQueues(MessageBase message, bool encryptMessage, params MessageTag[] tags) =>
+            WriteToSubscriptionQueues(message, encryptMessage, new MessageTagCollection(tags));
+
+        public void WriteToSubscriptionQueues(MessageBase message, bool encryptMessage, MessageTagCollection tags)
+        {
+            SubscriptionQueue.WriteToBoundExchange(message, encryptMessage, tags);
         }
 
         protected void WriteToClientNoWait(string clientName, MessageBase message, bool encryptMessage)
@@ -245,7 +244,6 @@ namespace Pinknose.DistributedWorkers.Clients
                 false => EncryptionOption.None
             };
 
-
             var formattedMessage = ConfigureUnicastMessageForSend(message, clientName, encryptionOption);
 
             lock (Channel)
@@ -256,15 +254,6 @@ namespace Pinknose.DistributedWorkers.Clients
                     basicProperties: formattedMessage.BasicProperties,
                     formattedMessage.SignedMessage);
             }
-        }
-
-        public void WriteToSubscriptionQueues(MessageBase message, bool encryptMessage, params MessageTag[] tags) =>
-            WriteToSubscriptionQueues(message, encryptMessage, new MessageTagCollection(tags));
-
-        public void WriteToSubscriptionQueues(MessageBase message, bool encryptMessage, MessageTagCollection tags)
-        {
-
-            SubscriptionQueue.WriteToBoundExchange(message, encryptMessage, tags);
         }
 
         protected (byte[] SignedMessage, IBasicProperties BasicProperties) ConfigureUnicastMessageForSend(MessageBase message, string recipientName, EncryptionOption encryptionOptions)
@@ -348,7 +337,6 @@ namespace Pinknose.DistributedWorkers.Clients
             Channel.FlowControl += Channel_FlowControl;
             Channel.ModelShutdown += Channel_ModelShutdown;
 
-
             WorkQueue = MessageQueue.CreateMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, WorkQueueName, this.QueuesAreDurable, this.AutoDeleteQueuesOnClose);
             WorkQueue.MessageReceived += Queue_MessageReceived;
             WorkQueue.AsynchronousException += (sender, eventArgs) => this.AsynchronousException?.Invoke(this, eventArgs);
@@ -369,12 +357,78 @@ namespace Pinknose.DistributedWorkers.Clients
                 true,
                 new Dictionary<string, object>());
 
-            SubscriptionQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, SubscriptionExchangeName, SubscriptionQueueName, this.QueuesAreDurable, this.AutoDeleteQueuesOnClose,  subscriptionTags);
+            SubscriptionQueue = MessageQueue.CreateExchangeBoundMessageQueue<ReadableMessageQueue>(this, Channel, ClientName, SubscriptionExchangeName, SubscriptionQueueName, this.QueuesAreDurable, this.AutoDeleteQueuesOnClose, subscriptionTags);
             SubscriptionQueue.MessageReceived += Queue_MessageReceived;
             SubscriptionQueue.AsynchronousException += (sender, eventArgs) => FireAsynchronousExceptionEvent(sender, eventArgs);
 
             //TODO: SHould ACK be required?
             SubscriptionQueue.BeginFullConsume(false);
+        }
+
+        /// <summary>
+        /// Async method that writes to a client and returns a task that waits for the result.
+        /// </summary>
+        /// <param name="clientName"></param>
+        /// <param name="message"></param>
+        /// <param name="waitTime"></param>
+        /// <param name="encryptionOptions"></param>
+        /// <returns></returns>
+        protected async Task<RpcCallWaitInfo> WriteToClient(string clientName, MessageBase message, int waitTime, bool encryptMessage)
+        {
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+
+            var encryptionOption = encryptMessage switch
+            {
+                true => EncryptionOption.EncryptWithPrivateKey,
+                false => EncryptionOption.None
+            };
+
+            var formattedMessage = ConfigureUnicastMessageForSend(message, clientName, encryptionOption);
+
+            lock (Channel)
+            {
+                Channel.BasicPublish(
+                    exchange: "",
+                    routingKey: NameHelper.GetDedicatedQueueName(SystemName, clientName),
+                    basicProperties: formattedMessage.BasicProperties,
+                    formattedMessage.SignedMessage);
+            }
+
+            RpcCallWaitInfo response = new RpcCallWaitInfo();
+            response.WaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
+
+            RpcCallWaitInfo.Add(formattedMessage.BasicProperties.CorrelationId, response);
+
+            Task task = new Task(() =>
+            {
+                if (!response.WaitHandle.WaitOne(waitTime))
+                {
+                    response.CallResult = RpcCallResult.Timeout;
+                }
+                else
+                {
+                    if (response.ResponseMessageEnvelope.SignatureVerificationStatus == SignatureVerificationStatus.SignatureValid)
+                    {
+                        response.CallResult = RpcCallResult.Success;
+                    }
+                    else
+                    {
+                        response.CallResult = RpcCallResult.BadSignature;
+                    }
+                }
+
+                RpcCallWaitInfo.Remove(formattedMessage.BasicProperties.CorrelationId);
+                response.WaitHandle.Dispose();
+            });
+
+            task.Start();
+
+            await task.ConfigureAwait(false);
+
+            return response;
         }
 
         private void Channel_ModelShutdown(object sender, ShutdownEventArgs e)
@@ -413,74 +467,6 @@ namespace Pinknose.DistributedWorkers.Clients
         {
             throw new NotImplementedException();
         }
-
-        /// <summary>
-        /// Async method that writes to a client and returns a task that waits for the result.
-        /// </summary>
-        /// <param name="clientName"></param>
-        /// <param name="message"></param>
-        /// <param name="waitTime"></param>
-        /// <param name="encryptionOptions"></param>
-        /// <returns></returns>
-        protected async Task<RpcCallWaitInfo> WriteToClient(string clientName, MessageBase message, int waitTime, bool encryptMessage)
-        {
-            if (message == null)
-            {
-                throw new ArgumentNullException(nameof(message));
-            }
-
-            var encryptionOption = encryptMessage switch
-            {
-                true => EncryptionOption.EncryptWithPrivateKey,
-                false => EncryptionOption.None
-            };
-
-            var formattedMessage = ConfigureUnicastMessageForSend(message, clientName, encryptionOption);
-
-            lock (Channel)
-            {
-                Channel.BasicPublish(
-                    exchange: "",
-                    routingKey: NameHelper.GetDedicatedQueueName(SystemName, clientName),
-                    basicProperties: formattedMessage.BasicProperties,
-                    formattedMessage.SignedMessage);
-            }
-
-            RpcCallWaitInfo response = new RpcCallWaitInfo();
-            response.WaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
-
-            rpcCallWaitInfo.Add(formattedMessage.BasicProperties.CorrelationId, response);
-
-            Task task = new Task(() =>
-            {
-                if (!response.WaitHandle.WaitOne(waitTime))
-                {
-                    response.CallResult = RpcCallResult.Timeout;
-                }
-                else
-                {
-                    if (response.ResponseMessageEnvelope.SignatureVerificationStatus == SignatureVerificationStatus.SignatureValid)
-                    {
-                        response.CallResult = RpcCallResult.Success;
-                    }
-                    else
-                    {
-                        response.CallResult = RpcCallResult.BadSignature;
-                    }
-                }
-
-                rpcCallWaitInfo.Remove(formattedMessage.BasicProperties.CorrelationId);
-                response.WaitHandle.Dispose();
-            });
-
-            task.Start();
-
-            await task.ConfigureAwait(false);
-
-            return response;
-        }
-
-        
 
         private void HeartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {

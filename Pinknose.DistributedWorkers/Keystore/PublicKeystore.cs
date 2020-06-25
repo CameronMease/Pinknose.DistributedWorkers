@@ -147,7 +147,7 @@ namespace Pinknose.DistributedWorkers.Keystore
             throw new NotImplementedException();
         }
 
-        public bool TryGetValue(string key, [MaybeNullWhen(false)] out MessageClientIdentity value)
+        public bool TryGetValue(string key, out MessageClientIdentity value)
         {
             return dictionary.TryGetValue(key, out value);
         }

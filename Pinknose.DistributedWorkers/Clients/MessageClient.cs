@@ -205,9 +205,9 @@ namespace Pinknose.DistributedWorkers.Clients
             //var signatureIsValid = clientServerHandshakeComplete && SignatureIsValid(e.RawData, PublicKeystore[e.Message.ClientName].Dsa);
 
             if (e.MessageEnevelope.BasicProperties.CorrelationId != null &&
-                rpcCallWaitInfo.ContainsKey(e.MessageEnevelope.BasicProperties.CorrelationId))
+                RpcCallWaitInfo.ContainsKey(e.MessageEnevelope.BasicProperties.CorrelationId))
             {
-                var waitInfo = rpcCallWaitInfo[e.MessageEnevelope.BasicProperties.CorrelationId];
+                var waitInfo = RpcCallWaitInfo[e.MessageEnevelope.BasicProperties.CorrelationId];
                 waitInfo.ResponseMessageEnvelope = e.MessageEnevelope;
                 //waitInfo.RawResponse = e.RawData;
                 waitInfo.WaitHandle.Set();
@@ -254,7 +254,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
         private void ServerHeartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            //TODO: Get timeouts working Log.Warning("Server timeout.");
+            Log.Warning("Server timeout.");
         }
 
         #endregion Methods

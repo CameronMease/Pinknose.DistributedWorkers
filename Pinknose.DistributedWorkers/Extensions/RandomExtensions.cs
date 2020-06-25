@@ -13,7 +13,7 @@ namespace Pinknose.DistributedWorkers.Extensions
 
             random.NextBytes(bytes);
 
-            return BitConverter.ToUInt32(bytes);
+            return BitConverter.ToUInt32(bytes, 0);
         }
     }
 }

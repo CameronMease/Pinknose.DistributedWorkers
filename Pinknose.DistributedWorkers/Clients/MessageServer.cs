@@ -22,6 +22,7 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using Pinknose.DistributedWorkers.Exceptions;
 using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.Messages;
 using Pinknose.DistributedWorkers.MessageTags;
@@ -232,12 +233,32 @@ namespace Pinknose.DistributedWorkers.Clients
             SetupConnections(timeout, new MessageTagCollection());
 
             ServerQueue.MessageReceived += ServerQueue_MessageReceived;
-            ServerQueue.AsynchronousException += (sender, eventArgs) => this.FireAsynchronousExceptionEvent(sender, eventArgs);
+            ServerQueue.AsynchronousException += ServerQueue_AsynchronousException;
 
             //WorkQueue.Purge();
 
             ServerQueue.BeginFullConsume(true);
             //LogQueue.BeginFullConsume(true);
+        }
+
+        private void ServerQueue_AsynchronousException(object sender, Exceptions.AsynchronousExceptionEventArgs e)
+        {
+            // Special case: If this is a client announcement and the identity is not valid, send a message back to the client
+            if (e.Exception.GetType() == typeof(IdentityException))
+            {
+                /*
+                ((MessageQueue)sender).RespondToMessage(
+                        ((IdentityException)e.Exception).MessageEnevelope,
+                        new ClientAnnounceResponseMessage(AnnounceResponse.Rejected, -1, null)
+                        {
+                            MessageText = "Identity is not valid."
+                        }, 
+                        EncryptionOption.None;
+                */
+            }
+
+            // Fire asyncrhonouse exception event
+            this.FireAsynchronousExceptionEvent(sender, e);
         }
 
         public override void Disconnect()

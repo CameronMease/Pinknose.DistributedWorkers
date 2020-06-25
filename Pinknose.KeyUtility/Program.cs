@@ -38,7 +38,6 @@ namespace Pinknose.KeyUtility
                 }
 
                 ECDiffieHellmanCurve curve = ECDiffieHellmanCurve.P256;
-                string json;
 
                 if (generateOptionsBase.KeySize256)
                 {

@@ -47,6 +47,8 @@ namespace Pinknose.DistributedWorkers.MessageTags
 
         public string TagName { get; private set; }
 
+        public virtual bool HasValue => false;
+
         #endregion Properties
 
         #region Methods
@@ -66,14 +68,14 @@ namespace Pinknose.DistributedWorkers.MessageTags
             return obj.GetType().IsAssignableTo(typeof(MessageTag)) && this.Equals((MessageTag)obj);
         }
 
-        public bool Equals([AllowNull] MessageTag other)
+        public bool Equals(MessageTag other)
         {
             return !(other is null) && this.GetMangledTagAndValue() == other.GetMangledTagAndValue();
         }
 
         public override int GetHashCode()
         {
-            return GetMangledTagAndValue().GetHashCode(StringComparison.Ordinal);
+            return GetMangledTagAndValue().GetHashCode();
         }
 
         public override string ToString()
@@ -102,7 +104,7 @@ namespace Pinknose.DistributedWorkers.MessageTags
 
         internal static MessageTag DemangleTag(string mangledTag)
         {
-            string[] values = mangledTag.Split(":");
+            string[] values = mangledTag.Split(':');
 
             if (values.Length != 2)
             {

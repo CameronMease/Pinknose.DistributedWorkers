@@ -42,6 +42,8 @@ namespace Pinknose.DistributedWorkers.MessageTags
 
         public object Value { get; private set; }
 
+        public override bool HasValue => true;
+
         #endregion Properties
 
         #region Methods

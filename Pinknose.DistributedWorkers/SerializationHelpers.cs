@@ -66,7 +66,7 @@ namespace Pinknose.DistributedWorkers
                 GUnzipToStream(data, outputMemoryStream);
                 byte[] unzippedBytes = new byte[outputMemoryStream.Length];
                 outputMemoryStream.Seek(0, SeekOrigin.Begin);
-                outputMemoryStream.Read(unzippedBytes);
+                outputMemoryStream.Read(unzippedBytes, 0, unzippedBytes.Length);
                 return unzippedBytes;
             }
         }
@@ -88,12 +88,12 @@ namespace Pinknose.DistributedWorkers
             {
                 using (GZipStream gzipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
                 {
-                    gzipStream.Write(data);
+                    gzipStream.Write(data, 0, data.Length);
                 }
 
                 memoryStream.Seek(0, SeekOrigin.Begin);
                 byte[] bytes = new byte[memoryStream.Length];
-                memoryStream.Read(bytes);
+                memoryStream.Read(bytes, 0, bytes.Length);
 
                 return bytes;
             }

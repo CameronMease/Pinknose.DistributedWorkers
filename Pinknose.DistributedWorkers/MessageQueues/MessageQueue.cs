@@ -267,13 +267,13 @@ namespace Pinknose.DistributedWorkers.MessageQueues
             {
                 string mangledTag = tag.GetMangledTagName();
 
-                if (basicProperties.Headers.ContainsKey(mangledTag))
+                if (!basicProperties.Headers.ContainsKey(mangledTag))
                 {
                     basicProperties.Headers.Add(mangledTag, "");
                 }
 
                 // If this is a tag with a value (not just a tag)
-                if (tag.GetType() != typeof(MessageTag))
+                if (tag.HasValue)
                 {
                     basicProperties.Headers.Add(tag.GetMangledTagAndValue(), "");
                 }

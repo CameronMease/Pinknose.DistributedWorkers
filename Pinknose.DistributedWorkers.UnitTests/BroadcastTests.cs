@@ -75,7 +75,7 @@ namespace Pinknose.DistributedWorkers.UnitTests
             Assert.IsFalse(client2GotMessage);
             Assert.IsFalse(serverGotMessage);
 
-            server.BroadcastToAllClients(new StringMessage("test"), EncryptionOption.None);
+            server.BroadcastToAllClients(new StringMessage("test"), false);
 
             Thread.Sleep(100);
 

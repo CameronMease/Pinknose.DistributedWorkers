@@ -23,7 +23,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 using Pinknose.DistributedWorkers.Clients;
+using Pinknose.DistributedWorkers.Exceptions;
 using Pinknose.DistributedWorkers.MessageTags;
+using Pinknose.Utilities;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
@@ -86,6 +88,11 @@ namespace Pinknose.DistributedWorkers.Messages
                 throw new ArgumentOutOfRangeException(nameof(recipientName), $"{nameof(recipientName)} cannot be empty if encryption is set to private key.");
             }
 
+            if (messageClient == null)
+            {
+                throw new ArgumentNullException(nameof(messageClient));
+            }
+
             var wrapper = new MessageEnvelope();
             wrapper.Message = message;
             wrapper.SenderName = messageClient.ClientName;
@@ -130,7 +137,7 @@ namespace Pinknose.DistributedWorkers.Messages
 
             byte[] bytes = new byte[totalBufferSize];
 
-            // Load bits
+            // Load bits;
             var bits = new BitVector32(0);
             bits[isClientAnnounceMask] = this.Message.GetType() == typeof(ClientAnnounceMessage);
             bits[isClientAnnounceResponseMask] = this.Message.GetType() == typeof(ClientAnnounceResponseMessage);
@@ -234,25 +241,27 @@ namespace Pinknose.DistributedWorkers.Messages
                 envelope.SenderName = Encoding.UTF8.GetString(bytes, index, senderNameLength);
                 index += senderNameLength;
 
-                var iv = bytes[(index)..(index + ivLength)];
+                //var iv = bytes[(index)..(index + ivLength)];
+                var iv = bytes.RangeByLength(index, ivLength);
                 index += ivLength;
 
-                var signature = bytes[^signatureLength..];
+                var signature = bytes.RangeFromEnd(signatureLength);
 
                 if (signatureLength != messageClient.SignatureLength)
                 {
                     throw new NotImplementedException("Signautre length is invalid.");
                 }
 
-                envelope.SignatureVerificationStatus = messageClient.ValidateSignature(bytes[..^signatureLength], signature, envelope.SenderName);
+                envelope.SignatureVerificationStatus = messageClient.ValidateSignature(bytes.RangeExcludeLast(signatureLength), signature, envelope.SenderName);
 
                 if (envelope.SignatureVerificationStatus != SignatureVerificationStatus.SignatureValid)
                 {
-                    throw new NotImplementedException(envelope.SignatureVerificationStatus.ToString());
+                    //TODO: Add back: throw new IdentityException(envelope.SignatureVerificationStatus.ToString());
                 }
 
                 // Get the bytes representing the message
-                byte[] messageBytes = bytes[index..^signatureLength];
+                //byte[] messageBytes = bytes[index..^signatureLength];
+                byte[] messageBytes = bytes.RangeExcludeLast(index, signatureLength);
 
                 // Decrypt the bytes if necessary
                 if (envelope._encryptionOption == EncryptionOption.EncryptWithPrivateKey)

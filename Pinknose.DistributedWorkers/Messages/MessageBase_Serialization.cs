@@ -137,7 +137,7 @@ namespace Pinknose.DistributedWorkers.Messages
 
             using (MemoryStream memoryStream = new MemoryStream())
             {
-                memoryStream.Write(messageBytes);
+                memoryStream.Write(messageBytes, 0, messageBytes.Length);
                 memoryStream.Seek(0, SeekOrigin.Begin);
 
                 var message = (MessageBase)formatter.Deserialize(memoryStream);
