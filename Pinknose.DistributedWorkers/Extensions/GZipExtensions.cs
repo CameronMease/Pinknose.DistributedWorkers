@@ -26,7 +26,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 
-namespace Pinknose.DistributedWorkers
+namespace Pinknose.DistributedWorkers.Extensions
 {
     public static class GZipExtensions
     {
