@@ -2,6 +2,6 @@
   "SystemName": "system",
   "Name": "client1",
   "KeySize": 256,
-  "Encrypted": false,
+  "Encryption": "None",
   "ECKey-Private": "RUNLMgEAAAABAAAAAAAAACAAAAAgAAAAAQAAAAAAAAD/////AAAAAQAAAAAAAAAAAAAAAP////////////////////8AAAABAAAAAAAAAAAAAAAA///////////////8WsY12Ko6k+ez671VdpiGvGUdBrDMU7D2O848PifSYEtrF9Hy4SxCR/i85uVjpEDydwN9gS3rM6D0oTlF2JjClk/jQuL+Gn+bjufrSnwPnhYrzjNXazFezsu2QGg3v1H1/////wAAAAD//////////7zm+q2nF56E87nKwvxjJVEBhc6srBg3ps5zx98zhHKJFimZlELkwLZ2+OFmE7EvnXZbccWRuc568pLfyA9G+71pI7JcsJnuNYWxj/3Omokh7igyryuZb+WlPJPSh3NjWV/VRjYu5KJDg+4ye7sERkCr"
 }

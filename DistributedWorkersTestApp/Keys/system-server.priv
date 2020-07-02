@@ -2,7 +2,7 @@
   "SystemName": "system",
   "Name": "server",
   "KeySize": 256,
-  "Encrypted": true,
+  "Encryption": "Password",
   "Salt": "r3lj7BqPXnY=",
   "IV": "eGVQ3K2lzzUdZuljKO2hTA==",
   "ECKey-Private": "2zP6i1HtX9oGm42gBQJrumM0bLT+ZOuEv7zvJ2Ur0e/mYwbUvpz5+Gw+5TP91USy4Bk7BcPDaoOc/XD7w/lxonAsc4hRIWEfXknRfcWUVNrR4rH/t/kjRl/5wSYo5HH7c9/F6kqk8LxUz3l4LeIdYycVM8DSKI9KLkpy0IM+njUlTHI1WO8RfxowH4ablX06mGolmIUwwsR4MMYqkaZAvLajLqDUD2zhesCwMFZKUm42oC/Af5beaE9+vYNmIrUisY9yPAyljsVrw+/djLmtluROYhIBssoQLkywR1Lhc51skKglR98soFjsvl4Hx9JYHj2BugYakeHkqC8AGr0KM55NSvBy6Q6PwwNap4svinpQB+aDclIjMBWVCakc0rgrixatjTY43rYcBCKFk9NPRUMa0YF7408cwynKAP0NbbE8DAnEbYd0UAIRs4rNThnD"
