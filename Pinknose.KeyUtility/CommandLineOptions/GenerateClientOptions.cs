@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Security;
 using System.Text;
 
-namespace Pinknose.KeyUtility.CommandLineOptions
+namespace Pinknose.DistributedWorkers.KeyUtility.CommandLineOptions
 {
     [Verb("generate-client", HelpText = "Generate a new client key")]
     internal class GenerateClientOptions : GenerateOptionsBase

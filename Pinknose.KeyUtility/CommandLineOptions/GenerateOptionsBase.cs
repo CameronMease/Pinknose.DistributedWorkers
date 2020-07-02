@@ -1,9 +1,10 @@
 ﻿using CommandLine;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Text;
 
-namespace Pinknose.KeyUtility.CommandLineOptions
+namespace Pinknose.DistributedWorkers.KeyUtility.CommandLineOptions
 {
     public abstract class GenerateOptionsBase
     {
@@ -21,5 +22,15 @@ namespace Pinknose.KeyUtility.CommandLineOptions
 
         [Option(shortName: 'd', longName:"dir", HelpText = "Directory to store the key files.")]
         public string Directory { get; set; } = null;
+
+        [Option(shortName: 'j', longName: "json", Group = "Private Key File Format", HelpText = "Store private key in JSON file.")]
+        public bool JsonPrivateKey { get; set; } = false;
+
+        [Option(shortName: 'u', longName: "user-encrypted", Group = "Private Key File Format", HelpText = "Store private key in encrypted format that can be decrypted by any process run by the current user.")]
+        public bool CurrentUserEncryptedPrivateKey { get; set; } = false;
+
+        [Option(shortName: 'l', longName: "local-macine-encrypted", Group = "Private Key File Format", HelpText = "Store private key in encrypted format that can be decrypted by any process running on this machine.")]
+        public bool LocalMachineEncryptedPrivateKey { get; set; } = false;
+
     }
 }

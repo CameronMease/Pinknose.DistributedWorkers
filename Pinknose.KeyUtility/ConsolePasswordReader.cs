@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Pinknose.KeyUtility
+namespace Pinknose.DistributedWorkers.KeyUtility
 {
     public static class ConsolePasswordReader
     {

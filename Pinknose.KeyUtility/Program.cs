@@ -1,10 +1,11 @@
 ﻿using CommandLine;
 using Pinknose.DistributedWorkers.Clients;
-using Pinknose.KeyUtility.CommandLineOptions;
+using Pinknose.DistributedWorkers.KeyUtility.CommandLineOptions;
 using System;
 using System.IO;
+using System.Text;
 
-namespace Pinknose.KeyUtility
+namespace Pinknose.DistributedWorkers.KeyUtility
 {
     internal class Program
     {
@@ -14,82 +15,99 @@ namespace Pinknose.KeyUtility
         {
             GenerateClientOptions generateClientOptions = null;
             GenerateServerOptions generateServerOptions = null;
+            ConvertPrivateKeyOptions convertPrivateKeyOptions = null;
 
             CommandLine.Parser.Default.ParseArguments<GenerateClientOptions, GenerateServerOptions>(args)
                 .WithParsed<GenerateClientOptions>(opts => generateClientOptions = opts)
                 .WithParsed<GenerateServerOptions>(opts => generateServerOptions = opts)
+                .WithParsed<ConvertPrivateKeyOptions>(opts => convertPrivateKeyOptions = opts)
                 .WithNotParsed(errors => Environment.Exit(-1));
 
             if (generateClientOptions != null || generateServerOptions != null)
             {
-                MessageClientIdentity clientInfo = null;
-                GenerateOptionsBase generateOptionsBase = generateClientOptions != null ? (GenerateOptionsBase)generateClientOptions : (GenerateOptionsBase)generateServerOptions;
+                GenerateKey(generateClientOptions, generateServerOptions);
+            }
 
-                if (string.IsNullOrEmpty(generateOptionsBase.Directory))
-                {
-                    generateOptionsBase.Directory = Directory.GetCurrentDirectory();
-                }
-                else
-                {
-                    if (Directory.Exists(generateOptionsBase.Directory))
-                    {
-                        Console.WriteLine($"{generateOptionsBase.Directory} is not a valid directory.");
-                    }
-                }
+            if (convertPrivateKeyOptions != null)
+            {
+                ConvertPrivateKey(convertPrivateKeyOptions);
+            }
+        }
 
-                ECDiffieHellmanCurve curve = ECDiffieHellmanCurve.P256;
+        private static void ConvertPrivateKey(ConvertPrivateKeyOptions convertPrivateKeyOptions)
+        {
+            throw new NotImplementedException();
+        }
 
-                if (generateOptionsBase.KeySize256)
-                {
-                    curve = ECDiffieHellmanCurve.P256;
-                }
-                else if (generateOptionsBase.KeySize384)
-                {
-                    curve = ECDiffieHellmanCurve.P384;
-                }
-                else if (generateOptionsBase.KeySize521)
-                {
-                    curve = ECDiffieHellmanCurve.P521;
-                }
+        private static void GenerateKey(GenerateClientOptions generateClientOptions, GenerateServerOptions generateServerOptions)
+        {
+            StringBuilder sb = new StringBuilder();
 
-                if (generateClientOptions != null)
-                {
-                    clientInfo = MessageClientIdentity.CreateClientInfo(generateClientOptions.SystemName, generateClientOptions.ClientName, curve, true);
-                }
-                else if (generateServerOptions != null)
-                {
-                    clientInfo = MessageClientIdentity.CreateServerInfo(generateServerOptions.SystemName, curve, true);
-                }
+            MessageClientIdentity clientInfo = null;
+            GenerateOptionsBase generateOptionsBase = generateClientOptions != null ? (GenerateOptionsBase)generateClientOptions : (GenerateOptionsBase)generateServerOptions;
 
-                string path = Path.Combine(generateOptionsBase.Directory, clientInfo.SystemName + "-" + clientInfo.Name);
+            if (generateOptionsBase.Directory == null)
+            {
+                generateOptionsBase.Directory = Directory.GetCurrentDirectory();
+            }
+            else if (!Directory.Exists(generateOptionsBase.Directory))
+            {
+                Console.WriteLine($"{generateOptionsBase.Directory} is not a valid directory.");
+                Environment.Exit(-1);
+            }
 
-                bool encrypted = false;
+            ECDiffieHellmanCurve curve = ECDiffieHellmanCurve.P256;
 
-                Console.Write("Do you want to encrypt the private key (highly recommended!)? (Y/N): ");
+            if (generateOptionsBase.KeySize256)
+            {
+                curve = ECDiffieHellmanCurve.P256;
+            }
+            else if (generateOptionsBase.KeySize384)
+            {
+                curve = ECDiffieHellmanCurve.P384;
+            }
+            else if (generateOptionsBase.KeySize521)
+            {
+                curve = ECDiffieHellmanCurve.P521;
+            }
 
-                ConsoleKeyInfo keyInfo;
+            if (generateClientOptions != null)
+            {
+                clientInfo = MessageClientIdentity.CreateClientInfo(generateClientOptions.SystemName, generateClientOptions.ClientName, curve, true);
+            }
+            else if (generateServerOptions != null)
+            {
+                clientInfo = MessageClientIdentity.CreateServerInfo(generateServerOptions.SystemName, curve, true);
+            }
+
+            string path = Path.Combine(generateOptionsBase.Directory, clientInfo.SystemName + "-" + clientInfo.Name);
+
+            string publicFile = path + ".pub";
+            File.WriteAllText(publicFile, clientInfo.SerializePublicInfoToJson());
+
+            sb.AppendLine("\nCreating Client Key");
+            sb.AppendLine($"   Diffie-Hellman Elliptic Curve             {curve}");
+            sb.AppendLine($"   System Name:                              {clientInfo.SystemName}");
+            sb.AppendLine($"   Client Name:                              {clientInfo.Name}");
+            sb.AppendLine($"   Identity Hash:                            {clientInfo.IdentityHash}");
+            sb.AppendLine($"   Public Key File:                          {publicFile}");
+
+            //Console.WriteLine($"   Private Key File:              {privateFile}");
+
+            // Private Key saving
+
+            if (generateOptionsBase.JsonPrivateKey)
+            {
+                string password = "";
+                bool match = false;
+                string privateFile = path + ".priv";
 
                 do
                 {
-                    keyInfo = Console.ReadKey();
-                } while (keyInfo.Key != ConsoleKey.Y && keyInfo.Key != ConsoleKey.N);
-
-                Console.WriteLine();
-
-                string password = "";
-                bool match = false;
-
-                if (keyInfo.Key == ConsoleKey.Y)
-                {
-                    encrypted = true;
-
                     do
                     {
-                        do
-                        {
-                            Console.Write("Enter password: ");
-                            password = ConsolePasswordReader.ReadPassword();
-                        } while (string.IsNullOrWhiteSpace(password));
+                        Console.Write("Enter password: ");
+                        password = ConsolePasswordReader.ReadPassword();
 
                         Console.Write("Re-enter password: ");
                         if (ConsolePasswordReader.ReadPassword() != password)
@@ -102,25 +120,52 @@ namespace Pinknose.KeyUtility
                             match = true;
                         }
                     } while (!match);
-                }
 
-                string privateFile = path + ".priv";
-                string publicFile = path + ".pub";
+                    if (password == "")
+                    {
+                        Console.Write("You have entered a blank password.  Are you sure you want to save the private key without a password (not recommended!)? (Y/N): ");
 
-                Console.WriteLine("\nCreating Client Key");
-                Console.WriteLine($"   Diffie-Hellman Elliptic Curve: {curve}");
-                Console.WriteLine($"   System Name:                   {clientInfo.SystemName}");
-                Console.WriteLine($"   Client Name:                   {clientInfo.Name}");
-                Console.WriteLine($"   Encrypted Private Key:         {encrypted}");
-                Console.WriteLine($"   Public Key File:               {publicFile}");
-                Console.WriteLine($"   Private Key File:              {privateFile}");
+                        if (Console.ReadKey().Key == ConsoleKey.Y)
+                        {
+                            Console.WriteLine();
+                            File.WriteAllText(privateFile, clientInfo.SerializePrivateInfoToJson(Encryption.None));
+                            sb.AppendLine($"   Unencrypted Private Key File:             {privateFile}");
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        File.WriteAllText(privateFile, clientInfo.SerializePrivateInfoToJson(Encryption.Password, password));
+                        sb.AppendLine($"   Password-Protected Private Key File:      {privateFile}");
+                        break;
+                    }
+                } while (true);
 
-                File.WriteAllText(privateFile, clientInfo.SerializePrivateInfoToJson(password));
-                File.WriteAllText(publicFile, clientInfo.SerializePublicInfoToJson());
-
-                var duhh = MessageClientIdentity.Import(privateFile, password);
-                var duhh1 = MessageClientIdentity.Import(publicFile);
+                Console.WriteLine();
             }
+
+            if (generateOptionsBase.LocalMachineEncryptedPrivateKey)
+            {
+                string privateFile = path + ".privl";
+
+                File.WriteAllText(privateFile, clientInfo.SerializePrivateInfoToJson(Encryption.LocalMachine));
+                sb.AppendLine($"   Current User-Encrypted Private Key File:  {privateFile}");
+            }
+
+            if (generateOptionsBase.CurrentUserEncryptedPrivateKey)
+            {
+                string privateFile = path + ".privu";
+
+                File.WriteAllText(privateFile, clientInfo.SerializePrivateInfoToJson(Encryption.CurrentUser));
+                sb.AppendLine($"   Local Machine-Encrypted Private Key File: {privateFile}");
+            }
+
+            Console.WriteLine(sb.ToString());
+
+            // TEMP Test Code
+            //var idu = MessageClientIdentity.ImportFromFile(path + ".privu");
+            //var idl = MessageClientIdentity.ImportFromFile(path + ".privl");
+            //var idj = MessageClientIdentity.ImportFromFile(path + ".priv", "duhh");
         }
 
         #endregion Methods
