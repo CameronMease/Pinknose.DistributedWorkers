@@ -118,15 +118,15 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Password" xml:space="preserve">
-    <value>guest</value>
+    <value>test</value>
   </data>
   <data name="RabbitMQServerName" xml:space="preserve">
-    <value>localhost</value>
+    <value>garage</value>
   </data>
   <data name="SystemName" xml:space="preserve">
     <value>aSystem</value>
   </data>
   <data name="Username" xml:space="preserve">
-    <value>guest</value>
+    <value>test</value>
   </data>
 </root>

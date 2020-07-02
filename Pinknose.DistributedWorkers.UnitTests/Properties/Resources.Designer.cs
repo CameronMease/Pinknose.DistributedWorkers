@@ -61,7 +61,7 @@ namespace Pinknose.DistributedWorkers.UnitTests.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to guest.
+        ///   Looks up a localized string similar to test.
         /// </summary>
         internal static string Password {
             get {
@@ -70,7 +70,7 @@ namespace Pinknose.DistributedWorkers.UnitTests.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to localhost.
+        ///   Looks up a localized string similar to garage.
         /// </summary>
         internal static string RabbitMQServerName {
             get {
@@ -88,7 +88,7 @@ namespace Pinknose.DistributedWorkers.UnitTests.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to guest.
+        ///   Looks up a localized string similar to test.
         /// </summary>
         internal static string Username {
             get {
