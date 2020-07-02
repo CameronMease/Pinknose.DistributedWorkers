@@ -36,6 +36,8 @@ using System.Text.Json;
 
 namespace Pinknose.DistributedWorkers.Clients
 {
+    public enum Encryption { None, CurrentUser, LocalMachine, Password}
+
     [Serializable]
     public class MessageClientIdentity : IDisposable, ISerializable
     {
@@ -123,10 +125,6 @@ namespace Pinknose.DistributedWorkers.Clients
 
         public string SystemName { get; private set; }
 
-        /// <summary>
-        /// Symmetric key between the client and the holder of the MessageClientInfo.  Note: This field is not serialized.
-        /// </summary>
-        //public byte[] SymmetricKey { get; private set; }
         internal string DedicatedQueueName => NameHelper.GetDedicatedQueueName(SystemName, Name);
 
         #endregion Properties
@@ -169,9 +167,9 @@ namespace Pinknose.DistributedWorkers.Clients
                  ecKey = Convert.FromBase64String(jObject.Value<string>(nameof(ECKey) + "-Public"));
             }
 
-            bool encrypted = jObject.Value<bool>("Encrypted");
+            Encryption encryption = (Encryption)Enum.Parse(typeof(Encryption), jObject.Value<string>("Encryption"));
 
-            if (encrypted)
+            if (encryption == Encryption.Password)
             {
                 using var random = RNGCryptoServiceProvider.Create();
                 byte[] salt = Convert.FromBase64String(jObject.Value<string>("Salt"));
@@ -185,6 +183,14 @@ namespace Pinknose.DistributedWorkers.Clients
                 using var decryptor = aes.CreateDecryptor();
                 ecKey = decryptor.TransformFinalBlock(ecKey, 0, ecKey.Length);
             }
+            else if (encryption == Encryption.LocalMachine)
+            {
+                ecKey = ProtectedData.Unprotect(ecKey, null, DataProtectionScope.LocalMachine);
+            }
+            else if (encryption == Encryption.CurrentUser)
+            {
+                ecKey = ProtectedData.Unprotect(ecKey, null, DataProtectionScope.CurrentUser);
+            }
 
             CngKey cngKey = CngKey.Import(ecKey, isPrivateKey ? CngKeyBlobFormat.EccFullPrivateBlob : CngKeyBlobFormat.EccFullPublicBlob);
 
@@ -193,27 +199,27 @@ namespace Pinknose.DistributedWorkers.Clients
 
         public string SerializePublicInfoToJson()
         {
-            return SerializeToJson(false);
+            return SerializeToJson(false, Encryption.None, "");
         }
 
-        public string SerializePrivateInfoToJson(string password=null)
+        public string SerializePrivateInfoToJson(Encryption encryption, string password="")
         {
-            return SerializeToJson(true, password);
+            return SerializeToJson(true, encryption, password);
         }
 
-        private string SerializeToJson(bool includePrivateKey=false, string password=null)
+        private string SerializeToJson(bool includePrivateKey, Encryption encryption, string password)
         {
             var jObject = new JObject();
             jObject.Add(nameof(SystemName), this.SystemName);
             jObject.Add(nameof(Name), this.Name);
             jObject.Add("KeySize", this.ECKey.KeySize);
+            jObject.Add("Encryption", encryption.ToString());
             
             if (includePrivateKey)
             {
                 var eccKey = this.ECKey.Export(CngKeyBlobFormat.EccFullPrivateBlob);
 
-
-                if (!string.IsNullOrEmpty(password))
+                if (encryption == Encryption.Password)
                 {
                     using var random = RNGCryptoServiceProvider.Create();
                     byte[] salt = new byte[SaltSize];
@@ -223,16 +229,19 @@ namespace Pinknose.DistributedWorkers.Clients
                     using AesCng aes = new AesCng();
                     aes.Key = deriveBytes.GetBytes(aes.KeySize / 8);
 
-                    jObject.Add("Encrypted", true);
                     jObject.Add("Salt", salt);
                     jObject.Add("IV", aes.IV);
 
                     using var encryptor = aes.CreateEncryptor();
                     eccKey = encryptor.TransformFinalBlock(eccKey, 0, eccKey.Length);
                 }
-                else
+                else if (encryption == Encryption.LocalMachine)
                 {
-                    jObject.Add("Encrypted", false);
+                    eccKey = ProtectedData.Protect(eccKey, null, DataProtectionScope.LocalMachine);
+                }
+                else if (encryption == Encryption.CurrentUser)
+                {
+                    eccKey = ProtectedData.Protect(eccKey, null, DataProtectionScope.CurrentUser);
                 }
 
                 jObject.Add(nameof(ECKey) + "-Private",eccKey);
