@@ -433,9 +433,8 @@ namespace Pinknose.DistributedWorkers.Clients
 
         private void Channel_ModelShutdown(object sender, ShutdownEventArgs e)
         {
-            var duhh = this;
-
-            throw new NotImplementedException();
+            IsConnected = false;
+            //TODO: Add events, reconnect, etc.
         }
 
         private void Channel_FlowControl(object sender, RabbitMQ.Client.Events.FlowControlEventArgs e)

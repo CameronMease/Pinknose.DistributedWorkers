@@ -45,7 +45,9 @@ namespace DistributedWorkersTestApp
             int val = 0;
 
             string systemName = "aSystem";
-            string rabbitMQServerName = "localhost";
+            string rabbitMQServerName = "garage";
+            string userName = "test";
+            string password = "test";
 
             var duhh1 = AesCng.Create();
 
@@ -69,12 +71,6 @@ namespace DistributedWorkersTestApp
             var infoTag = new MessageTagValue("Severity", "Info");
             var debugTag = new MessageTagValue("Severity", "Debug");
 
-
-            //using var serverInfo = MessageClientInfo.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
-            //using var client1Info = MessageClientInfo.CreateClientInfo(systemName, "client1", ECDiffieHellmanCurve.P256);
-            //using var client2Info = MessageClientInfo.CreateClientInfo(systemName, "client2", ECDiffieHellmanCurve.P256);
-            //using var client3Info = MessageClientInfo.CreateClientInfo(systemName, "client3", ECDiffieHellmanCurve.P256);
-
             using var serverPublicInfo =  MessageClientIdentity.ImportFromFile(@"keys\system-server.pub");
             using var serverPrivateInfo =  MessageClientIdentity.ImportFromFile(@"keys\system-server.priv", "monkey123"); 
 
@@ -93,12 +89,12 @@ namespace DistributedWorkersTestApp
             Console.WriteLine(client3PublicInfo.IdentityHash);
 
             var server = new MessageServerConfigurationBuilder()
-                .RabbitMQCredentials("guest", "guest")
-                .RabbitMQServerHostName("127.0.0.1")
+                .RabbitMQCredentials(userName, password)
+                .RabbitMQServerHostName(rabbitMQServerName)
                 .Identity(serverPrivateInfo)
                 .AddClientIdentity(client1PublicInfo)
-                //.AddClientInfo(client2PublicInfo)
-                //.AddClientInfo(client3PublicInfo)
+                .AddClientIdentity(client2PublicInfo)
+                .AddClientIdentity(client3PublicInfo)
                 .AutoDeleteQueuesOnClose(true)
                 .QueuesAreDurable(false)
                 .CreateMessageServer();
@@ -142,7 +138,7 @@ namespace DistributedWorkersTestApp
             var never = new MessageTagValue("duhh", "never");
 
             MessageClient client1 = new MessageClientConfigurationBuilder()
-                .RabbitMQCredentials("guest", "guest")
+                .RabbitMQCredentials(userName, password)
                 .RabbitMQServerHostName(rabbitMQServerName)
                 .ServerIdentity(serverPublicInfo)
                 .Identity(client1PrivateInfo)
@@ -165,7 +161,7 @@ namespace DistributedWorkersTestApp
             client1.BeginFullWorkConsume(true);
 
             MessageClient client2 = new MessageClientConfigurationBuilder()
-                .RabbitMQCredentials("guest", "guest")
+                .RabbitMQCredentials(userName, password)
                 .RabbitMQServerHostName(rabbitMQServerName)
                 .ServerIdentity(serverPublicInfo)
                 .Identity(client2PrivateInfo)
@@ -183,13 +179,13 @@ namespace DistributedWorkersTestApp
                     Console.WriteLine($"Client 2: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
                 }
             };
-            //client2.Connect(TimeSpan.FromSeconds(10), even);
+            client2.Connect(TimeSpan.FromSeconds(10), even);
             //client2.BeginFullWorkConsume(true);
 
 #if false
 
             MessageClient client3 = new MessageClientConfiguration()
-                .Credentials("guest", "guest")
+                .RabbitMQCredentials(userName, password)
                 .RabbitMQServer(rabbitMQServerName)
                 .ServerInfo(serverInfo)
                 .ClientInfo(client3Info)

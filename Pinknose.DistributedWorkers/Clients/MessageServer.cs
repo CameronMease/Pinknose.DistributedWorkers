@@ -239,6 +239,8 @@ namespace Pinknose.DistributedWorkers.Clients
 
             ServerQueue.BeginFullConsume(true);
             //LogQueue.BeginFullConsume(true);
+
+            IsConnected = true;
         }
 
         private void ServerQueue_AsynchronousException(object sender, Exceptions.AsynchronousExceptionEventArgs e)
