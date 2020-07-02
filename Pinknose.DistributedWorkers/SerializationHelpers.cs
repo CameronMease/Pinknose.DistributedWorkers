@@ -23,6 +23,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 using Newtonsoft.Json;
+using Pinknose.DistributedWorkers.Extensions;
 using System;
 using System.IO;
 using System.IO.Compression;
