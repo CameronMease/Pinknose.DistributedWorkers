@@ -160,37 +160,37 @@ namespace Pinknose.DistributedWorkers.Clients
 
             if (isPrivateKey)
             {
-                 ecKey = Convert.FromBase64String(jObject.Value<string>(nameof(ECKey) + "-Private"));
+                ecKey = Convert.FromBase64String(jObject.Value<string>(nameof(ECKey) + "-Private"));
+
+                Encryption encryption = (Encryption)Enum.Parse(typeof(Encryption), jObject.Value<string>("Encryption"));
+
+                if (encryption == Encryption.Password)
+                {
+                    using var random = RNGCryptoServiceProvider.Create();
+                    byte[] salt = Convert.FromBase64String(jObject.Value<string>("Salt"));
+                    byte[] iv = Convert.FromBase64String(jObject.Value<string>("IV"));
+
+                    using Rfc2898DeriveBytes deriveBytes = new Rfc2898DeriveBytes(password, salt, KeyDerivationIterations, HashAlgorithmName.SHA512);
+                    using AesCng aes = new AesCng();
+                    aes.Key = deriveBytes.GetBytes(aes.KeySize / 8);
+                    aes.IV = iv;
+
+                    using var decryptor = aes.CreateDecryptor();
+                    ecKey = decryptor.TransformFinalBlock(ecKey, 0, ecKey.Length);
+                }
+                else if (encryption == Encryption.LocalMachine)
+                {
+                    ecKey = ProtectedData.Unprotect(ecKey, null, DataProtectionScope.LocalMachine);
+                }
+                else if (encryption == Encryption.CurrentUser)
+                {
+                    ecKey = ProtectedData.Unprotect(ecKey, null, DataProtectionScope.CurrentUser);
+                }
             }
             else
             {
                  ecKey = Convert.FromBase64String(jObject.Value<string>(nameof(ECKey) + "-Public"));
-            }
-
-            Encryption encryption = (Encryption)Enum.Parse(typeof(Encryption), jObject.Value<string>("Encryption"));
-
-            if (encryption == Encryption.Password)
-            {
-                using var random = RNGCryptoServiceProvider.Create();
-                byte[] salt = Convert.FromBase64String(jObject.Value<string>("Salt"));
-                byte[] iv = Convert.FromBase64String(jObject.Value<string>("IV"));
-
-                using Rfc2898DeriveBytes deriveBytes = new Rfc2898DeriveBytes(password, salt, KeyDerivationIterations, HashAlgorithmName.SHA512);
-                using AesCng aes = new AesCng();
-                aes.Key = deriveBytes.GetBytes(aes.KeySize / 8);
-                aes.IV = iv;
-
-                using var decryptor = aes.CreateDecryptor();
-                ecKey = decryptor.TransformFinalBlock(ecKey, 0, ecKey.Length);
-            }
-            else if (encryption == Encryption.LocalMachine)
-            {
-                ecKey = ProtectedData.Unprotect(ecKey, null, DataProtectionScope.LocalMachine);
-            }
-            else if (encryption == Encryption.CurrentUser)
-            {
-                ecKey = ProtectedData.Unprotect(ecKey, null, DataProtectionScope.CurrentUser);
-            }
+            }            
 
             CngKey cngKey = CngKey.Import(ecKey, isPrivateKey ? CngKeyBlobFormat.EccFullPrivateBlob : CngKeyBlobFormat.EccFullPublicBlob);
 
