@@ -1,8 +1,11 @@
 ﻿using CommandLine;
+using EasyNetQ.Management.Client.Model;
 using Pinknose.DistributedWorkers.Clients;
 using Pinknose.DistributedWorkers.KeyUtility.CommandLineOptions;
 using System;
 using System.IO;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Pinknose.DistributedWorkers.KeyUtility
@@ -17,11 +20,18 @@ namespace Pinknose.DistributedWorkers.KeyUtility
             GenerateServerOptions generateServerOptions = null;
             ConvertPrivateKeyOptions convertPrivateKeyOptions = null;
 
-            CommandLine.Parser.Default.ParseArguments<GenerateClientOptions, GenerateServerOptions>(args)
+            CommandLine.Parser.Default.ParseArguments<GenerateClientOptions, GenerateServerOptions, ConvertPrivateKeyOptions>(args)
                 .WithParsed<GenerateClientOptions>(opts => generateClientOptions = opts)
                 .WithParsed<GenerateServerOptions>(opts => generateServerOptions = opts)
                 .WithParsed<ConvertPrivateKeyOptions>(opts => convertPrivateKeyOptions = opts)
                 .WithNotParsed(errors => Environment.Exit(-1));
+
+            var assembly = Assembly.GetExecutingAssembly();
+            var version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>();
+            var title = assembly.GetCustomAttribute<AssemblyTitleAttribute>();
+
+
+            Console.WriteLine($"{title.Title}, {version.Version}");
 
             if (generateClientOptions != null || generateServerOptions != null)
             {
@@ -32,6 +42,8 @@ namespace Pinknose.DistributedWorkers.KeyUtility
             {
                 ConvertPrivateKey(convertPrivateKeyOptions);
             }
+
+            Environment.ExitCode = 0;
         }
 
         private static void ConvertPrivateKey(ConvertPrivateKeyOptions convertPrivateKeyOptions)
@@ -123,9 +135,11 @@ namespace Pinknose.DistributedWorkers.KeyUtility
 
                     if (password == "")
                     {
-                        Console.Write("You have entered a blank password.  Are you sure you want to save the private key without a password (not recommended!)? (Y/N): ");
+                        Console.Write("You have entered a blank password.  Are you sure you want to save the private key without a password (not recommended!)? Type YES to continue without password: ");
 
-                        if (Console.ReadKey().Key == ConsoleKey.Y)
+                        string line = Console.ReadLine();
+
+                        if (line == "YES")
                         {
                             Console.WriteLine();
                             File.WriteAllText(privateFile, clientInfo.SerializePrivateInfoToJson(Encryption.None));

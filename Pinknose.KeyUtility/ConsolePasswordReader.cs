@@ -8,10 +8,19 @@ namespace Pinknose.DistributedWorkers.KeyUtility
     {
         public static string ReadPassword()
         {
+            if (Console.IsInputRedirected)
+            {
+                // Special case for unit testing.
+                return Console.ReadLine();
+            }
+
             string password = "";
-            // From: https://stackoverflow.com/questions/3404421/password-masking-console-application
+            // Modified from example at: https://stackoverflow.com/questions/3404421/password-masking-console-application
             do
             {
+
+
+
                 ConsoleKeyInfo key = Console.ReadKey(true);
                 // Backspace Should Not Work
                 if (key.Key != ConsoleKey.Backspace && key.Key != ConsoleKey.Enter)

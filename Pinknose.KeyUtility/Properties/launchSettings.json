@@ -2,7 +2,7 @@
   "profiles": {
     "Pinknose.KeyUtility": {
       "commandName": "Project",
-      "commandLineArgs": "generate-client -s \"dumdum\" -n \"dumdum\" --256 -u -l -j"
+      "commandLineArgs": "generate-client -s system -n pushoverClient --256 -j -d \"C:\\Users\\camer\\source\\repos\\Pinknose Open Source\\Pinknose.DistributedWorkers\\DistributedWorkersTestApp\\Keys\""
     }
   }
 }

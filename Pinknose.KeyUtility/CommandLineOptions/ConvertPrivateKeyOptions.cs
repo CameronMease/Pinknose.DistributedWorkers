@@ -17,7 +17,7 @@ namespace Pinknose.DistributedWorkers.KeyUtility.CommandLineOptions
         [Option(shortName: 'u', longName: "user-encrypted", Group = "Private Key File Format", HelpText = "Store private key in encrypted format that can be decrypted by any process run by the current user.")]
         public bool CurrentUserEncryptedPrivateKey { get; set; } = false;
 
-        [Option(shortName: 'l', longName: "local-macine-encrypted", Group = "Private Key File Format", HelpText = "Store private key in encrypted format that can be decrypted by any process running on this machine.")]
+        [Option(shortName: 'l', longName: "local-machine-encrypted", Group = "Private Key File Format", HelpText = "Store private key in encrypted format that can be decrypted by any process running on this machine.")]
         public bool LocalMachineEncryptedPrivateKey { get; set; } = false;
 
     }
