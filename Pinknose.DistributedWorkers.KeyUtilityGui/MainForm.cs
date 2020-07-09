@@ -73,6 +73,9 @@ namespace Pinknose.DistributedWorkers.KeyUtilityGui
         private void OpenDirectory(string directory)
         {
             directoryStatusLabel.Text = directory;
+            propertyGrid.SelectedObject = null;
+            jsonTextBox.Text = "";
+
 
             List<string> files = new List<string>();
 

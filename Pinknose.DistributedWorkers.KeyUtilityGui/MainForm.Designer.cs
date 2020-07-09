@@ -399,7 +399,7 @@
             // 
             this.splitContainer2.Panel2.Controls.Add(this.jsonTextBox);
             this.splitContainer2.Size = new System.Drawing.Size(615, 404);
-            this.splitContainer2.SplitterDistance = 180;
+            this.splitContainer2.SplitterDistance = 200;
             this.splitContainer2.TabIndex = 1;
             this.splitContainer2.Text = "splitContainer2";
             // 
@@ -409,7 +409,7 @@
             this.propertyGrid.Location = new System.Drawing.Point(0, 0);
             this.propertyGrid.Name = "propertyGrid";
             this.propertyGrid.PropertySort = System.Windows.Forms.PropertySort.Alphabetical;
-            this.propertyGrid.Size = new System.Drawing.Size(615, 180);
+            this.propertyGrid.Size = new System.Drawing.Size(615, 200);
             this.propertyGrid.TabIndex = 0;
             // 
             // jsonTextBox
@@ -418,7 +418,7 @@
             this.jsonTextBox.Location = new System.Drawing.Point(0, 0);
             this.jsonTextBox.Name = "jsonTextBox";
             this.jsonTextBox.ReadOnly = true;
-            this.jsonTextBox.Size = new System.Drawing.Size(615, 220);
+            this.jsonTextBox.Size = new System.Drawing.Size(615, 200);
             this.jsonTextBox.TabIndex = 0;
             this.jsonTextBox.Text = "";
             // 
