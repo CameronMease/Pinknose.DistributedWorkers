@@ -196,6 +196,8 @@ namespace Pinknose.DistributedWorkers.MessageQueues
             return queue;
         }
 
+
+
         internal static TQueueType CreateMessageQueue<TQueueType>(MessageClientBase parentMessageClient, IModel channel, string clientName, string queueName, bool durable, bool autoDelete) where TQueueType : MessageQueue, new()
         {
             var queue = new TQueueType()
