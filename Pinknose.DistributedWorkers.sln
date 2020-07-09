@@ -18,6 +18,18 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerTest", "ServerTest\Se
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pinknose.DistributedWorkers.KeyUtility", "Pinknose.KeyUtility\Pinknose.DistributedWorkers.KeyUtility.csproj", "{804FC7A3-1D52-4B16-901C-2590A0A6F3D2}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pinknose.DistributedWorkers.XBee", "Pinknose.DistributedWorkers.XBee\Pinknose.DistributedWorkers.XBee.csproj", "{A6DDB6D6-BAA8-4969-8C1A-0730D3EFECE0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pinknose.DistributedWorkers.AzureNotifications", "Pinknose.DistributedWorkers.AzureNotifications\Pinknose.DistributedWorkers.AzureNotifications.csproj", "{8D1F7426-51C4-433C-80B0-EC52653E8BF0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pinknose.DistributedWorkers.AmazonSnsNotifications", "Pinknose.DistributedWorkers.AmazonSnsNotifications\Pinknose.DistributedWorkers.AmazonSnsNotifications.csproj", "{6EEA6D9F-7767-4B30-8221-C53535CD7998}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Notification Clients", "Notification Clients", "{C4224246-B891-4CBD-AC89-608259C00534}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pinknose.DistributedWorkers.Pushover", "Pinknose.DistributedWorkers.Pushover\Pinknose.DistributedWorkers.Pushover.csproj", "{2FCB3AFD-39BB-495E-8A70-F8D2AD300526}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pinknose.DistributedWorkers.KeyUtilityGui", "Pinknose.DistributedWorkers.KeyUtilityGui\Pinknose.DistributedWorkers.KeyUtilityGui.csproj", "{AFC24013-6DB4-4D53-BB62-F0210A04A43F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,9 +56,34 @@ Global
 		{804FC7A3-1D52-4B16-901C-2590A0A6F3D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{804FC7A3-1D52-4B16-901C-2590A0A6F3D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{804FC7A3-1D52-4B16-901C-2590A0A6F3D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6DDB6D6-BAA8-4969-8C1A-0730D3EFECE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6DDB6D6-BAA8-4969-8C1A-0730D3EFECE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6DDB6D6-BAA8-4969-8C1A-0730D3EFECE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6DDB6D6-BAA8-4969-8C1A-0730D3EFECE0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D1F7426-51C4-433C-80B0-EC52653E8BF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D1F7426-51C4-433C-80B0-EC52653E8BF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D1F7426-51C4-433C-80B0-EC52653E8BF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D1F7426-51C4-433C-80B0-EC52653E8BF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EEA6D9F-7767-4B30-8221-C53535CD7998}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EEA6D9F-7767-4B30-8221-C53535CD7998}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EEA6D9F-7767-4B30-8221-C53535CD7998}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EEA6D9F-7767-4B30-8221-C53535CD7998}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FCB3AFD-39BB-495E-8A70-F8D2AD300526}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FCB3AFD-39BB-495E-8A70-F8D2AD300526}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FCB3AFD-39BB-495E-8A70-F8D2AD300526}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FCB3AFD-39BB-495E-8A70-F8D2AD300526}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFC24013-6DB4-4D53-BB62-F0210A04A43F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFC24013-6DB4-4D53-BB62-F0210A04A43F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFC24013-6DB4-4D53-BB62-F0210A04A43F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFC24013-6DB4-4D53-BB62-F0210A04A43F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8D1F7426-51C4-433C-80B0-EC52653E8BF0} = {C4224246-B891-4CBD-AC89-608259C00534}
+		{6EEA6D9F-7767-4B30-8221-C53535CD7998} = {C4224246-B891-4CBD-AC89-608259C00534}
+		{2FCB3AFD-39BB-495E-8A70-F8D2AD300526} = {C4224246-B891-4CBD-AC89-608259C00534}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8F3BDCBD-2811-4E04-95F8-098C2D851108}

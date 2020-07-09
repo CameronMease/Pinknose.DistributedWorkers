@@ -22,6 +22,10 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using EasyNetQ.Management.Client.Model;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using Pinknose.DistributedWorkers.Clients;
 using Pinknose.DistributedWorkers.Configuration;
 using Pinknose.DistributedWorkers.Crypto;
@@ -29,19 +33,32 @@ using Pinknose.DistributedWorkers.Extensions;
 using Pinknose.DistributedWorkers.Logging;
 using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.MessageTags;
+using Pinknose.DistributedWorkers.Pushover;
 using Serilog;
 using System;
+using System.Configuration;
+using System.IO;
 using System.Security.Cryptography;
 
 namespace DistributedWorkersTestApp
 {
     internal class Program
     {
-        private enum dumdum
-        { a, v, c }
-
         private static void Main(string[] args)
         {
+            // Get secrets
+            var devEnvironmentVariable = Environment.GetEnvironmentVariable("NETCORE_ENVIRONMENT");
+            var isDevelopment = string.IsNullOrEmpty(devEnvironmentVariable) || devEnvironmentVariable.ToLower() == "development";
+
+            string secretsPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                @"Microsoft\UserSecrets\9a735c2c-ec7a-4c5a-936e-7210fc978f5d",
+                "secrets.json");
+
+            var secrets = JsonConvert.DeserializeObject<UserSecrets>(File.ReadAllText(secretsPath));
+
+            // Do everything else
+
             int val = 0;
 
             string systemName = "aSystem";
@@ -71,8 +88,8 @@ namespace DistributedWorkersTestApp
             var infoTag = new MessageTagValue("Severity", "Info");
             var debugTag = new MessageTagValue("Severity", "Debug");
 
-            using var serverPublicInfo =  MessageClientIdentity.ImportFromFile(@"keys\system-server.pub");
-            using var serverPrivateInfo =  MessageClientIdentity.ImportFromFile(@"keys\system-server.priv", "monkey123"); 
+            using var serverPublicInfo = MessageClientIdentity.ImportFromFile(@"keys\system-server.pub");
+            using var serverPrivateInfo = MessageClientIdentity.ImportFromFile(@"keys\system-server.priv", "monkey123");
 
             using var client1PublicInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client1.pub");
             using var client1PrivateInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client1.priv");
@@ -82,6 +99,10 @@ namespace DistributedWorkersTestApp
 
             using var client3PublicInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client3.pub");
             using var client3PrivateInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client3.priv");
+
+            using var pushoverPublicInfo = MessageClientIdentity.ImportFromFile(@"keys\system-pushoverClient.pub");
+            using var pushoverPrivateInfo = MessageClientIdentity.ImportFromFile(@"keys\system-pushoverClient.priv");
+
 
             Console.WriteLine(serverPublicInfo.IdentityHash);
             Console.WriteLine(client1PublicInfo.IdentityHash);
@@ -95,11 +116,12 @@ namespace DistributedWorkersTestApp
                 .AddClientIdentity(client1PublicInfo)
                 .AddClientIdentity(client2PublicInfo)
                 .AddClientIdentity(client3PublicInfo)
+                .AddClientIdentity(pushoverPublicInfo)
                 .AutoDeleteQueuesOnClose(true)
                 .QueuesAreDurable(false)
                 .CreateMessageServer();
 
- 
+
             server.MessageReceived += (sender, e) => e.Response = MessageResponse.Ack;
             server.AsynchronousException += Client_AsynchronousException;
 
@@ -137,6 +159,33 @@ namespace DistributedWorkersTestApp
             var even = new MessageTagValue("duhh", "even");
             var never = new MessageTagValue("duhh", "never");
 
+            // TODO: Not all configuration options return the right configuration builder type
+
+            var pushoverClient = new PushoverMessageClientConfigurationBuilder()
+                .PushoverAppApiKey(secrets.PushoverAppApiKey)
+                .PushoverUserKey(secrets.PushoverUserKey)
+                .RabbitMQCredentials(userName, password)
+                .RabbitMQServerHostName(rabbitMQServerName)
+                .ServerIdentity(serverPublicInfo)
+                .Identity(pushoverPrivateInfo)
+                .AutoDeleteQueuesOnClose(true)
+                .QueuesAreDurable(false)
+                .CreateMessageClient();
+
+
+            pushoverClient.AddTransform<IntMessage>(t =>
+            {
+                if (t.Payload % 10 == 0)
+                {
+                    return null; // (t.Payload.ToString());
+                }
+
+                return null;
+            });
+
+            pushoverClient.AsynchronousException += Client_AsynchronousException;
+            pushoverClient.Connect(10000);
+
             MessageClient client1 = new MessageClientConfigurationBuilder()
                 .RabbitMQCredentials(userName, password)
                 .RabbitMQServerHostName(rabbitMQServerName)
@@ -157,8 +206,8 @@ namespace DistributedWorkersTestApp
                     Console.WriteLine($"Client 1: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
                 }
             };
-            client1.Connect(TimeSpan.FromSeconds(10), odd);
-            client1.BeginFullWorkConsume(true);
+            //client1.Connect(TimeSpan.FromSeconds(10), odd);
+            //client1.BeginFullWorkConsume(true);
 
             MessageClient client2 = new MessageClientConfigurationBuilder()
                 .RabbitMQCredentials(userName, password)
@@ -179,7 +228,7 @@ namespace DistributedWorkersTestApp
                     Console.WriteLine($"Client 2: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
                 }
             };
-            client2.Connect(TimeSpan.FromSeconds(10), even);
+            //client2.Connect(TimeSpan.FromSeconds(10), even);
             //client2.BeginFullWorkConsume(true);
 
 #if false
