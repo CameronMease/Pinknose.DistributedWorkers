@@ -27,14 +27,18 @@ using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.MessageTags;
 using System;
 
+/// <summary>
+/// 
+/// </summary>
+/// <typeparam name="TServerQueue">Queue type (read-only or read/write) for the server queue.  If you are extending a client, this should be a read-only queue.</typeparam>
 public abstract class MessageClientBase<TServerQueue> : MessageClientBase where TServerQueue : MessageQueue, new()
 {
     //internal TServerQueue LogQueue { get; private set; }
 
     #region Constructors
 
-    protected MessageClientBase(MessageClientIdentity clientInfo, string rabbitMqServerHostName, string userName, string password) :
-                base(clientInfo, rabbitMqServerHostName, userName, password)
+    protected MessageClientBase(MessageClientIdentity clientInfo, string rabbitMqServerHostName, string userName, string password, bool autoDeleteQueuesOnClose, bool queuesAreDurable) :
+                base(clientInfo, rabbitMqServerHostName, userName, password, autoDeleteQueuesOnClose, queuesAreDurable)
     {
     }
 

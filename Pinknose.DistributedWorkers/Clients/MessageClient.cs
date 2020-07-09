@@ -33,14 +33,14 @@ using System.Threading.Tasks;
 
 namespace Pinknose.DistributedWorkers.Clients
 {
-    public sealed class MessageClient : MessageClientBase<MessageQueue>
+    public class MessageClient : MessageClientBase<MessageQueue>
     {
         #region Fields
 
         /// <summary>
         /// The hearbteat send/receive interval in milliseconds.
         /// </summary>
-        public int HeartbeatInterval { get; internal set; } = 1000;
+        public int HeartbeatInterval { get; private set; } = 1000;
 
         private bool clientServerHandshakeComplete = false;
         //private string serverName = "server";
@@ -59,27 +59,30 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Constructors
 
-        internal MessageClient(MessageClientIdentity identity, MessageClientIdentity serverIdentity, string rabbitMqServerHostName, string userName, string password, params MessageClientIdentity[] clientInfos) :
-             base(identity, rabbitMqServerHostName, userName, password)
+        public MessageClient(MessageClientIdentity identity, MessageClientIdentity serverIdentity, string rabbitMqServerHostName, string userName, string password, bool autoDeleteQueuesOnClose, bool queuesAreDurable, int heartbeatInterval, params MessageClientIdentity[] clientInfos) :
+             base(identity, rabbitMqServerHostName, userName, password, autoDeleteQueuesOnClose, queuesAreDurable)
         {
             this.PublicKeystore.Add(serverIdentity);
             this.PublicKeystore.AddRange(clientInfos);
+            HeartbeatInterval = heartbeatInterval;
         }
 
-        internal MessageClient(MessageClientIdentity identity, MessageClientIdentity serverIdentity, string rabbitMqServerHostName, string userName, string password) :
-            this(identity, serverIdentity, rabbitMqServerHostName, userName, password, Array.Empty<MessageClientIdentity>())
+#if false
+        public MessageClient(MessageClientIdentity identity, MessageClientIdentity serverIdentity, string rabbitMqServerHostName, string userName, string password, bool autoDeleteQueuesOnClose, bool queuesAreDurable, int heartbeatInterval) :
+            this(identity, serverIdentity, rabbitMqServerHostName, userName, password, autoDeleteQueuesOnClose, queuesAreDurable, heartArray.Empty<MessageClientIdentity>())
         {
         }
+#endif 
 
-        #endregion Constructors
+#endregion Constructors
 
-        #region Properties
+#region Properties
 
         private ReadableMessageQueue DedicatedQueue { get; set; }
 
-        #endregion Properties
+#endregion Properties
 
-        #region Methods
+#region Methods
 
         /// <summary>
         /// Connects the server's queues to the RabbitMQ server and begins processing of messages.
@@ -257,6 +260,6 @@ namespace Pinknose.DistributedWorkers.Clients
             Log.Warning("Server timeout.");
         }
 
-        #endregion Methods
+#endregion Methods
     }
 }

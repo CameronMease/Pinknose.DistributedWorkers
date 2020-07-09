@@ -26,9 +26,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
-
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Text;
@@ -85,6 +86,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Properties
 
+        [DisplayName("Identity Hash")]
         public string IdentityHash 
         {
             get
@@ -117,12 +119,16 @@ namespace Pinknose.DistributedWorkers.Clients
             }
         }
 
+        [Browsable(false)]
         public ECDsaCng Dsa { get; private set; }
 
+        [Browsable(false)]
         public CngKey ECKey { get; private set; }
 
+        [DisplayName("Client Name")]
         public string Name { get; private set; }
 
+        [DisplayName("System Name")]
         public string SystemName { get; private set; }
 
         internal string DedicatedQueueName => NameHelper.GetDedicatedQueueName(SystemName, Name);
@@ -145,6 +151,11 @@ namespace Pinknose.DistributedWorkers.Clients
 
         public static MessageClientIdentity ImportFromFile(string keyFilePath, string password = "")
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                keyFilePath = keyFilePath.Replace(@"\", "/");
+            }
+
             var json = File.ReadAllText(keyFilePath);
 
             return Import(json, password);

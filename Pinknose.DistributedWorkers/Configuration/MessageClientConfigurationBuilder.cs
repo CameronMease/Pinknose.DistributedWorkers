@@ -22,59 +22,64 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using EasyNetQ.Management.Client.Model;
 using Pinknose.DistributedWorkers.Clients;
 using System.Linq;
 
 namespace Pinknose.DistributedWorkers.Configuration
 {
-    public class MessageClientConfigurationBuilder : MessageClientConfigurationBase<MessageClientConfigurationBuilder>
+    public abstract class MessageClientConfigurationBuilder<TConfigType, TClient> : MessageClientConfigurationBase<MessageClientConfigurationBuilder<TConfigType, TClient>> where TConfigType : MessageClientConfigurationBuilderBase
     {
         #region Fields
 
-        private MessageClientIdentity _thisIdentity = null;
-        private MessageClientIdentity _serverIdentity = null;
-        private int _heartbeatInterval = 1000;
+        protected MessageClientIdentity _thisIdentity = null;
+        protected MessageClientIdentity _serverIdentity = null;
+        protected int _heartbeatInterval = 1000;
 
         #endregion Fields
 
         #region Methods
 
-        public MessageClientConfigurationBuilder Identity(MessageClientIdentity identity)
+        public TConfigType Identity(MessageClientIdentity identity)
         {
             _thisIdentity = identity;
 
-            return this;
+            return (TConfigType)(object)this;
         }
 
-        public MessageClientConfigurationBuilder ServerIdentity(MessageClientIdentity serverIdentity)
+        public TConfigType ServerIdentity(MessageClientIdentity serverIdentity)
         {
             _serverIdentity = serverIdentity;
 
-            return this;
+            return (TConfigType)(object)this;
         }
 
-        public MessageClientConfigurationBuilder HeartbeatInterval(int interval)
+        public TConfigType HeartbeatInterval(int interval)
         {
             _heartbeatInterval = interval;
-            return this;
+            return (TConfigType)(object)this;
         }
 
-        public MessageClient CreateMessageClient()
-        {
-            return new MessageClient(
-                _thisIdentity,
-                _serverIdentity,
-                this._rabbitMQServerHostName,
-                this._userName,
-                this._password,
-                this._clientIdentities.ToArray())
-            {
-                QueuesAreDurable = _queuesAreDurable,
-                AutoDeleteQueuesOnClose = _autoDeleteQueuesOnClose,
-                HeartbeatInterval = _heartbeatInterval
-            };
-        }
+        public abstract TClient CreateMessageClient();
+        
 
         #endregion Methods
+    }
+
+    public class MessageClientConfigurationBuilder : MessageClientConfigurationBuilder<MessageClientConfigurationBuilder, MessageClient>
+    {
+        public override MessageClient CreateMessageClient()
+        {
+            return new MessageClient(
+               _thisIdentity,
+               _serverIdentity,
+               this._rabbitMQServerHostName,
+               this._userName,
+               this._password,
+               _autoDeleteQueuesOnClose,
+               _queuesAreDurable,
+               _heartbeatInterval,
+               this._clientIdentities.ToArray());
+        }
     }
 }

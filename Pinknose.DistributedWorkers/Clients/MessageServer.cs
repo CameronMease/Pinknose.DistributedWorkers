@@ -38,8 +38,8 @@ namespace Pinknose.DistributedWorkers.Clients
     {
         public event EventHandler<MessageReceivedEventArgs> RpcMessageReceived;
 
-        internal MessageServer(MessageClientIdentity serverInfo, string rabbitMqServerHostName, string userName, string password, params MessageClientIdentity[] clientInfos) :
-            base(serverInfo, rabbitMqServerHostName, userName, password)
+        internal MessageServer(MessageClientIdentity serverInfo, string rabbitMqServerHostName, string userName, string password, bool autoDeleteQueuesOnClose, bool queuesAreDurable, params MessageClientIdentity[] clientInfos) :
+            base(serverInfo, rabbitMqServerHostName, userName, password, autoDeleteQueuesOnClose, queuesAreDurable)
         {
             if (serverInfo is null)
             {

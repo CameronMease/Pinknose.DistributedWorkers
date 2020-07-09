@@ -67,7 +67,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Constructors
 
-        protected MessageClientBase(MessageClientIdentity clientInfo, string rabbitMqServerHostName, string userName, string password)
+        protected MessageClientBase(MessageClientIdentity clientInfo, string rabbitMqServerHostName, string userName, string password, bool autoDeleteQueuesOnClose, bool queuesAreDurable)
         {
             if (clientInfo is null)
             {
@@ -97,6 +97,9 @@ namespace Pinknose.DistributedWorkers.Clients
             _password = password;
             _rabbitMqServerHostName = rabbitMqServerHostName;
 
+            AutoDeleteQueuesOnClose = autoDeleteQueuesOnClose;
+            QueuesAreDurable = queuesAreDurable;
+
             //Log.Verbose($"Client '{ClientInfo.Name}' has public key '{ClientInfo.k.GetPublicKeyHash()}'.");
 
             InternalId = Guid.NewGuid().ToString();
@@ -114,8 +117,8 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Properties
 
-        public bool QueuesAreDurable { get; set; } = true;
-        public bool AutoDeleteQueuesOnClose { get; set; } = false;
+        public bool QueuesAreDurable { get; private set; } = true;
+        public bool AutoDeleteQueuesOnClose { get; private set; } = false;
         public string ClientName => Identity.Name;
         public string InternalId { get; private set; }
         public bool IsConnected { get; protected set; } = false;

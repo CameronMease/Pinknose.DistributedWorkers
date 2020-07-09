@@ -51,11 +51,10 @@ namespace Pinknose.DistributedWorkers.Configuration
                 this._rabbitMQServerHostName,
                 this._userName,
                 this._password,
-                _clientIdentities.ToArray())
-            {
-                QueuesAreDurable = _queuesAreDurable,
-                AutoDeleteQueuesOnClose = _autoDeleteQueuesOnClose
-            };
+                _autoDeleteQueuesOnClose,
+                _queuesAreDurable,
+                _clientIdentities.ToArray());
+
         }
 
         #endregion Methods
