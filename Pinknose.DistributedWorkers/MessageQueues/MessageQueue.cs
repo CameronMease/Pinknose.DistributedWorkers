@@ -100,7 +100,7 @@ namespace Pinknose.DistributedWorkers.MessageQueues
             string exchangeName = match.Groups["exchangeName"].Value;
             string routingKey = match.Groups["routingKey"].Value;
 
-            var envelope = MessageEnvelope.WrapMessage(responseMessage, originalMessageEnvelope.SenderName, this.ParentMessageClient, encryptionOption);
+            var envelope = MessageEnvelope.WrapMessage(responseMessage, originalMessageEnvelope.SenderIdentityHash, this.ParentMessageClient, encryptionOption);
             byte[] hashedMessage = envelope.Serialize();
 
             lock (Channel)

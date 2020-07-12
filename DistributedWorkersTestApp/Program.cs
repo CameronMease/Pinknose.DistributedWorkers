@@ -88,20 +88,20 @@ namespace DistributedWorkersTestApp
             var infoTag = new MessageTagValue("Severity", "Info");
             var debugTag = new MessageTagValue("Severity", "Debug");
 
-            using var serverPublicInfo = MessageClientIdentity.ImportFromFile(@"keys\system-server.pub");
-            using var serverPrivateInfo = MessageClientIdentity.ImportFromFile(@"keys\system-server.priv", "monkey123");
+            using var serverPublicInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-server.pub");
+            using var serverPrivateInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-server.priv", "abc");
 
-            using var client1PublicInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client1.pub");
-            using var client1PrivateInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client1.priv");
+            using var client1PublicInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-client1.pub");
+            using var client1PrivateInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-client1.priv", "abc");
 
-            using var client2PublicInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client2.pub");
-            using var client2PrivateInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client2.priv");
+            using var client2PublicInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-client2.pub");
+            using var client2PrivateInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-client2.priv", "abc");
 
-            using var client3PublicInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client3.pub");
-            using var client3PrivateInfo = MessageClientIdentity.ImportFromFile(@"keys\system-client3.priv");
+            using var client3PublicInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-client3.pub");
+            using var client3PrivateInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-client3.priv", "abc");
 
-            using var pushoverPublicInfo = MessageClientIdentity.ImportFromFile(@"keys\system-pushoverClient.pub");
-            using var pushoverPrivateInfo = MessageClientIdentity.ImportFromFile(@"keys\system-pushoverClient.priv");
+            using var pushoverPublicInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-pushoverClient.pub");
+            using var pushoverPrivateInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-pushoverClient.priv", "abc");
 
 
             Console.WriteLine(serverPublicInfo.IdentityHash);
@@ -150,7 +150,7 @@ namespace DistributedWorkersTestApp
 
             //Log.Verbose($"Server public string: {serverInfo.PublicKey.PublicKeyToString()}");
 
-            server.Connect(TimeSpan.FromSeconds(10));
+            server.Connect(TimeSpan.FromSeconds(20));
             sendTimer.Start();
 
             //Thread.Sleep(30000);
@@ -184,7 +184,7 @@ namespace DistributedWorkersTestApp
             });
 
             pushoverClient.AsynchronousException += Client_AsynchronousException;
-            pushoverClient.Connect(10000);
+            pushoverClient.Connect(20000);
 
             MessageClient client1 = new MessageClientConfigurationBuilder()
                 .RabbitMQCredentials(userName, password)
@@ -206,8 +206,8 @@ namespace DistributedWorkersTestApp
                     Console.WriteLine($"Client 1: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
                 }
             };
-            //client1.Connect(TimeSpan.FromSeconds(10), odd);
-            //client1.BeginFullWorkConsume(true);
+            client1.Connect(TimeSpan.FromSeconds(10), odd);
+            client1.BeginFullWorkConsume(true);
 
             MessageClient client2 = new MessageClientConfigurationBuilder()
                 .RabbitMQCredentials(userName, password)

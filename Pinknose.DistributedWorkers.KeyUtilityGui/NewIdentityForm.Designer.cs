@@ -47,6 +47,8 @@
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.cancelButton = new System.Windows.Forms.Button();
             this.createButton = new System.Windows.Forms.Button();
+            this.label7 = new System.Windows.Forms.Label();
+            this.isServerIdentityCheckBox = new System.Windows.Forms.CheckBox();
             this.folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
@@ -58,38 +60,41 @@
             this.tableLayoutPanel1.ColumnCount = 2;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40.5F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 59.5F));
-            this.tableLayoutPanel1.Controls.Add(this.passwordTextBox2, 1, 5);
-            this.tableLayoutPanel1.Controls.Add(this.passwordTextBox1, 1, 4);
-            this.tableLayoutPanel1.Controls.Add(this.clientNameTextBox, 1, 1);
-            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.label3, 0, 3);
-            this.tableLayoutPanel1.Controls.Add(this.label4, 0, 4);
-            this.tableLayoutPanel1.Controls.Add(this.label5, 0, 5);
-            this.tableLayoutPanel1.Controls.Add(this.systemNameTextBox, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 1, 3);
-            this.tableLayoutPanel1.Controls.Add(this.label6, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.curveComboBox, 1, 2);
-            this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel2, 0, 6);
+            this.tableLayoutPanel1.Controls.Add(this.passwordTextBox2, 1, 6);
+            this.tableLayoutPanel1.Controls.Add(this.passwordTextBox1, 1, 5);
+            this.tableLayoutPanel1.Controls.Add(this.clientNameTextBox, 1, 2);
+            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.label3, 0, 4);
+            this.tableLayoutPanel1.Controls.Add(this.label4, 0, 5);
+            this.tableLayoutPanel1.Controls.Add(this.label5, 0, 6);
+            this.tableLayoutPanel1.Controls.Add(this.systemNameTextBox, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this.label6, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.curveComboBox, 1, 3);
+            this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel2, 0, 7);
+            this.tableLayoutPanel1.Controls.Add(this.label7, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.isServerIdentityCheckBox, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 7;
+            this.tableLayoutPanel1.RowCount = 8;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 26F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 105F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 82F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(800, 339);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(800, 361);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // passwordTextBox2
             // 
             this.passwordTextBox2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.passwordTextBox2.Location = new System.Drawing.Point(327, 230);
+            this.passwordTextBox2.Location = new System.Drawing.Point(327, 251);
             this.passwordTextBox2.Name = "passwordTextBox2";
             this.passwordTextBox2.PasswordChar = '*';
             this.passwordTextBox2.Size = new System.Drawing.Size(470, 23);
@@ -99,7 +104,7 @@
             // passwordTextBox1
             // 
             this.passwordTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.passwordTextBox1.Location = new System.Drawing.Point(327, 201);
+            this.passwordTextBox1.Location = new System.Drawing.Point(327, 222);
             this.passwordTextBox1.Name = "passwordTextBox1";
             this.passwordTextBox1.PasswordChar = '*';
             this.passwordTextBox1.Size = new System.Drawing.Size(470, 23);
@@ -109,7 +114,7 @@
             // clientNameTextBox
             // 
             this.clientNameTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.clientNameTextBox.Location = new System.Drawing.Point(327, 32);
+            this.clientNameTextBox.Location = new System.Drawing.Point(327, 58);
             this.clientNameTextBox.Name = "clientNameTextBox";
             this.clientNameTextBox.Size = new System.Drawing.Size(470, 23);
             this.clientNameTextBox.TabIndex = 2;
@@ -119,7 +124,7 @@
             this.label1.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label1.Location = new System.Drawing.Point(214, 4);
+            this.label1.Location = new System.Drawing.Point(214, 30);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(107, 21);
             this.label1.TabIndex = 0;
@@ -130,7 +135,7 @@
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label2.Location = new System.Drawing.Point(225, 33);
+            this.label2.Location = new System.Drawing.Point(225, 59);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(96, 21);
             this.label2.TabIndex = 0;
@@ -141,7 +146,7 @@
             this.label3.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label3.Location = new System.Drawing.Point(121, 135);
+            this.label3.Location = new System.Drawing.Point(121, 156);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(200, 21);
             this.label3.TabIndex = 0;
@@ -152,7 +157,7 @@
             this.label4.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label4.Location = new System.Drawing.Point(121, 202);
+            this.label4.Location = new System.Drawing.Point(121, 223);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(200, 21);
             this.label4.TabIndex = 0;
@@ -163,7 +168,7 @@
             this.label5.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label5.Location = new System.Drawing.Point(25, 231);
+            this.label5.Location = new System.Drawing.Point(25, 252);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(296, 21);
             this.label5.TabIndex = 0;
@@ -172,7 +177,7 @@
             // systemNameTextBox
             // 
             this.systemNameTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.systemNameTextBox.Location = new System.Drawing.Point(327, 3);
+            this.systemNameTextBox.Location = new System.Drawing.Point(327, 29);
             this.systemNameTextBox.Name = "systemNameTextBox";
             this.systemNameTextBox.Size = new System.Drawing.Size(470, 23);
             this.systemNameTextBox.TabIndex = 1;
@@ -184,7 +189,7 @@
             this.flowLayoutPanel1.Controls.Add(this.localMachineCheckBox);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Left;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(327, 96);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(327, 117);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(344, 99);
             this.flowLayoutPanel1.TabIndex = 2;
@@ -230,7 +235,7 @@
             this.label6.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label6.Location = new System.Drawing.Point(221, 65);
+            this.label6.Location = new System.Drawing.Point(221, 88);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(100, 21);
             this.label6.TabIndex = 0;
@@ -242,7 +247,7 @@
             this.curveComboBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             this.curveComboBox.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.curveComboBox.FormattingEnabled = true;
-            this.curveComboBox.Location = new System.Drawing.Point(327, 61);
+            this.curveComboBox.Location = new System.Drawing.Point(327, 87);
             this.curveComboBox.Name = "curveComboBox";
             this.curveComboBox.Size = new System.Drawing.Size(121, 29);
             this.curveComboBox.TabIndex = 3;
@@ -256,11 +261,11 @@
             this.tableLayoutPanel2.Controls.Add(this.cancelButton, 1, 0);
             this.tableLayoutPanel2.Controls.Add(this.createButton, 0, 0);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 259);
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 280);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 1;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(794, 77);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(794, 78);
             this.tableLayoutPanel2.TabIndex = 4;
             // 
             // cancelButton
@@ -289,6 +294,28 @@
             this.createButton.UseVisualStyleBackColor = true;
             this.createButton.Click += new System.EventHandler(this.createButton_Click);
             // 
+            // label7
+            // 
+            this.label7.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.label7.AutoSize = true;
+            this.label7.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.label7.Location = new System.Drawing.Point(195, 2);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(126, 21);
+            this.label7.TabIndex = 0;
+            this.label7.Text = "Is Server Identity";
+            // 
+            // isServerIdentityCheckBox
+            // 
+            this.isServerIdentityCheckBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.isServerIdentityCheckBox.AutoSize = true;
+            this.isServerIdentityCheckBox.Location = new System.Drawing.Point(327, 6);
+            this.isServerIdentityCheckBox.Name = "isServerIdentityCheckBox";
+            this.isServerIdentityCheckBox.Size = new System.Drawing.Size(15, 14);
+            this.isServerIdentityCheckBox.TabIndex = 9;
+            this.isServerIdentityCheckBox.UseVisualStyleBackColor = true;
+            this.isServerIdentityCheckBox.CheckedChanged += new System.EventHandler(this.isServerIdentityCheckBox_CheckedChanged);
+            // 
             // folderBrowserDialog
             // 
             this.folderBrowserDialog.Description = "Select folder for identity key files";
@@ -300,7 +327,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancelButton;
-            this.ClientSize = new System.Drawing.Size(800, 339);
+            this.ClientSize = new System.Drawing.Size(800, 361);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "NewIdentityForm";
@@ -338,5 +365,7 @@
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Button createButton;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.CheckBox isServerIdentityCheckBox;
     }
 }

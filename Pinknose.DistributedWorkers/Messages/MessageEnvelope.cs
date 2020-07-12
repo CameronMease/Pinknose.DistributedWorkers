@@ -68,11 +68,12 @@ namespace Pinknose.DistributedWorkers.Messages
         public string Exchange { get; private set; }
         public MessageBase Message { get; private set; } = null;
 
-        public string RecipientName { get; private set; }
+        public string RecipientIdentityHash { get; private set; }
         public bool Redelivered { get; private set; }
         public PublicationAddress ReplyToAddres { get; private set; }
         public string RoutingKey { get; private set; }
-        public string SenderName { get; private set; }
+
+        public string SenderIdentityHash { get; private set; }
         public SignatureVerificationStatus SignatureVerificationStatus { get; private set; }
 
         public MessageTag[] Tags { get; private set; }
@@ -81,11 +82,11 @@ namespace Pinknose.DistributedWorkers.Messages
 
         #region Methods
 
-        public static MessageEnvelope WrapMessage(MessageBase message, string recipientName, MessageClientBase messageClient, EncryptionOption encryptionOption)
+        public static MessageEnvelope WrapMessage(MessageBase message, string recipientIdentityHash, MessageClientBase messageClient, EncryptionOption encryptionOption)
         {
-            if (string.IsNullOrEmpty(recipientName) && encryptionOption == EncryptionOption.EncryptWithPrivateKey)
+            if (string.IsNullOrEmpty(recipientIdentityHash) && encryptionOption == EncryptionOption.EncryptWithPrivateKey)
             {
-                throw new ArgumentOutOfRangeException(nameof(recipientName), $"{nameof(recipientName)} cannot be empty if encryption is set to private key.");
+                throw new ArgumentOutOfRangeException(nameof(recipientIdentityHash), $"{nameof(recipientIdentityHash)} cannot be empty if encryption is set to private key.");
             }
 
             if (messageClient == null)
@@ -95,10 +96,10 @@ namespace Pinknose.DistributedWorkers.Messages
 
             var wrapper = new MessageEnvelope();
             wrapper.Message = message;
-            wrapper.SenderName = messageClient.ClientName;
+            wrapper.SenderIdentityHash = messageClient.Identity.IdentityHash;
             wrapper._messageClient = messageClient;
             wrapper._encryptionOption = encryptionOption;
-            wrapper.RecipientName = recipientName;
+            wrapper.RecipientIdentityHash = recipientIdentityHash;
 
             return wrapper;
         }
@@ -117,7 +118,7 @@ namespace Pinknose.DistributedWorkers.Messages
 
         public byte[] Serialize()
         {
-            byte[] senderBytes = Encoding.UTF8.GetBytes(SenderName);
+            byte[] senderBytes = Encoding.UTF8.GetBytes(SenderIdentityHash);
             byte[] iv = Array.Empty<byte>();
             int sharedKeyId = 0;
 
@@ -126,7 +127,7 @@ namespace Pinknose.DistributedWorkers.Messages
             // Add encryption, if required;
             if (this._encryptionOption == EncryptionOption.EncryptWithPrivateKey)
             {
-                (messageBytes, iv) = this._messageClient.EncryptDataWithClientKey(messageBytes, this.RecipientName);
+                (messageBytes, iv) = this._messageClient.EncryptDataWithClientKey(messageBytes, this.RecipientIdentityHash);
             }
             else if (this._encryptionOption == EncryptionOption.EncryptWithSystemSharedKey)
             {
@@ -147,7 +148,7 @@ namespace Pinknose.DistributedWorkers.Messages
             var numbers = new BitVector32(0);
             numbers[signatureLengthSection] = _messageClient.SignatureLength;
             numbers[encryptionOptionSection] = (int)_encryptionOption;
-            numbers[senderNameLengthSection] = SenderName.Length;
+            numbers[senderNameLengthSection] = SenderIdentityHash.Length;
             numbers[ivLengthSection] = iv.Length;
             numbers[sharedKeyIdSection] = sharedKeyId;
             BitConverter.GetBytes(numbers.Data).CopyTo(bytes, 4);
@@ -232,14 +233,14 @@ namespace Pinknose.DistributedWorkers.Messages
                 var numbers = new BitVector32(BitConverter.ToInt32(bytes, 4));
                 var signatureLength = numbers[signatureLengthSection];
                 envelope._encryptionOption = (EncryptionOption)numbers[encryptionOptionSection];
-                var senderNameLength = numbers[senderNameLengthSection];
+                var senderIdentityLength = numbers[senderNameLengthSection];
                 var ivLength = numbers[ivLengthSection];
                 var sharedKeyId = numbers[sharedKeyIdSection];
 
                 int index = 8;
 
-                envelope.SenderName = Encoding.UTF8.GetString(bytes, index, senderNameLength);
-                index += senderNameLength;
+                envelope.SenderIdentityHash = Encoding.UTF8.GetString(bytes, index, senderIdentityLength);
+                index += senderIdentityLength;
 
                 //var iv = bytes[(index)..(index + ivLength)];
                 var iv = bytes.RangeByLength(index, ivLength);
@@ -252,7 +253,7 @@ namespace Pinknose.DistributedWorkers.Messages
                     throw new NotImplementedException("Signautre length is invalid.");
                 }
 
-                envelope.SignatureVerificationStatus = messageClient.ValidateSignature(bytes.RangeExcludeLast(signatureLength), signature, envelope.SenderName);
+                envelope.SignatureVerificationStatus = messageClient.ValidateSignature(bytes.RangeExcludeLast(signatureLength), signature, envelope.SenderIdentityHash);
 
                 if (envelope.SignatureVerificationStatus != SignatureVerificationStatus.SignatureValid)
                 {
@@ -266,7 +267,7 @@ namespace Pinknose.DistributedWorkers.Messages
                 // Decrypt the bytes if necessary
                 if (envelope._encryptionOption == EncryptionOption.EncryptWithPrivateKey)
                 {
-                    messageBytes = messageClient.DecryptDataWithClientKey(messageBytes, envelope.SenderName, iv);
+                    messageBytes = messageClient.DecryptDataWithClientKey(messageBytes, envelope.SenderIdentityHash, iv);
                 }
                 else if (envelope._encryptionOption == EncryptionOption.EncryptWithSystemSharedKey)
                 {

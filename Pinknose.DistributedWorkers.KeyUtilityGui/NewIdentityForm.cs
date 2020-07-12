@@ -136,5 +136,19 @@ namespace Pinknose.DistributedWorkers.KeyUtilityGui
         {
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+
+        private void isServerIdentityCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (isServerIdentityCheckBox.Checked)
+            {
+                clientNameTextBox.Enabled = false;
+                clientNameTextBox.Text = "server";
+            }
+            else
+            {
+                clientNameTextBox.Enabled = true;
+                clientNameTextBox.Text = "";
+            }
+        }
     }
 }

@@ -116,7 +116,7 @@ namespace Pinknose.DistributedWorkers.Clients
             DedicatedQueue.BeginFullConsume(true);
 
             // Announce client to server
-            ClientAnnounceMessage message = new ClientAnnounceMessage(PublicKeystore.ParentClientInfo.ECKey);
+            ClientAnnounceMessage message = new ClientAnnounceMessage(PublicKeystore.ParentClientInfo);
 
             //TODO: Encrypt this?
             var result = this.WriteToServer(message, (int)timeout.TotalMilliseconds, false).Result;
@@ -220,7 +220,7 @@ namespace Pinknose.DistributedWorkers.Clients
                 if (e.MessageEnevelope.Message.GetType() == typeof(ClientReannounceRequestMessage))
                 {
                     Log.Information("Server requested reannouncement of clients.");
-                    var message = new ClientAnnounceMessage(PublicKeystore.ParentClientInfo.ECKey);
+                    var message = new ClientAnnounceMessage(PublicKeystore.ParentClientInfo);
 
                     //todo: Encrypt?
                     WriteToServerNoWait(message, false);
@@ -238,7 +238,7 @@ namespace Pinknose.DistributedWorkers.Clients
                 {
                     var tempMessage = (PublicKeyUpdate)e.MessageEnevelope.Message;
                     PublicKeystore.Add(tempMessage.ClientInfo);
-                    Log.Verbose($"Received public key '{tempMessage.ClientInfo.ECKey.GetPublicKeyHash()}' for client '{tempMessage.ClientInfo.Name}'.");
+                    //TODO: Re-enable Log.Verbose($"Received public key '{tempMessage.ClientInfo.ECKey.GetPublicKeyHash()}' for client '{tempMessage.ClientInfo.Name}'.");
                 }
                 else if (e.MessageEnevelope.GetType() == typeof(SystemSharedKeyUpdate))
                 {

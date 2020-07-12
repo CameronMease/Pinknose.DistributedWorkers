@@ -23,6 +23,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 using System;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
 namespace Pinknose.DistributedWorkers.Clients
@@ -31,13 +32,15 @@ namespace Pinknose.DistributedWorkers.Clients
 
     public partial class MessageClientBase
     {
+        private static readonly HashAlgorithmName SignatureHashAlgorithm = HashAlgorithmName.SHA256;
+
         #region Properties
 
         internal int SignatureLength
         {
             get
             {
-                var length = this.Identity.Dsa.KeySize switch
+                var length = this.Identity.ECDsa.KeySize switch
                 {
                     256 => 64,
                     384 => 96,
@@ -55,25 +58,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Methods
 
-        public static CngKey CreateClientKey(ECDiffieHellmanCurve curve, bool allowExport = false)
-        {
-            CngAlgorithm algorithm = curve switch
-            {
-                ECDiffieHellmanCurve.P256 => CngAlgorithm.ECDiffieHellmanP256,
-                ECDiffieHellmanCurve.P384 => CngAlgorithm.ECDiffieHellmanP384,
-                ECDiffieHellmanCurve.P521 => CngAlgorithm.ECDiffieHellmanP521,
-                _ => throw new ArgumentOutOfRangeException(nameof(curve))
-            };
-
-            CngKeyCreationParameters parameters = new CngKeyCreationParameters()
-            {
-                ExportPolicy = allowExport ? CngExportPolicies.AllowPlaintextExport : CngExportPolicies.None
-            };
-
-            CngKey key = CngKey.Create(algorithm, null, parameters);
-
-            return key;
-        }
+        
 
         public static byte[] GetRandomBytes(int length)
         {
@@ -100,10 +85,10 @@ namespace Pinknose.DistributedWorkers.Clients
             }
         }
 
-        internal byte[] DecryptDataWithClientKey(byte[] cypherText, string clientName, byte[] iv)
+        internal byte[] DecryptDataWithClientKey(byte[] cypherText, string cliendtIdentityHash, byte[] iv)
         {
             //TODO: Need to make sure the symmetric key was created first.
-            return DecryptData(cypherText, this.PublicKeystore.GetSymmetricKey(clientName), iv);
+            return DecryptData(cypherText, this.PublicKeystore.GetSymmetricKey(cliendtIdentityHash), iv);
         }
 
         internal byte[] DecryptDataWithSystemSharedKey(byte[] cypherText, byte[] iv)
@@ -129,22 +114,22 @@ namespace Pinknose.DistributedWorkers.Clients
 
         internal byte[] SignData(byte[] data)
         {
-            return this.Identity.Dsa.SignData(data);
+            return this.Identity.ECDsa.SignData(data, SignatureHashAlgorithm);
         }
 
         internal byte[] SignData(byte[] data, int offset, int count)
         {
-            return this.Identity.Dsa.SignData(data, offset, count);
+            return this.Identity.ECDsa.SignData(data, offset, count, SignatureHashAlgorithm);
         }
 
-        internal SignatureVerificationStatus ValidateSignature(byte[] message, byte[] signature, string clientName)
+        internal SignatureVerificationStatus ValidateSignature(byte[] message, byte[] signature, string senderIdentityHash)
         {
-            if (!PublicKeystore.Contains(clientName) && clientName != this.ClientName)
+            if (!PublicKeystore.Contains(senderIdentityHash) && senderIdentityHash != this.Identity.IdentityHash)
             {
                 return SignatureVerificationStatus.NoValidClientInfo;
             }
-            else if ((clientName == this.ClientName && PublicKeystore.ParentClientInfo.Dsa.VerifyData(message, signature)) ||
-                PublicKeystore[clientName].Dsa.VerifyData(message, signature))
+            else if ((senderIdentityHash == this.Identity.IdentityHash && PublicKeystore.ParentClientInfo.ECDsa.VerifyData(message, signature, SignatureHashAlgorithm)) ||
+                PublicKeystore[senderIdentityHash].ECDsa.VerifyData(message, signature, SignatureHashAlgorithm))
             {
                 return SignatureVerificationStatus.SignatureValid;
             }

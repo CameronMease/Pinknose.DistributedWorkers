@@ -22,26 +22,26 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using EasyNetQ.Management.Client.Model;
+using Pinknose.DistributedWorkers.Clients;
 using System;
 using System.Security.Cryptography;
 
 namespace Pinknose.DistributedWorkers.Messages
 {
     [Serializable]
-    internal sealed class ClientAnnounceMessage : MessageBase
+    internal sealed class ClientAnnounceMessage : PayloadMessage<MessageClientIdentity>
     {
         #region Constructors
 
-        internal ClientAnnounceMessage(CngKey key) : base()
+        internal ClientAnnounceMessage(MessageClientIdentity clientIdentity) : 
+            base(clientIdentity, false, true)
         {
-            PublicKey = key.Export(CngKeyBlobFormat.EccFullPublicBlob);
         }
 
         #endregion Constructors
 
         #region Properties
-
-        public byte[] PublicKey { get; private set; }
 
         public int HeartbeatInterval { get; internal set; }
 

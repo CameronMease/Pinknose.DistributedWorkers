@@ -32,14 +32,18 @@ using System.Security.Cryptography;
 
 namespace Pinknose.DistributedWorkers.Keystore
 {
-    [Serializable]
+    /// <summary>
+    /// Stores the public keys of other clients.  Creates shared keys between the 
+    /// parent of this keystore and any of the other known clients.
+    /// </summary>
+    //[Serializable]
     public sealed class PublicKeystore : IEnumerable<MessageClientIdentity>
     {
         #region Fields
 
         private Dictionary<string, MessageClientIdentity> dictionary = new Dictionary<string, MessageClientIdentity>();
 
-        private Dictionary<(CngKey PrivateKey, CngKey PublicKey), byte[]> symmetricKeys = new Dictionary<(CngKey PrivateKey, CngKey PublicKey), byte[]>();
+        private SortedDictionary<string, byte[]> symmetricKeys = new SortedDictionary<string, byte[]>();
 
         #endregion Fields
 
@@ -74,14 +78,15 @@ namespace Pinknose.DistributedWorkers.Keystore
 
         #endregion Indexers
 
-        /*
-        protected PublicKeystore(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
-        */
+/*
+protected PublicKeystore(SerializationInfo info, StreamingContext context) : base(info, context)
+{
+}
+*/
 
-        #region Methods
+#region Methods
 
+#if false
         public void Add(string systemName, string clientName, byte[] publicKeyBlob, CngKeyBlobFormat format)
         {
             var key = CngKey.Import(publicKeyBlob, format);
@@ -92,6 +97,7 @@ namespace Pinknose.DistributedWorkers.Keystore
         {
             dictionary.Add(clientName, AddSymmetricKeyIfNotExist(new MessageClientIdentity(systemName, clientName, key)));
         }
+#endif
 
         public void Add(MessageClientIdentity clientInfo)
         {
@@ -100,7 +106,7 @@ namespace Pinknose.DistributedWorkers.Keystore
                 throw new ArgumentNullException(nameof(clientInfo));
             }
 
-            dictionary.Add(clientInfo.Name, AddSymmetricKeyIfNotExist(clientInfo));
+            dictionary.Add(clientInfo.IdentityHash, AddSymmetricKeyIfNotExist(clientInfo));
         }
 
         public void AddRange(IEnumerable<MessageClientIdentity> clientInfos)
@@ -111,19 +117,19 @@ namespace Pinknose.DistributedWorkers.Keystore
             }
         }
 
-        public bool Contains(string clientName)
+        public bool Contains(string clientIdentityHash)
         {
-            return dictionary.ContainsKey(clientName);
+            return dictionary.ContainsKey(clientIdentityHash);
         }
 
-        public byte[] GetSymmetricKey(string clientName)
+        public byte[] GetSymmetricKey(string clientIdentityHash)
         {
-            return symmetricKeys[(ParentClientInfo.ECKey, this[clientName].ECKey)];
+            return symmetricKeys[clientIdentityHash];
         }
 
         public byte[] GetSymmetricKey(MessageClientIdentity clientInfo)
         {
-            return symmetricKeys[(ParentClientInfo.ECKey, clientInfo.ECKey)];
+            return symmetricKeys[clientInfo.IdentityHash];
         }
 
         public void Merge(PublicKeystore keystore)
@@ -137,9 +143,9 @@ namespace Pinknose.DistributedWorkers.Keystore
             }
         }
 
-        public bool Remove(string clientName)
+        public bool Remove(string clientIdentityHash)
         {
-            return dictionary.Remove(clientName);
+            return dictionary.Remove(clientIdentityHash);
         }
 
         public bool Remove(KeyValuePair<string, MessageClientIdentity> item)
@@ -162,27 +168,19 @@ namespace Pinknose.DistributedWorkers.Keystore
             return dictionary.Values.GetEnumerator();
         }
 
-        private static byte[] GenerateSymmetricKey(CngKey privateKey, CngKey publicKey)
-        {
-            using ECDiffieHellmanCng ecdh = new ECDiffieHellmanCng(privateKey);
-            ecdh.KeyDerivationFunction = ECDiffieHellmanKeyDerivationFunction.Hash;
-            ecdh.HashAlgorithm = CngAlgorithm.Sha256;
-            return ecdh.DeriveKeyMaterial(publicKey);
-        }
-
         private MessageClientIdentity AddSymmetricKeyIfNotExist(MessageClientIdentity clientInfo)
         {
-            var key = (ParentClientInfo.ECKey, clientInfo.ECKey);
+            string hash = clientInfo.IdentityHash;
 
-            if (!symmetricKeys.ContainsKey(key))
+            if (!symmetricKeys.ContainsKey(clientInfo.IdentityHash))
             {
-                symmetricKeys.Add(key, GenerateSymmetricKey(ParentClientInfo.ECKey, clientInfo.ECKey));
+                symmetricKeys.Add(clientInfo.IdentityHash, this.ParentClientInfo.GenerateSymmetricKey(clientInfo));
             }
 
             return clientInfo;
         }
 
-        #endregion Methods
+#endregion Methods
 
         /*
         internal PublicKeystore(SerializationInfo info, StreamingContext context)

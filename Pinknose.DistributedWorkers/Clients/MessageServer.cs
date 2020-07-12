@@ -65,21 +65,21 @@ namespace Pinknose.DistributedWorkers.Clients
         {
             if (e.MessageEnevelope.Message.GetType() == typeof(ClientAnnounceMessage))
             {
-                if (!clients.ContainsKey(e.MessageEnevelope.SenderName))
+                if (!clients.ContainsKey(e.MessageEnevelope.SenderIdentityHash))
                 {
-                    var tempMessage = (ClientAnnounceMessage)e.MessageEnevelope.Message;
+                    var announceMessage = (ClientAnnounceMessage)e.MessageEnevelope.Message;
 
                     ReusableThreadSafeTimer timeoutTimer = null;
                     ReusableThreadSafeTimer heartbeatSendTimer = null;
 
-                    if (tempMessage.HeartbeatInterval > 0)
+                    if (announceMessage.HeartbeatInterval > 0)
                     {
                         timeoutTimer = new ReusableThreadSafeTimer()
                         {
                             AutoReset = false,
-                            Interval = tempMessage.HeartbeatInterval * 2,
+                            Interval = announceMessage.HeartbeatInterval * 2,
                             Enabled = true,
-                            Tag = e.MessageEnevelope.SenderName
+                            Tag = e.MessageEnevelope.SenderIdentityHash
                         };
 
                         timeoutTimer.Elapsed += TimeoutTimer_Elapsed;
@@ -87,16 +87,15 @@ namespace Pinknose.DistributedWorkers.Clients
                         heartbeatSendTimer = new ReusableThreadSafeTimer()
                         {
                             AutoReset = true,
-                            Interval = tempMessage.HeartbeatInterval,
+                            Interval = announceMessage.HeartbeatInterval,
                             Enabled = true,
-                            Tag = e.MessageEnevelope.SenderName
+                            Tag = e.MessageEnevelope.SenderIdentityHash
                         };
 
                         heartbeatSendTimer.Elapsed += HeartbeatSendTimer_Elapsed;
-                    }                    
+                    }
 
-                    //TODO:  This won't work if the system name is different.  Maybe just serialize the identity and send to server?
-                    var clientInfo = new MessageClientIdentity(this.SystemName, e.MessageEnevelope.SenderName, tempMessage.PublicKey, CngKeyBlobFormat.EccFullPublicBlob);
+                    var clientInfo = announceMessage.Payload;  // new MessageClientIdentity(this.SystemName, e.MessageEnevelope.SenderName, announceMessage.Payload, CngKeyBlobFormat.EccFullPublicBlob);
 
                     //e.MessageEnevelope.ReverifySignature(clientInfo.Dsa);
 
@@ -105,9 +104,9 @@ namespace Pinknose.DistributedWorkers.Clients
                     {
                         //TODO: This is where we need to determine what to do with a new unstrusted signature
 
-                        Log.Information($"Client '{e.MessageEnevelope.SenderName}' announced and accepted.");
+                        Log.Information($"Client '{e.MessageEnevelope.SenderIdentityHash}' announced and accepted.");
                         message = "";
-                        clients.Add(e.MessageEnevelope.SenderName, (DateTime.Now, DateTime.Now, "duhh", timeoutTimer, heartbeatSendTimer));
+                        clients.Add(e.MessageEnevelope.SenderIdentityHash, (DateTime.Now, DateTime.Now, "duhh", timeoutTimer, heartbeatSendTimer));
 
                         //PublicKeystore[e.MessageEnevelope.SenderName] = clientInfo;
 
@@ -131,7 +130,7 @@ namespace Pinknose.DistributedWorkers.Clients
                     }
                     else
                     {
-                        Log.Information($"Client '{e.MessageEnevelope.SenderName}' announced and rejected for invalid signature.");
+                        Log.Information($"Client '{e.MessageEnevelope.SenderIdentityHash}' announced and rejected for invalid signature.");
                         message = "Signature was invalid.";
 
                         ((MessageQueue)sender).RespondToMessage(
@@ -165,9 +164,9 @@ namespace Pinknose.DistributedWorkers.Clients
 
                 if (e.MessageEnevelope.GetType() == typeof(HeartbeatMessage))
                 {
-                    if (!clients.ContainsKey(e.MessageEnevelope.SenderName))
+                    if (!clients.ContainsKey(e.MessageEnevelope.SenderIdentityHash))
                     {
-                        Log.Warning($"Heartbeat from unknown client '{e.MessageEnevelope.SenderName}'.");
+                        Log.Warning($"Heartbeat from unknown client '{e.MessageEnevelope.SenderIdentityHash}'.");
 
                         foreach (var clientInfo in clients.Values)
                         {
@@ -181,7 +180,7 @@ namespace Pinknose.DistributedWorkers.Clients
                     }
                     else
                     {
-                        var clientInfo = clients[e.MessageEnevelope.SenderName];
+                        var clientInfo = clients[e.MessageEnevelope.SenderIdentityHash];
                         clientInfo.TimeoutTimer.Restart();
                         clientInfo.LastSeen = DateTime.Now;
                     }
@@ -268,7 +267,7 @@ namespace Pinknose.DistributedWorkers.Clients
             throw new NotImplementedException();
         }
 
-        private Dictionary<string, (DateTime AnnouncementTime, DateTime LastSeen, string PrivateQueueName, ReusableThreadSafeTimer TimeoutTimer, ReusableThreadSafeTimer HeatbeatSendTiemr)> clients =
-            new Dictionary<string, (DateTime AnnouncementTime, DateTime LastSeen, string PrivateQueueName, ReusableThreadSafeTimer TimeoutTimer, ReusableThreadSafeTimer HeatbeatSendTiemr)>();
+        private SortedDictionary<string, (DateTime AnnouncementTime, DateTime LastSeen, string PrivateQueueName, ReusableThreadSafeTimer TimeoutTimer, ReusableThreadSafeTimer HeatbeatSendTiemr)> clients =
+            new SortedDictionary<string, (DateTime AnnouncementTime, DateTime LastSeen, string PrivateQueueName, ReusableThreadSafeTimer TimeoutTimer, ReusableThreadSafeTimer HeatbeatSendTiemr)>();
     }
 }

@@ -1,4 +1,5 @@
-﻿using Pinknose.DistributedWorkers.Clients;
+﻿using Microsoft.VisualBasic;
+using Pinknose.DistributedWorkers.Clients;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -57,7 +58,11 @@ namespace Pinknose.DistributedWorkers.KeyUtilityGui
 
         private void OpenKeyFile(string path)
         {
-            var identity = MessageClientIdentity.ImportFromFile(path);
+            var identity = MessageClientIdentity.ImportFromFile(path, () =>
+            {
+                //TODO: Need to popup up a password input box
+                return "a";
+            });
 
             propertyGrid.SelectedObject = identity;
         }

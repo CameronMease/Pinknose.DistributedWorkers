@@ -50,6 +50,12 @@
     <None Update="Keys\system-pushoverClient.priv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Keys\system-pushoverClient.privl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Keys\system-pushoverClient.privu">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Keys\system-pushoverClient.pub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
