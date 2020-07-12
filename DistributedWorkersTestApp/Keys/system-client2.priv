@@ -1,7 +1,12 @@
 {
   "SystemName": "system",
   "Name": "client2",
-  "KeySize": 256,
-  "Encryption": "None",
-  "ECKey-Private": "RUNLMgEAAAABAAAAAAAAACAAAAAgAAAAAQAAAAAAAAD/////AAAAAQAAAAAAAAAAAAAAAP////////////////////8AAAABAAAAAAAAAAAAAAAA///////////////8WsY12Ko6k+ez671VdpiGvGUdBrDMU7D2O848PifSYEtrF9Hy4SxCR/i85uVjpEDydwN9gS3rM6D0oTlF2JjClk/jQuL+Gn+bjufrSnwPnhYrzjNXazFezsu2QGg3v1H1/////wAAAAD//////////7zm+q2nF56E87nKwvxjJVEBaZ8IoXji6m89XsWnMvFxK9vlaB5XiP+KeL6HhvvioMv6Obaybd9sKbpeSSx3ICY1LypIkR2jPrxVjfcEIaq4sqpJXH0mrJelG/pN3qYaYds7v+s/UwGSFJ9Mc2204q08"
+  "Curve": "nistP256",
+  "Salt": "cC0+i9Icazk=",
+  "IV": "7gzHNSEhEx44Zc7pUK8sag==",
+  "Encryption": "Password",
+  "D": "AEw5madUgdjAqeW+TseW7UxAC4IiQWXezuHbvDq9Xbd6qoF9D6dsjy7hwt4sxubE",
+  "Q.X": "Q3bjHMjTYfLiGtkPHVViRgcwkV2RGlOE9BzfoxQtICs=",
+  "Q.Y": "oj/Kn9iSEHZBB9Pl6oqEHQIYBiiukwHDXaU1c5enYk8=",
+  "Hash": "348180CD-ED961A52-9A3C7221-3815BD69-DF2297E7-323019C3-50D1B64-AA195F39"
 }

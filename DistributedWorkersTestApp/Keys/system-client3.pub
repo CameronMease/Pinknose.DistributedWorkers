@@ -1,6 +1,8 @@
 {
   "SystemName": "system",
   "Name": "client3",
-  "KeySize": 256,
-  "ECKey-Public": "RUNLMQEAAAABAAAAAAAAACAAAAAgAAAAAQAAAAAAAAD/////AAAAAQAAAAAAAAAAAAAAAP////////////////////8AAAABAAAAAAAAAAAAAAAA///////////////8WsY12Ko6k+ez671VdpiGvGUdBrDMU7D2O848PifSYEtrF9Hy4SxCR/i85uVjpEDydwN9gS3rM6D0oTlF2JjClk/jQuL+Gn+bjufrSnwPnhYrzjNXazFezsu2QGg3v1H1/////wAAAAD//////////7zm+q2nF56E87nKwvxjJVEBsDkMsTH1/2zCmPGvBWEtuJaH30n3/m1D/3XptfouQixJ/a+IurR1xjM0VeSnr5RlRHNfXooC8eRl1OZFRj/Vcg=="
+  "Curve": "nistP256",
+  "Q.X": "ckeBFL4yZNu8U2aBPtv4KZ7vhvf5O26dBgBQ1O9I+PM=",
+  "Q.Y": "hDBg8xovHEZ/+dbGsHhcdlUPKfrAhrMVkM3GA6CV4SU=",
+  "Hash": "53C41CCE-60AD122-D9A4362-286B7526-30C5C34F-43388999-F43F4A2D-2AAB9F41"
 }

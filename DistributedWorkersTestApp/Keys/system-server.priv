@@ -1,9 +1,12 @@
 {
   "SystemName": "system",
   "Name": "server",
-  "KeySize": 256,
+  "Curve": "nistP256",
+  "Salt": "G3UKWesOK9M=",
+  "IV": "50YorR0TladK9shlAl6+bg==",
   "Encryption": "Password",
-  "Salt": "r3lj7BqPXnY=",
-  "IV": "eGVQ3K2lzzUdZuljKO2hTA==",
-  "ECKey-Private": "2zP6i1HtX9oGm42gBQJrumM0bLT+ZOuEv7zvJ2Ur0e/mYwbUvpz5+Gw+5TP91USy4Bk7BcPDaoOc/XD7w/lxonAsc4hRIWEfXknRfcWUVNrR4rH/t/kjRl/5wSYo5HH7c9/F6kqk8LxUz3l4LeIdYycVM8DSKI9KLkpy0IM+njUlTHI1WO8RfxowH4ablX06mGolmIUwwsR4MMYqkaZAvLajLqDUD2zhesCwMFZKUm42oC/Af5beaE9+vYNmIrUisY9yPAyljsVrw+/djLmtluROYhIBssoQLkywR1Lhc51skKglR98soFjsvl4Hx9JYHj2BugYakeHkqC8AGr0KM55NSvBy6Q6PwwNap4svinpQB+aDclIjMBWVCakc0rgrixatjTY43rYcBCKFk9NPRUMa0YF7408cwynKAP0NbbE8DAnEbYd0UAIRs4rNThnD"
+  "D": "YNpIqxknrmUlRvH1DyrPZZ//7Ah18nqwPGVc07L5mN9QPxS69KRGeSoB9mFwbY8L",
+  "Q.X": "T5U89Z4s2JEg/ySCd1/E+BvZtVHcJBYWAhgjdfXD+sk=",
+  "Q.Y": "9R8fhqeSPZF4xRqZB34Eki5PTvaDvF4YvLG1j4dGffY=",
+  "Hash": "88E973C8-119DC6C0-8B7445E6-20A5801F-5E75C3B-EBBCCE1-453297AF-AD346747"
 }
