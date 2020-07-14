@@ -28,7 +28,7 @@ using Pinknose.Utilities;
 using System.Collections;
 using System.Reflection;
 
-namespace Pinknose.DistributedWorkers
+namespace Pinknose.DistributedWorkers.Serialization
 {
     public class JsonShouldSerializeContractResolver : DefaultContractResolver
     {
