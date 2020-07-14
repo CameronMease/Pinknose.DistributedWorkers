@@ -70,8 +70,10 @@ namespace Pinknose.DistributedWorkers.Clients
             }
         }
 
+        /*
         internal static SignatureVerificationStatus ValidateSignature(byte[] rawMessage, byte[] signature, byte[] publicKey)
         {
+
             using CngKey key = CngKey.Import(publicKey, CngKeyBlobFormat.EccFullPublicBlob);
             using ECDsaCng tempDsa = new ECDsaCng(key);
 
@@ -84,6 +86,7 @@ namespace Pinknose.DistributedWorkers.Clients
                 return SignatureVerificationStatus.SignatureNotValid;
             }
         }
+        */
 
         internal byte[] DecryptDataWithClientKey(byte[] cypherText, string cliendtIdentityHash, byte[] iv)
         {
@@ -96,9 +99,9 @@ namespace Pinknose.DistributedWorkers.Clients
             return DecryptData(cypherText, PublicKeystore.SystemSharedKeys[PublicKeystore.CurrentSharedKeyId], iv);
         }
 
-        internal (byte[] CipherText, byte[] IV) EncryptDataWithClientKey(byte[] data, string clientName)
+        internal (byte[] CipherText, byte[] IV) EncryptDataWithClientKey(byte[] data, string clientIdentityHash)
         {
-            return EncryptDataWithClientKey(data, PublicKeystore[clientName]);
+            return EncryptDataWithClientKey(data, PublicKeystore[clientIdentityHash]);
         }
 
         internal (byte[] CipherText, byte[] IV) EncryptDataWithClientKey(byte[] data, MessageClientIdentity clientInfo)
@@ -141,7 +144,16 @@ namespace Pinknose.DistributedWorkers.Clients
 
         private static byte[] DecryptData(byte[] cipherText, byte[] key, byte[] iv)
         {
-            using AesCng aes = new AesCng();
+            Aes aes;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                aes = new AesCng();
+            }
+            else
+            {
+                aes = new AesManaged();
+            }
             aes.Key = key;
             aes.IV = iv;
 
@@ -155,14 +167,27 @@ namespace Pinknose.DistributedWorkers.Clients
 
             //Log.Verbose($"Plaintext: {plainText.ToHashedHexString()}");
 
+            aes.Dispose();
+
             return plainText;
         }
 
         private static (byte[] CipherText, byte[] IV) EncryptData(byte[] data, byte[] key)
         {
-            using AesCng aes = new AesCng();
+            Aes aes;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                aes = new AesCng();
+            }
+            else
+            {
+                aes = new AesManaged();
+            }
+
             aes.Key = key;
-            aes.IV = GetRandomBytes(16);
+            var iv = GetRandomBytes(16);
+            aes.IV = iv;
 
             using var encryptor = aes.CreateEncryptor();
 
@@ -173,7 +198,9 @@ namespace Pinknose.DistributedWorkers.Clients
             //Log.Verbose($"Cipher text: {cipherText.ToHashedHexString()}");
             //Log.Verbose($"Plaintext: {data.ToHashedHexString()}");
 
-            return (cipherText, aes.IV);
+            aes.Dispose();
+
+            return (cipherText, iv);
         }
 
         #endregion Methods
