@@ -145,10 +145,11 @@ namespace Pinknose.DistributedWorkers.Clients
 
         internal string DedicatedQueueName => NameHelper.GetDedicatedQueueName(SystemName, Name);
 
-#endregion Properties
+        #endregion Properties
 
 #region Methods
 
+#if false
         public static MessageClientIdentity CreateClientInfo(string systemName, string clientName, ECDiffieHellmanCurve privateKeyCurve, bool allowExport=false)
         {
             var dh = MessageClientIdentity.CreateDH(privateKeyCurve, allowExport);
@@ -160,6 +161,7 @@ namespace Pinknose.DistributedWorkers.Clients
             var dh = MessageClientIdentity.CreateDH(privateKeyCurve, allowExport);
             return new MessageClientIdentity(systemName, NameHelper.GetServerName(), dh, true);
         }
+#endif
 
         public byte[] GenerateSymmetricKey(MessageClientIdentity otherIdentity)
         {
@@ -222,6 +224,7 @@ namespace Pinknose.DistributedWorkers.Clients
             return dh;
         }
 
+#if false
         private static ECDiffieHellman CreateDH(int keySize, bool allowExport = false)
         {
             ECCurve namedCurve = keySize switch
@@ -234,7 +237,9 @@ namespace Pinknose.DistributedWorkers.Clients
 
             return CreateDH(namedCurve, allowExport);
         }
+#endif
 
+#if false
         private static ECDiffieHellman CreateDH(ECDiffieHellmanCurve curve, bool allowExport = false)
         {
             ECCurve namedCurve = curve switch
@@ -247,8 +252,10 @@ namespace Pinknose.DistributedWorkers.Clients
 
             return CreateDH(namedCurve, allowExport);
         }
+#endif
 
-            private static ECDiffieHellman CreateDH(ECCurve curve, bool allowExport = false)
+#if false
+        private static ECDiffieHellman CreateDH(ECCurve curve, bool allowExport = false)
         {
             CngKeyCreationParameters parameters = new CngKeyCreationParameters()
             {
@@ -270,6 +277,7 @@ namespace Pinknose.DistributedWorkers.Clients
 #endif
             }
         }
+#endif
 
         // To detect redundant calls
 
@@ -302,7 +310,7 @@ namespace Pinknose.DistributedWorkers.Clients
             }
         }
 
-        #endregion Methods
+#endregion Methods
 
         // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
         // ~ClientInfo()
