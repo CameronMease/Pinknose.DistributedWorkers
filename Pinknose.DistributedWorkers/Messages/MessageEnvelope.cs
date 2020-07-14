@@ -222,10 +222,10 @@ namespace Pinknose.DistributedWorkers.Messages
         /// </remarks>
         private static MessageEnvelope Deserialize(byte[] bytes, MessageClientBase messageClient)
         {
+            var envelope = new MessageEnvelope();
+
             try
             {
-                var envelope = new MessageEnvelope();
-
                 var bits = new BitVector32(BitConverter.ToInt32(bytes, 0));
                 var isClientAnnounce = bits[isClientAnnounceMask];
                 var isClientAnnounceResponse = bits[isClientAnnounceResponseMask];
