@@ -24,6 +24,7 @@
 
 using Newtonsoft.Json;
 using Pinknose.DistributedWorkers.Extensions;
+using Pinknose.DistributedWorkers.Serialization;
 using System;
 using System.IO;
 using System.IO.Compression;
