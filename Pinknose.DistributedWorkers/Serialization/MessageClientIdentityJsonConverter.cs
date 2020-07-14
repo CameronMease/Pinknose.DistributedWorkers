@@ -43,7 +43,7 @@ namespace Pinknose.DistributedWorkers.Serialization
             byte[] iv = null;
             byte[] salt = null;
             Encryption encryption = Encryption.None;
-            string curveName = "";
+            string curveOid = "";
             string d = null;
             string qx = "";
             string qy = "";
@@ -79,8 +79,8 @@ namespace Pinknose.DistributedWorkers.Serialization
                             encryption = (Encryption)Enum.Parse(typeof(Encryption), (string)reader.Value);
                             break;
 
-                        case "Curve":
-                            curveName = (string)reader.Value;
+                        case "CurveOid":
+                            curveOid = (string)reader.Value;
                             break;
 
                         case "D":
@@ -111,7 +111,7 @@ namespace Pinknose.DistributedWorkers.Serialization
 
             ECParameters ecParameters = new ECParameters()
             {
-                Curve = ECCurve.CreateFromFriendlyName(curveName),
+                Curve = ECCurve.CreateFromOid(new Oid(curveOid)),
                 D = d == null ? null : privateKey,
                 Q = new ECPoint()
                 {
@@ -241,7 +241,7 @@ namespace Pinknose.DistributedWorkers.Serialization
                 throw new NotImplementedException();
             }
 
-            jObject.Add("Curve", parms.Curve.Oid.FriendlyName);
+            jObject.Add("CurveOid", parms.Curve.Oid.Value);
 
             if (parms.D != null && _savePrivateKey)
             {
@@ -254,7 +254,15 @@ namespace Pinknose.DistributedWorkers.Serialization
                     random.GetBytes(salt);
 
                     using Rfc2898DeriveBytes deriveBytes = new Rfc2898DeriveBytes(_password, salt, KeyDerivationIterations, HashAlgorithmName.SHA512);
-                    using AesCng aes = new AesCng();
+                    Aes aes;
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        aes = new AesCng();
+                    }
+                    else
+                    {
+                        aes = new AesManaged();
+                    }
                     aes.Key = deriveBytes.GetBytes(aes.KeySize / 8);
 
                     jObject.Add("Salt", salt);
@@ -262,6 +270,8 @@ namespace Pinknose.DistributedWorkers.Serialization
 
                     using var encryptor = aes.CreateEncryptor();
                     privateKey = encryptor.TransformFinalBlock(privateKey, 0, privateKey.Length);
+
+                    aes.Dispose(); 
                 }
                 else if (_encryptionType == Encryption.LocalMachine)
                 {
