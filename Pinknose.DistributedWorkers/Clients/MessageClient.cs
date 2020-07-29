@@ -26,9 +26,13 @@ using Pinknose.DistributedWorkers.Extensions;
 using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.Messages;
 using Pinknose.DistributedWorkers.MessageTags;
+using Pinknose.DistributedWorkers.Modules;
 using Pinknose.Utilities;
 using Serilog;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 
 namespace Pinknose.DistributedWorkers.Clients
@@ -260,6 +264,19 @@ namespace Pinknose.DistributedWorkers.Clients
             Log.Warning("Server timeout.");
         }
 
-#endregion Methods
+        public void AddModule(ClientModule module)
+        {
+            module.RegisterClient(this);
+        }
+
+        public void AddModuleRange(IEnumerable<ClientModule> modules)
+        {
+            foreach (var module in modules)
+            {
+                AddModule(module);
+            }
+        }
+
+        #endregion Methods
     }
 }

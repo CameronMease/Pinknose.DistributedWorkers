@@ -24,6 +24,8 @@
 
 using EasyNetQ.Management.Client.Model;
 using Pinknose.DistributedWorkers.Clients;
+using Pinknose.DistributedWorkers.Modules;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Pinknose.DistributedWorkers.Configuration
@@ -35,6 +37,7 @@ namespace Pinknose.DistributedWorkers.Configuration
         protected MessageClientIdentity _thisIdentity = null;
         protected MessageClientIdentity _serverIdentity = null;
         protected int _heartbeatInterval = 1000;
+        protected List<ClientModule> _modules = new List<ClientModule>();
 
         #endregion Fields
 
@@ -62,6 +65,11 @@ namespace Pinknose.DistributedWorkers.Configuration
 
         public abstract TClient CreateMessageClient();
         
+        public TConfigType AddModule(ClientModule module)
+        {
+            _modules.Add(module);
+            return (TConfigType)(object)this;
+        }
 
         #endregion Methods
     }
@@ -70,7 +78,7 @@ namespace Pinknose.DistributedWorkers.Configuration
     {
         public override MessageClient CreateMessageClient()
         {
-            return new MessageClient(
+            var client = new MessageClient(
                _thisIdentity,
                _serverIdentity,
                this._rabbitMQServerHostName,
@@ -80,6 +88,10 @@ namespace Pinknose.DistributedWorkers.Configuration
                _queuesAreDurable,
                _heartbeatInterval,
                this._clientIdentities.ToArray());
+
+            client.AddModuleRange(_modules);
+
+            return client;
         }
     }
 }
