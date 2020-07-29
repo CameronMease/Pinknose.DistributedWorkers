@@ -13,3 +13,8 @@ Anyone who:
 * Needs to pass strongly-typed messages
 ## Wiki
 See the [Wiki](https://github.com/CameronMease/Pinknose.DistributedWorkers/wiki).
+## Defect Status
+<a href="https://scan.coverity.com/projects/pinknose-distributedworkers">
+  <img alt="Coverity Scan Build Status"
+       src="https://scan.coverity.com/projects/21539/badge.svg"/>
+</a>
