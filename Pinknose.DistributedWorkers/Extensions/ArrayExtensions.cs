@@ -45,6 +45,19 @@ namespace Pinknose.DistributedWorkers.Extensions
             return sb.ToString();
         }
 
+        public static string ToHexString(this byte[] byteArray)
+        {
+            using SHA256Managed hasher = new SHA256Managed();
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (byte singleByte in byteArray)
+            {
+                sb.Append(singleByte.ToString("x2"));
+            }
+
+            return sb.ToString();
+        }
 
         #endregion Methods
     }
