@@ -28,7 +28,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Notification Clients", "Not
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pinknose.DistributedWorkers.Pushover", "Pinknose.DistributedWorkers.Pushover\Pinknose.DistributedWorkers.Pushover.csproj", "{2FCB3AFD-39BB-495E-8A70-F8D2AD300526}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pinknose.DistributedWorkers.KeyUtilityGui", "Pinknose.DistributedWorkers.KeyUtilityGui\Pinknose.DistributedWorkers.KeyUtilityGui.csproj", "{AFC24013-6DB4-4D53-BB62-F0210A04A43F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pinknose.DistributedWorkers.KeyUtilityGui", "Pinknose.DistributedWorkers.KeyUtilityGui\Pinknose.DistributedWorkers.KeyUtilityGui.csproj", "{AFC24013-6DB4-4D53-BB62-F0210A04A43F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "XBee", "XBee", "{EE45BCF9-3464-449D-B33E-3D27C7779E49}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XBeeLibrary.Core", "..\xbee-csharp\XBeeLibrary.Core\XBeeLibrary.Core.csproj", "{3D3CC3E0-6CFD-4570-BA9E-3E31EFA010D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XBeeLibrary.Windows", "..\xbee-csharp\XBeeLibrary.Windows\XBeeLibrary.Windows.csproj", "{D6027B58-2401-415E-B441-C1EE5122D850}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,6 +82,14 @@ Global
 		{AFC24013-6DB4-4D53-BB62-F0210A04A43F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFC24013-6DB4-4D53-BB62-F0210A04A43F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFC24013-6DB4-4D53-BB62-F0210A04A43F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D3CC3E0-6CFD-4570-BA9E-3E31EFA010D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D3CC3E0-6CFD-4570-BA9E-3E31EFA010D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D3CC3E0-6CFD-4570-BA9E-3E31EFA010D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D3CC3E0-6CFD-4570-BA9E-3E31EFA010D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6027B58-2401-415E-B441-C1EE5122D850}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6027B58-2401-415E-B441-C1EE5122D850}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6027B58-2401-415E-B441-C1EE5122D850}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6027B58-2401-415E-B441-C1EE5122D850}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -84,6 +98,8 @@ Global
 		{8D1F7426-51C4-433C-80B0-EC52653E8BF0} = {C4224246-B891-4CBD-AC89-608259C00534}
 		{6EEA6D9F-7767-4B30-8221-C53535CD7998} = {C4224246-B891-4CBD-AC89-608259C00534}
 		{2FCB3AFD-39BB-495E-8A70-F8D2AD300526} = {C4224246-B891-4CBD-AC89-608259C00534}
+		{3D3CC3E0-6CFD-4570-BA9E-3E31EFA010D9} = {EE45BCF9-3464-449D-B33E-3D27C7779E49}
+		{D6027B58-2401-415E-B441-C1EE5122D850} = {EE45BCF9-3464-449D-B33E-3D27C7779E49}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8F3BDCBD-2811-4E04-95F8-098C2D851108}

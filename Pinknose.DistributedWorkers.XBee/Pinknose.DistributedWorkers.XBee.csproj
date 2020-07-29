@@ -5,6 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Pinknose.Utilities" Version="0.1.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\xbee-csharp\XBeeLibrary.Core\XBeeLibrary.Core.csproj" />
+    <ProjectReference Include="..\..\xbee-csharp\XBeeLibrary.Windows\XBeeLibrary.Windows.csproj" />
     <ProjectReference Include="..\Pinknose.DistributedWorkers\Pinknose.DistributedWorkers.csproj" />
   </ItemGroup>
 

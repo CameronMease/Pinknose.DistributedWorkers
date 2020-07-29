@@ -8,18 +8,30 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="3.1.5" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.5" />
+    <Compile Remove="XBeeSerialInterface.cs" />
+    <Compile Remove="XBeeSerialInterfaceDataStream.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="3.1.6" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.6" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
+    <PackageReference Include="System.IO.Ports" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Pinknose.DistributedWorkers.Pushover\Pinknose.DistributedWorkers.Pushover.csproj" />
+    <ProjectReference Include="..\Pinknose.DistributedWorkers.XBee\Pinknose.DistributedWorkers.XBee.csproj" />
     <ProjectReference Include="..\Pinknose.DistributedWorkers\Pinknose.DistributedWorkers.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Keys\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="XBeeSerialInterface.cs" />
+    <None Include="XBeeSerialInterfaceDataStream.cs" />
   </ItemGroup>
 
   <ItemGroup>

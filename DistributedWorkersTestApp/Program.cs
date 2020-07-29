@@ -22,9 +22,6 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
-using EasyNetQ.Management.Client.Model;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Pinknose.DistributedWorkers.Clients;
 using Pinknose.DistributedWorkers.Configuration;
@@ -34,11 +31,18 @@ using Pinknose.DistributedWorkers.Logging;
 using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.MessageTags;
 using Pinknose.DistributedWorkers.Pushover;
+using Pinknose.DistributedWorkers.XBee;
+using Pinknose.DistributedWorkers.XBee.Messages;
 using Serilog;
 using System;
 using System.Configuration;
 using System.IO;
+using System.IO.Ports;
 using System.Security.Cryptography;
+using XBeeLibrary.Core;
+using XBeeLibrary.Core.Connection;
+using XBeeLibrary.Windows;
+using XBeeLibrary.Windows.Connection.Serial;
 
 namespace DistributedWorkersTestApp
 {
@@ -46,6 +50,11 @@ namespace DistributedWorkersTestApp
     {
         private static void Main(string[] args)
         {
+            var duhh11 = new XBeeMessageBase(XBeeMessageType.Command);
+
+            //duhh11.SerializeForXBee();
+
+
             // Get secrets
             var devEnvironmentVariable = Environment.GetEnvironmentVariable("NETCORE_ENVIRONMENT");
             var isDevelopment = string.IsNullOrEmpty(devEnvironmentVariable) || devEnvironmentVariable.ToLower() == "development";
@@ -100,14 +109,23 @@ namespace DistributedWorkersTestApp
             using var client3PublicInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-client3.pub");
             using var client3PrivateInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-client3.priv", "abc");
 
-            using var pushoverPublicInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-pushoverClient.pub");
-            using var pushoverPrivateInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-pushoverClient.priv", "abc");
+            //using var pushoverPublicInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-pushoverClient.pub");
+            //using var pushoverPrivateInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-pushoverClient.priv", "abc");
 
 
             Console.WriteLine(serverPublicInfo.IdentityHash);
             Console.WriteLine(client1PublicInfo.IdentityHash);
             Console.WriteLine(client2PublicInfo.IdentityHash);
             Console.WriteLine(client3PublicInfo.IdentityHash);
+
+
+
+
+
+
+
+
+
 
             var server = new MessageServerConfigurationBuilder()
                 .RabbitMQCredentials(userName, password)
@@ -116,13 +134,24 @@ namespace DistributedWorkersTestApp
                 .AddClientIdentity(client1PublicInfo)
                 .AddClientIdentity(client2PublicInfo)
                 .AddClientIdentity(client3PublicInfo)
-                .AddClientIdentity(pushoverPublicInfo)
+                //.AddClientIdentity(pushoverPublicInfo)
                 .AutoDeleteQueuesOnClose(true)
                 .QueuesAreDurable(false)
                 .CreateMessageServer();
 
 
-            server.MessageReceived += (sender, e) => e.Response = MessageResponse.Ack;
+            server.MessageReceived += (sender, e) =>
+            {
+                e.Response = MessageResponse.Ack;
+
+                if (e.MessageEnevelope.Message.GetType() == typeof(XBeeReceivedDataMessage))
+                {
+                    var tempMessage = (XBeeReceivedDataMessage)e.MessageEnevelope.Message;
+
+                    Log.Verbose($"{tempMessage.XBeeSender}: {tempMessage.DataString}");
+                }
+            };
+
             server.AsynchronousException += Client_AsynchronousException;
 
             System.Timers.Timer sendTimer = new System.Timers.Timer(1000)
@@ -159,8 +188,22 @@ namespace DistributedWorkersTestApp
             var even = new MessageTagValue("duhh", "even");
             var never = new MessageTagValue("duhh", "never");
 
-            // TODO: Not all configuration options return the right configuration builder type
+            var pushoverModule = new PushoverModule(secrets.PushoverAppApiKey, secrets.PushoverUserKey);
+            pushoverModule.AddTransform<IntMessage>(t =>
+            {
+                if (t.Payload % 10 == 0)
+                {
+                    return null; // (t.Payload.ToString());
+                }
 
+                return null;
+            });
+            var xbeeModule = new XBeeNetworkGatewayModule("COM12", new SerialPortParameters(115200, 8, StopBits.One, Parity.None, Handshake.None));
+
+
+
+            // TODO: Not all configuration options return the right configuration builder type
+#if false
             var pushoverClient = new PushoverMessageClientConfigurationBuilder()
                 .PushoverAppApiKey(secrets.PushoverAppApiKey)
                 .PushoverUserKey(secrets.PushoverUserKey)
@@ -185,6 +228,7 @@ namespace DistributedWorkersTestApp
 
             pushoverClient.AsynchronousException += Client_AsynchronousException;
             pushoverClient.Connect(20000);
+#endif
 
             MessageClient client1 = new MessageClientConfigurationBuilder()
                 .RabbitMQCredentials(userName, password)
@@ -193,7 +237,11 @@ namespace DistributedWorkersTestApp
                 .Identity(client1PrivateInfo)
                 .AutoDeleteQueuesOnClose(true)
                 .QueuesAreDurable(false)
+                .AddModule(pushoverModule)
+                .AddModule(xbeeModule)
                 .CreateMessageClient();
+
+            xbeeModule.OpenXBee();
 
             client1.AsynchronousException += Client_AsynchronousException;
 
@@ -258,6 +306,8 @@ namespace DistributedWorkersTestApp
 
             Console.ReadKey();
         }
+
+       
 
         private static void Client_AsynchronousException(object sender, Pinknose.DistributedWorkers.Exceptions.AsynchronousExceptionEventArgs e)
         {
