@@ -1,7 +1,7 @@
 {
   "SystemName": "system",
   "Name": "server",
-  "Curve": "nistP256",
+  "CurveOid": "1.2.840.10045.3.1.7",
   "Salt": "G3UKWesOK9M=",
   "IV": "50YorR0TladK9shlAl6+bg==",
   "Encryption": "Password",

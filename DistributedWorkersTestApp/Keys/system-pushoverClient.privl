@@ -1,7 +1,7 @@
 {
   "SystemName": "system",
   "Name": "pushoverClient",
-  "Curve": "nistP256",
+  "CurveOid": "1.2.840.10045.3.1.7",
   "Encryption": "LocalMachine",
   "D": "AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAACp7XnBH/70yZ0n0L89Ej8QQAAAACAAAAAAAQZgAAAAEAACAAAABLtFZqMS13zHf926DVOaFk99lESEmKbAdVqHBQcFw0owAAAAAOgAAAAAIAACAAAACbf28FKiA2qWvZmd5YBDgvXEkH/IdS9wMXuAGI1LRqrjAAAABirUDJW+dtN0qVlL7fOUG+EKz87hMqwwyW4NXA/T2vUNU6EvYmPtwCpCuzwQo64YZAAAAAT8Vk/+ERi5OoKHsn4kIL59NnTTaY90EpZGTwfY/BxBkmvufdVwZQLFP/UdhhE5D/ZqUMm+bhGw5+g5DgrnZpSA==",
   "Q.X": "6e39h2pfsLuSpyxjRW4zml3wdue99RJpkGMfk0MgQGY=",

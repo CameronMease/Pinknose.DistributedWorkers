@@ -1,7 +1,7 @@
 {
   "SystemName": "system",
   "Name": "client4",
-  "Curve": "nistP256",
+  "CurveOid": "1.2.840.10045.3.1.7",
   "Q.X": "Y3Kel07EoatRsI90uEOw9xXmOOt19R3kq9nfVgu0jE8=",
   "Q.Y": "bMdOy1gkoQzo3E7TJ+qhkPKX5AdLl+RmD5w5BBRncCY=",
   "Hash": "DEC84F70-323DCEE-7FE9A0A9-6E2DB2BE-C96DBEBA-9C7D671-FF90B543-F9BE8CF"

@@ -1,7 +1,7 @@
 {
   "SystemName": "system",
   "Name": "pushoverClient",
-  "Curve": "nistP256",
+  "CurveOid": "1.2.840.10045.3.1.7",
   "Salt": "P6TEWkoyYko=",
   "IV": "FllBZ8l+R9SY8RViOLVysA==",
   "Encryption": "Password",

@@ -1,7 +1,7 @@
 {
   "SystemName": "system",
   "Name": "client1",
-  "Curve": "nistP256",
+  "CurveOid": "1.2.840.10045.3.1.7",
   "Salt": "+OTa5/wKhX8=",
   "IV": "3ufwjdMpn8ulPwXiqmDUDw==",
   "Encryption": "Password",
