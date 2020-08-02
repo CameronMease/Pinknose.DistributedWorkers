@@ -19,7 +19,7 @@ namespace Pinknose.DistributedWorkers.Serialization
         private Encryption _encryptionType;
         private string _password;
 
-        public event EventHandler<PasswordRequiredEventAgs> PasswordRequired;
+        public event EventHandler<PasswordRequiredEventArgs> PasswordRequired;
 
 
         public MessageClientIdentityJsonConverter(Encryption encryptionType=Encryption.None, bool savePrivateKey = false, string password=null)
@@ -168,7 +168,7 @@ namespace Pinknose.DistributedWorkers.Serialization
 
                 if (string.IsNullOrEmpty(password))
                 {
-                    PasswordRequiredEventAgs e = new PasswordRequiredEventAgs();
+                    PasswordRequiredEventArgs e = new PasswordRequiredEventArgs();
                     PasswordRequired?.Invoke(this, e);
 
                     if (string.IsNullOrEmpty(e.Password))

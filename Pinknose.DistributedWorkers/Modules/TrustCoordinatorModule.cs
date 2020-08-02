@@ -6,13 +6,13 @@ using System.Text;
 
 namespace Pinknose.DistributedWorkers.Modules
 {
-    public sealed class CoordinatorModule : ClientModule
+    public sealed class TrustCoordinatorModule : ClientModule
     {
-        public CoordinatorModule(MessageTagCollection tags) : this(tags.ToArray())
+        public TrustCoordinatorModule(MessageTagCollection tags) : this(tags.ToArray())
         {
         }
 
-        public CoordinatorModule(params MessageTag[] tags) : base(tags)
+        public TrustCoordinatorModule(params MessageTag[] tags) : base(tags)
         {
 
 

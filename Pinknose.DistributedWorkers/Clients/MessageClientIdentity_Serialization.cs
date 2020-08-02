@@ -67,6 +67,11 @@ namespace Pinknose.DistributedWorkers.Clients
 
         public static MessageClientIdentity ImportFromFile(string keyFilePath, string password = "")
         {
+            if (keyFilePath is null)
+            {
+                throw new ArgumentNullException(nameof(keyFilePath));
+            }
+
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 keyFilePath = keyFilePath.Replace(@"\", "/");
@@ -79,6 +84,11 @@ namespace Pinknose.DistributedWorkers.Clients
 
         public static MessageClientIdentity ImportFromFile(string keyFilePath, Func<string> getPasswordDelegate)
         {
+            if (keyFilePath is null)
+            {
+                throw new ArgumentNullException(nameof(keyFilePath));
+            }
+
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 keyFilePath = keyFilePath.Replace(@"\", "/");
@@ -95,6 +105,7 @@ namespace Pinknose.DistributedWorkers.Clients
                 json, 
                 new MessageClientIdentityJsonConverter(password: password));
         }
+
 
         public static MessageClientIdentity Import(string json, Func<string> getPasswordDelegate)
         {

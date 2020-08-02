@@ -121,6 +121,16 @@ namespace Pinknose.DistributedWorkers.MessageTags
 
         public static MessageTagCollection operator |(MessageTagCollection tags1, MessageTagCollection tags2)
         {
+            if (tags1 is null)
+            {
+                throw new ArgumentNullException(nameof(tags1));
+            }
+
+            if (tags2 is null)
+            {
+                throw new ArgumentNullException(nameof(tags2));
+            }
+
             tags1.AddRange(tags2);
             return tags1;
         }
@@ -129,6 +139,9 @@ namespace Pinknose.DistributedWorkers.MessageTags
         {
             return _tags.GetEnumerator();
         }
+
+        public static MessageTagCollection BitwiseOr(MessageTagCollection left, MessageTagCollection right) => left | right;
+        
 
         #endregion Methods
     }

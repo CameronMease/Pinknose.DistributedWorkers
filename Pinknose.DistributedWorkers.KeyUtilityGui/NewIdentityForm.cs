@@ -93,7 +93,7 @@ namespace Pinknose.DistributedWorkers.KeyUtilityGui
 
             var curve = (ECDiffieHellmanCurve)curveComboBox.SelectedItem;
 
-            var identity = MessageClientIdentity.CreateClientInfo(this.systemNameTextBox.Text, this.clientNameTextBox.Text, curve, true);
+            var identity = new MessageClientIdentity(this.systemNameTextBox.Text, this.clientNameTextBox.Text, curve);
 
             string filePath = Path.Combine(FolderPath, this.systemNameTextBox.Text + "-" + this.clientNameTextBox.Text);
 

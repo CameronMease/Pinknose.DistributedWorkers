@@ -266,11 +266,21 @@ namespace Pinknose.DistributedWorkers.Clients
 
         public void AddModule(ClientModule module)
         {
+            if (module is null)
+            {
+                throw new ArgumentNullException(nameof(module));
+            }
+
             module.RegisterClient(this);
         }
 
         public void AddModuleRange(IEnumerable<ClientModule> modules)
         {
+            if (modules is null)
+            {
+                throw new ArgumentNullException(nameof(modules));
+            }
+
             foreach (var module in modules)
             {
                 AddModule(module);

@@ -22,29 +22,23 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Specialized;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 
 namespace Pinknose.DistributedWorkers.Clients
 {
-    public enum Encryption { None, CurrentUser, LocalMachine, Password}
+    public enum Encryption { None, CurrentUser, LocalMachine, Password }
 
     [Serializable]
     public partial class MessageClientIdentity : IDisposable, ISerializable, IComparable
     {
-        private string hash = null;
-
         #region Fields
+
+        private string hash = null;
 
         private bool disposedValue = false;
 
@@ -70,6 +64,43 @@ namespace Pinknose.DistributedWorkers.Clients
             ECDsa.ImportParameters(dh.ExportExplicitParameters(isPrivateIdentity));
         }
 
+        public MessageClientIdentity(string systemName, string clientName, ECDiffieHellmanCurve curve)
+        {
+            ECDiffieHellman dh;
+
+            var dhCurve = curve switch
+            {
+                ECDiffieHellmanCurve.P256 => ECCurve.NamedCurves.nistP256,
+                ECDiffieHellmanCurve.P384 => ECCurve.NamedCurves.nistP384,
+                ECDiffieHellmanCurve.P521 => ECCurve.NamedCurves.nistP521,
+                _ => throw new ArgumentOutOfRangeException(nameof(curve))
+            };
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                dh = new ECDiffieHellmanCng(dhCurve);
+                ECDsa = new ECDsaCng();
+            }
+            else
+            {
+#if (!NET48)
+                dh = new ECDiffieHellmanOpenSsl();
+#else
+                throw new NotSupportedException("ECDiffieHellmanOpenSsl is not supported in .NET 4.8");
+#endif
+
+                ECDsa = new ECDsaOpenSsl();
+            }
+
+            SystemName = systemName;
+            Name = clientName;
+            ECDiffieHellman = dh;
+
+            ECDsa.ImportParameters(dh.ExportExplicitParameters(true));
+        }
+
+        #endregion Constructors
+
 #if false
         internal MessageClientIdentity(string systemName, string clientName, byte[] pkcs8PrivateKey, ECDiffieHellmanCurve curve)
         {
@@ -81,12 +112,10 @@ namespace Pinknose.DistributedWorkers.Clients
         }
 #endif
 
-#endregion Constructors
-
-#region Properties
+        #region Properties
 
         [DisplayName("Identity Hash")]
-        public string IdentityHash 
+        public string IdentityHash
         {
             get
             {
@@ -127,27 +156,24 @@ namespace Pinknose.DistributedWorkers.Clients
         //[Browsable(false)]
         //public ECDsa Dsa { get; private set; }
 
-        [Browsable(false)]
-        internal ECDiffieHellman ECDiffieHellman { get; set; }
-
         //TODO: Make this private.  Expose the signing functions
         [Browsable(false)]
         public ECDsa ECDsa { get; private set; }
 
-        //[Browsable(false)]
-        //public CngKey ECKey { get; private set; }
-
         [DisplayName("Client Name")]
         public string Name { get; private set; }
 
+        //[Browsable(false)]
+        //public CngKey ECKey { get; private set; }
         [DisplayName("System Name")]
         public string SystemName { get; private set; }
+
+        [Browsable(false)]
+        internal ECDiffieHellman ECDiffieHellman { get; set; }
 
         internal string DedicatedQueueName => NameHelper.GetDedicatedQueueName(SystemName, Name);
 
         #endregion Properties
-
-#region Methods
 
 #if false
         public static MessageClientIdentity CreateClientInfo(string systemName, string clientName, ECDiffieHellmanCurve privateKeyCurve, bool allowExport=false)
@@ -163,6 +189,8 @@ namespace Pinknose.DistributedWorkers.Clients
         }
 #endif
 
+        #region Methods
+
         public byte[] GenerateSymmetricKey(MessageClientIdentity otherIdentity)
         {
             if (otherIdentity is null)
@@ -173,8 +201,6 @@ namespace Pinknose.DistributedWorkers.Clients
             return this.ECDiffieHellman.DeriveKeyFromHash(otherIdentity.ECDiffieHellman.PublicKey, HashAlgorithmName.SHA256);
         }
 
-        
-
         // This code added to correctly implement the disposable pattern.
         public void Dispose()
         {
@@ -182,6 +208,40 @@ namespace Pinknose.DistributedWorkers.Clients
             Dispose(true);
             // TODO: uncomment the following line if the finalizer is overridden above.
             // GC.SuppressFinalize(this);
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (obj is null)
+            {
+                throw new ArgumentNullException(nameof(obj));
+            }
+
+            if (obj.GetType() == this.GetType())
+            {
+                return this.IdentityHash.CompareTo(((MessageClientIdentity)obj).IdentityHash);
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects).
+                    ECDiffieHellman?.Dispose();
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+
+                disposedValue = true;
+            }
         }
 
         private static ECDsa CreateDsa(ECParameters ecParameters)
@@ -223,6 +283,8 @@ namespace Pinknose.DistributedWorkers.Clients
 
             return dh;
         }
+
+        #endregion Methods
 
 #if false
         private static ECDiffieHellman CreateDH(int keySize, bool allowExport = false)
@@ -280,38 +342,6 @@ namespace Pinknose.DistributedWorkers.Clients
 #endif
 
         // To detect redundant calls
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects).
-                    ECDiffieHellman?.Dispose();
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // TODO: set large fields to null.
-
-                disposedValue = true;
-            }
-        }
-
-        public int CompareTo(object obj)
-        {
-            if (obj.GetType() == this.GetType())
-            {
-                return this.IdentityHash.CompareTo(((MessageClientIdentity)obj).IdentityHash);
-            }
-            else
-            {
-                return -1;
-            }
-        }
-
-#endregion Methods
-
         // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
         // ~ClientInfo()
         // {

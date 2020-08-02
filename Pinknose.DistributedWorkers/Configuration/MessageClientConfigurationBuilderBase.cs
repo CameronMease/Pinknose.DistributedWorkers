@@ -35,6 +35,7 @@ namespace Pinknose.DistributedWorkers.Configuration
     {
         #region Fields
 
+#pragma warning disable CA1051 // Do not declare visible instance fields
         protected string _userName = "guest";
         protected string _password = "guest";
 
@@ -44,6 +45,7 @@ namespace Pinknose.DistributedWorkers.Configuration
         protected bool _autoDeleteQueuesOnClose = false;
 
         protected HashSet<MessageClientIdentity> _clientIdentities = new HashSet<MessageClientIdentity>();
+#pragma warning restore CA1051 // Do not declare visible instance fields
 
         #endregion Fields
 
@@ -90,6 +92,11 @@ namespace Pinknose.DistributedWorkers.Configuration
 
         public TConfigType AddClientInfoRange(IEnumerable<MessageClientIdentity> clientIdentity)
         {
+            if (clientIdentity is null)
+            {
+                throw new System.ArgumentNullException(nameof(clientIdentity));
+            }
+
             foreach (var info in clientIdentity)
             {
                 _clientIdentities.Add(info);

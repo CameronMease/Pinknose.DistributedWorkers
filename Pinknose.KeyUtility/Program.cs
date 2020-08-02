@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using EasyNetQ.Management.Client.Model;
+using Newtonsoft.Json.Serialization;
 using Pinknose.DistributedWorkers.Clients;
 using Pinknose.DistributedWorkers.KeyUtility.CommandLineOptions;
 using System;
@@ -85,11 +86,12 @@ namespace Pinknose.DistributedWorkers.KeyUtility
 
             if (generateClientOptions != null)
             {
-                clientInfo = MessageClientIdentity.CreateClientInfo(generateClientOptions.SystemName, generateClientOptions.ClientName, curve, true);
+                clientInfo = new MessageClientIdentity(generateClientOptions.SystemName, generateClientOptions.ClientName, curve);
             }
             else if (generateServerOptions != null)
             {
-                clientInfo = MessageClientIdentity.CreateServerInfo(generateServerOptions.SystemName, curve, true);
+                //TODO: Need to get server name from somehwere else.
+                clientInfo = new MessageClientIdentity(generateServerOptions.SystemName, "Server", curve);
             }
 
             string path = Path.Combine(generateOptionsBase.Directory, clientInfo.SystemName + "-" + clientInfo.Name);

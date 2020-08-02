@@ -50,10 +50,6 @@ namespace DistributedWorkersTestApp
     {
         private static void Main(string[] args)
         {
-            var duhh11 = new XBeeMessageBase(XBeeMessageType.Command);
-
-            //duhh11.SerializeForXBee();
-
 
             // Get secrets
             var devEnvironmentVariable = Environment.GetEnvironmentVariable("NETCORE_ENVIRONMENT");
@@ -144,11 +140,11 @@ namespace DistributedWorkersTestApp
             {
                 e.Response = MessageResponse.Ack;
 
-                if (e.MessageEnevelope.Message.GetType() == typeof(XBeeReceivedDataMessage))
+                if (e.MessageEnevelope.Message.GetType() == typeof(XBeeFromXBeeMessage))
                 {
-                    var tempMessage = (XBeeReceivedDataMessage)e.MessageEnevelope.Message;
+                    var tempMessage = (XBeeFromXBeeMessage)e.MessageEnevelope.Message;
 
-                    Log.Verbose($"{tempMessage.XBeeSender}: {tempMessage.DataString}");
+                    Log.Verbose($"{tempMessage.XBeeSourceAddress}: {tempMessage.RawData}");
                 }
             };
 

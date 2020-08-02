@@ -6,7 +6,9 @@ using System.Text;
 
 namespace Pinknose.DistributedWorkers.Exceptions
 {
+#pragma warning disable CA1032 // Implement standard exception constructors
     public class IdentityException : Exception
+#pragma warning restore CA1032 // Implement standard exception constructors
     {
         public IdentityException(string message, MessageEnvelope messageEnvelope) : base(message)
         {

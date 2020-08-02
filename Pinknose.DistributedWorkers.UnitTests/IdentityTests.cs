@@ -14,9 +14,10 @@ namespace Pinknose.DistributedWorkers.UnitTests
         [TestMethod]
         public void IdentityInvalidUnitTest()
         {
-            var clientIdent = MessageClientIdentity.CreateClientInfo("system", "client", ECDiffieHellmanCurve.P256);
-            var imposterClientIdent = MessageClientIdentity.CreateClientInfo("system", "client", ECDiffieHellmanCurve.P256);
-            var serverIdent = MessageClientIdentity.CreateServerInfo("system", ECDiffieHellmanCurve.P256);
+            var clientIdent = new MessageClientIdentity("system", "client", ECDiffieHellmanCurve.P256);
+            var imposterClientIdent = new MessageClientIdentity("system", "client", ECDiffieHellmanCurve.P256);
+            //TODO: WHere to get server name from?
+            var serverIdent = new MessageClientIdentity("system", "Server", ECDiffieHellmanCurve.P256);
 
             var server = new MessageServerConfigurationBuilder()
                 .AddClientIdentity(clientIdent)

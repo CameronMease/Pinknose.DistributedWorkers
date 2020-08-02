@@ -8,9 +8,9 @@ using System.Text;
 namespace Pinknose.DistributedWorkers.XBee.Messages
 {
     [Serializable]
-    public class XbeeToXBeeMessage : XBeeMessageBase
+    public abstract class XbeeToXBeeMessage : XBeeMessageBase
     {
-        public XbeeToXBeeMessage(XBeeMessageType xBeeMessageType) : base(xBeeMessageType)
+        public XbeeToXBeeMessage() : base()
         {
         }
 

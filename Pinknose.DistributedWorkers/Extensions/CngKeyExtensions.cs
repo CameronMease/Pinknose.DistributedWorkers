@@ -34,6 +34,11 @@ namespace Pinknose.DistributedWorkers.Extensions
 
         public static CngKey GetPublicKey(this CngKey key)
         {
+            if (key is null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
             byte[] bytes = key.Export(CngKeyBlobFormat.EccFullPublicBlob);
             return CngKey.Import(bytes, CngKeyBlobFormat.EccFullPublicBlob);
         }

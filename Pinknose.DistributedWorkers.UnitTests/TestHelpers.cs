@@ -41,7 +41,7 @@ namespace Pinknose.DistributedWorkers.UnitTests
         public static MessageClient CreateClient(string clientName, MessageClientIdentity serverInfo, [CallerMemberName] string systemName = "")
         {
             return new MessageClientConfigurationBuilder()
-                .Identity(MessageClientIdentity.CreateClientInfo(systemName, clientName, ECDiffieHellmanCurve.P256))
+                .Identity(new MessageClientIdentity(systemName, clientName, ECDiffieHellmanCurve.P256))
                 .ServerIdentity(serverInfo)
                 .RabbitMQServerHostName(Properties.Resources.RabbitMQServerName)
                 .RabbitMQCredentials(Properties.Resources.Username, Properties.Resources.Password)
@@ -52,7 +52,8 @@ namespace Pinknose.DistributedWorkers.UnitTests
 
         public static (MessageServer messageServer, MessageClientIdentity serverInfo) CreateServer(string serverName, CngKey key, [CallerMemberName] string systemName = "", params MessageClientIdentity[] clientInfo)
         {
-            var serverInfo = MessageClientIdentity.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
+            //TODO: Get server name from somewhere else
+            var serverInfo = new MessageClientIdentity(systemName, "Server", ECDiffieHellmanCurve.P256);
 
             return (new MessageServerConfigurationBuilder()
                 .Identity(serverInfo)
@@ -66,13 +67,14 @@ namespace Pinknose.DistributedWorkers.UnitTests
 
         public static (MessageServer messageServer, IEnumerable<MessageClient> clients) CreateClientsAndServer([CallerMemberName] string systemName = "", params string[] clientNames)
         {
-            MessageClientIdentity serverInfo = MessageClientIdentity.CreateServerInfo(systemName, ECDiffieHellmanCurve.P256);
+            //TODO: Get server name from somewhere else
+            MessageClientIdentity serverInfo = new MessageClientIdentity(systemName, "Server", ECDiffieHellmanCurve.P256);
             MessageClientIdentity[] clientsInfo = new MessageClientIdentity[clientNames.Count()];
             MessageClient[] messageClients = new MessageClient[clientNames.Count()];
 
             for (int i = 0; i < clientNames.Count(); i++)
             {
-                clientsInfo[i] = MessageClientIdentity.CreateClientInfo(systemName, clientNames[i], ECDiffieHellmanCurve.P256);
+                clientsInfo[i] = new MessageClientIdentity(systemName, clientNames[i], ECDiffieHellmanCurve.P256);
 
                 messageClients[i] = new MessageClientConfigurationBuilder()
                                         .Identity(clientsInfo[i])

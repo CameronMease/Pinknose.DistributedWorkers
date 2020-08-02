@@ -50,5 +50,17 @@ namespace Pinknose.DistributedWorkers.XBee.Messages
                 throw new NotImplementedException();
             }
         }
+
+        public override string ToString()
+        {
+            if (Is64BitAddress)
+            {
+                return XBee64BitAddress.ToString();
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 }

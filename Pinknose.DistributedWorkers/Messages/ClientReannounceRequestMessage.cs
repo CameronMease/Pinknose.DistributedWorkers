@@ -31,7 +31,7 @@ namespace Pinknose.DistributedWorkers.Messages
     {
         #region Constructors
 
-        public ClientReannounceRequestMessage(bool encryptMessage) : base()
+        public ClientReannounceRequestMessage() : base()
         {
         }
 

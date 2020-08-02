@@ -176,7 +176,7 @@ namespace Pinknose.DistributedWorkers.Clients
                         clients.Clear();
 
                         //TODO: How to determine when to encyrpt
-                        BroadcastToAllClients(new ClientReannounceRequestMessage(false), false);
+                        BroadcastToAllClients(new ClientReannounceRequestMessage(), false);
                     }
                     else
                     {

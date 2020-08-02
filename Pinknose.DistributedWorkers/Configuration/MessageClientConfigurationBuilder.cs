@@ -34,10 +34,12 @@ namespace Pinknose.DistributedWorkers.Configuration
     {
         #region Fields
 
+#pragma warning disable CA1051 // Do not declare visible instance fields
         protected MessageClientIdentity _thisIdentity = null;
         protected MessageClientIdentity _serverIdentity = null;
         protected int _heartbeatInterval = 1000;
         protected List<ClientModule> _modules = new List<ClientModule>();
+#pragma warning restore CA1051 // Do not declare visible instance fields
 
         #endregion Fields
 

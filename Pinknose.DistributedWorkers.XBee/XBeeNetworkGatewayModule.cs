@@ -148,7 +148,7 @@ namespace Pinknose.DistributedWorkers.XBee
 
             if (ForwardReceivedData)
             {
-                var message = new XBeeReceivedDataMessage(e.DataReceived);
+                var message = new XBeeFromXBeeMessage(e.DataReceived);
 
                 //TODO: When to encrypt?
                 this.MessageClient.WriteToSubscriptionQueues(message, false, new XBeeReceivedDataTag());

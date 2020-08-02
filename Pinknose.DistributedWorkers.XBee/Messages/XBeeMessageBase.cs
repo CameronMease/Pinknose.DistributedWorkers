@@ -11,17 +11,12 @@ namespace Pinknose.DistributedWorkers.XBee.Messages
     public enum XBeeMessageType { Status = 0, Command =1 }
 
     [Serializable]
-    public class XBeeMessageBase : MessageBase
+    public abstract class XBeeMessageBase : MessageBase
     {
-        public XBeeMessageBase(XBeeMessageType xBeeMessageType)
+        public XBeeMessageBase()
         {
-            XBeeMessageType = xBeeMessageType;
-        }
+        }       
 
-        [XBeeSerializeable("#MT")]
-        public XBeeMessageType XBeeMessageType { get; private set; }
-
-        
-        
+        public abstract string RawData { get; }        
     }
 }
