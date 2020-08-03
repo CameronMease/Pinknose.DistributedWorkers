@@ -76,6 +76,8 @@ namespace Pinknose.DistributedWorkers.Messages
         public string SenderIdentityHash { get; private set; }
         public SignatureVerificationStatus SignatureVerificationStatus { get; private set; }
 
+        public DateTime Timestamp { get; private set; }
+
         public MessageTag[] Tags { get; private set; }
 
         #endregion Properties
@@ -100,6 +102,7 @@ namespace Pinknose.DistributedWorkers.Messages
             wrapper._messageClient = messageClient;
             wrapper._encryptionOption = encryptionOption;
             wrapper.RecipientIdentityHash = recipientIdentityHash;
+            wrapper.Timestamp = DateTime.Now;
 
             return wrapper;
         }
@@ -111,13 +114,14 @@ namespace Pinknose.DistributedWorkers.Messages
         /// <remarks>
         /// Message Wrapper Format:
         ///
-        /// [ Info Bits ][ Info Numbers ][ Sender Name ][ IV - Optional][ Serialized Message (encryption optional)][ Signature ]
-        /// [                                          Signature based on this data                               ]
+        /// [ Info Bits ][ Info Numbers ][ Timestamp ][ Sender Name ][ IV - Optional][ Serialized Message (encryption optional)][ Signature ]
+        /// [                                               Signature based on this data                                       ]
         ///
         /// </remarks>
 
         public byte[] Serialize()
         {
+            int index = 0;
             byte[] senderBytes = Encoding.UTF8.GetBytes(SenderIdentityHash);
             byte[] iv = Array.Empty<byte>();
             int sharedKeyId = 0;
@@ -131,18 +135,19 @@ namespace Pinknose.DistributedWorkers.Messages
             }
             else if (this._encryptionOption == EncryptionOption.EncryptWithSystemSharedKey)
             {
-                (messageBytes, iv, sharedKeyId) = this._messageClient.EncryptDataWithSystemSharedKey(messageBytes);
+                (messageBytes, iv, sharedKeyId) = this._messageClient.EncryptDataWithSystemSharedKey(messageBytes, this.Timestamp);
             }
 
-            int totalBufferSize = 8 + senderBytes.Length + messageBytes.Length + iv.Length + _messageClient.SignatureLength;
+            int totalBufferSize = 8 + sizeof(long) + senderBytes.Length + messageBytes.Length + iv.Length + _messageClient.SignatureLength;
 
             byte[] bytes = new byte[totalBufferSize];
 
             // Load bits;
             var bits = new BitVector32(0);
             bits[isClientAnnounceMask] = this.Message.GetType() == typeof(ClientAnnounceMessage);
-            bits[isClientAnnounceResponseMask] = this.Message.GetType() == typeof(ClientAnnounceResponseMessage);
-            BitConverter.GetBytes(bits.Data).CopyTo(bytes, 0);
+            bits[isClientAnnounceResponseMask] = false; //this.Message.GetType() == typeof(ClientAnnounceResponseMessage);
+            BitConverter.GetBytes(bits.Data).CopyTo(bytes, index);
+            index += 4;
 
             // Load numbers
             var numbers = new BitVector32(0);
@@ -151,12 +156,18 @@ namespace Pinknose.DistributedWorkers.Messages
             numbers[senderNameLengthSection] = SenderIdentityHash.Length;
             numbers[ivLengthSection] = iv.Length;
             numbers[sharedKeyIdSection] = sharedKeyId;
-            BitConverter.GetBytes(numbers.Data).CopyTo(bytes, 4);
+            BitConverter.GetBytes(numbers.Data).CopyTo(bytes, index);
+            index += 4;
 
             // Copy fields
-            senderBytes.CopyTo(bytes, 8);
-            iv.CopyTo(bytes, 8 + senderBytes.Length);
-            messageBytes.CopyTo(bytes, 8 + senderBytes.Length + iv.Length);
+            BitConverter.GetBytes(this.Timestamp.Ticks).CopyTo(bytes, index);
+            index += sizeof(long);
+            senderBytes.CopyTo(bytes, index);
+            index += senderBytes.Length;
+            iv.CopyTo(bytes, index);
+            index += iv.Length;
+            messageBytes.CopyTo(bytes, index);
+            index += messageBytes.Length;
 
             byte[] signature = _messageClient.SignData(bytes, 0, totalBufferSize - _messageClient.SignatureLength);
 
@@ -239,6 +250,9 @@ namespace Pinknose.DistributedWorkers.Messages
 
                 int index = 8;
 
+                envelope.Timestamp = new DateTime(BitConverter.ToInt64(bytes, index));
+                index += sizeof(long);                
+
                 envelope.SenderIdentityHash = Encoding.UTF8.GetString(bytes, index, senderIdentityLength);
                 index += senderIdentityLength;
 
@@ -271,7 +285,7 @@ namespace Pinknose.DistributedWorkers.Messages
                 }
                 else if (envelope._encryptionOption == EncryptionOption.EncryptWithSystemSharedKey)
                 {
-                    messageBytes = messageClient.DecryptDataWithSystemSharedKey(messageBytes, iv);
+                    messageBytes = messageClient.DecryptDataWithSystemSharedKey(messageBytes, iv, envelope.Timestamp);
                 }
 
                 // Deserialize the message

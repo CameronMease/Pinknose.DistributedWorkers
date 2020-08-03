@@ -22,6 +22,8 @@ namespace Pinknose.DistributedWorkers.XBee
 
         private bool tryToReconnect = false;
 
+        public bool EncryptMessages { get; set; } = true;
+
         private ReusableThreadSafeTimer checkXBeeTimer = new ReusableThreadSafeTimer()
         {
             Interval = 1000,
@@ -150,8 +152,7 @@ namespace Pinknose.DistributedWorkers.XBee
             {
                 var message = new XBeeFromXBeeMessage(e.DataReceived);
 
-                //TODO: When to encrypt?
-                this.MessageClient.WriteToSubscriptionQueues(message, false, new XBeeReceivedDataTag());
+                this.MessageClient.WriteToSubscriptionQueues(message, EncryptMessages, new XBeeReceivedDataTag());
             }
         }
 

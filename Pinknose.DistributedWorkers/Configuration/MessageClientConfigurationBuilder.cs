@@ -36,7 +36,7 @@ namespace Pinknose.DistributedWorkers.Configuration
 
 #pragma warning disable CA1051 // Do not declare visible instance fields
         protected MessageClientIdentity _thisIdentity = null;
-        protected MessageClientIdentity _serverIdentity = null;
+        protected MessageClientIdentity _trustCoordinatorIdentity = null;
         protected int _heartbeatInterval = 1000;
         protected List<ClientModule> _modules = new List<ClientModule>();
 #pragma warning restore CA1051 // Do not declare visible instance fields
@@ -52,9 +52,9 @@ namespace Pinknose.DistributedWorkers.Configuration
             return (TConfigType)(object)this;
         }
 
-        public TConfigType ServerIdentity(MessageClientIdentity serverIdentity)
+        public TConfigType TrustCoordinatorIdentity(MessageClientIdentity trustCoordinatorIdentity)
         {
-            _serverIdentity = serverIdentity;
+            _trustCoordinatorIdentity = trustCoordinatorIdentity;
 
             return (TConfigType)(object)this;
         }
@@ -80,9 +80,17 @@ namespace Pinknose.DistributedWorkers.Configuration
     {
         public override MessageClient CreateMessageClient()
         {
+            MessageClientIdentity coordinatorIdent = _trustCoordinatorIdentity;
+
+            if (_modules.Any(m => m.GetType() == typeof(TrustCoordinatorModule)))
+            {
+                //This client is the trust coordinator
+                coordinatorIdent = _thisIdentity;
+            }
+
             var client = new MessageClient(
                _thisIdentity,
-               _serverIdentity,
+               coordinatorIdent,
                this._rabbitMQServerHostName,
                this._userName,
                this._password,

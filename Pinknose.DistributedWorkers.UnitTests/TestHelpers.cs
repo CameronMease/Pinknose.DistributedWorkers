@@ -42,7 +42,7 @@ namespace Pinknose.DistributedWorkers.UnitTests
         {
             return new MessageClientConfigurationBuilder()
                 .Identity(new MessageClientIdentity(systemName, clientName, ECDiffieHellmanCurve.P256))
-                .ServerIdentity(serverInfo)
+                .TrustCoordinatorIdentity(serverInfo)
                 .RabbitMQServerHostName(Properties.Resources.RabbitMQServerName)
                 .RabbitMQCredentials(Properties.Resources.Username, Properties.Resources.Password)
                 .QueuesAreDurable(false)
@@ -78,7 +78,7 @@ namespace Pinknose.DistributedWorkers.UnitTests
 
                 messageClients[i] = new MessageClientConfigurationBuilder()
                                         .Identity(clientsInfo[i])
-                                        .ServerIdentity(serverInfo)
+                                        .TrustCoordinatorIdentity(serverInfo)
                                         .RabbitMQServerHostName(Properties.Resources.RabbitMQServerName)
                                         .RabbitMQCredentials(Properties.Resources.Username, Properties.Resources.Password)
                                         .QueuesAreDurable(false)

@@ -59,6 +59,18 @@
     <None Update="Keys\system-client4.pub">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Keys\system-coordinator.priv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Keys\system-coordinator.privl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Keys\system-coordinator.privu">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Keys\system-coordinator.pub">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Keys\system-pushoverClient.priv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

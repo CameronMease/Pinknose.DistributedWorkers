@@ -52,7 +52,7 @@ namespace Pinknose.DistributedWorkers.Pushover
         {
             return new PushoverMessageClient(
                 _thisIdentity,
-                _serverIdentity,
+                _trustCoordinatorIdentity,
                 _rabbitMQServerHostName,
                 _userName,
                 _password,

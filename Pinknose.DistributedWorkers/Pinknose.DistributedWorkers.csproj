@@ -16,6 +16,9 @@
     <Authors>Cameron Mease</Authors>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Messages\ClientAnnounceResponseMessage.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="EasyNetQ.Management.Client" Version="1.3.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0">
       <PrivateAssets>all</PrivateAssets>
@@ -43,6 +46,7 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+    <None Include="Messages\ClientAnnounceResponseMessage.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Secrets\" />

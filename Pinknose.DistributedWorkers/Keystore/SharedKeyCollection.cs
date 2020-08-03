@@ -22,17 +22,19 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using Pinknose.DistributedWorkers.Crypto;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Pinknose.DistributedWorkers.Keystore
 {
-    public class SharedKeyCollection : IEnumerable<byte[]>
+    public class SharedKeyCollection : IEnumerable<TrustZoneSharedKey>
     {
         #region Fields
 
-        private SortedDictionary<int, (byte[] Key, DateTime CreationTime)> _dictionary = new SortedDictionary<int, (byte[] Key, DateTime CreationTime)>();
+        private List<TrustZoneSharedKey> keyList = new List<TrustZoneSharedKey>();
 
         #endregion Fields
 
@@ -44,16 +46,26 @@ namespace Pinknose.DistributedWorkers.Keystore
 
         #region Indexers
 
-        public byte[] this[int keyId]
+        public TrustZoneSharedKey this[DateTime validityTime]
         {
-            get => _dictionary[keyId].Key;
-            set
+            get
             {
-                if (keyId > MaxKeyId)
+                var keys = keyList.Where(k => validityTime >= k.ValidFrom && validityTime < k.ValidTo);
+
+                var keyCount = keys.Count();
+
+                if (keyCount == 0)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(keyId));
+                    throw new KeyNotFoundException("No shared key was found within the specified validity range.");
                 }
-                _dictionary[keyId] = (value, DateTime.Now);
+                else if (keyCount > 1)
+                {
+                    throw new NotImplementedException();
+                }
+                else
+                {
+                    return keys.First();
+                }
             }
         }
 
@@ -61,16 +73,39 @@ namespace Pinknose.DistributedWorkers.Keystore
 
         #region Methods
 
-        public IEnumerator<byte[]> GetEnumerator()
+        public IEnumerator<TrustZoneSharedKey> GetEnumerator()
         {
-            throw new NotImplementedException();
+            return keyList.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            throw new NotImplementedException();
+            return keyList.GetEnumerator();
+        }
+
+        public void Add(TrustZoneSharedKey trustZoneSharedKey)
+        {
+            if (!keyList.Contains(trustZoneSharedKey))
+            {
+                keyList.Add(trustZoneSharedKey);
+
+                if (keyList.Count > MaxKeys)
+                {
+                    var oldKeys = keyList
+                        .OrderBy(k => k.ValidTo)
+                        .Take(keyList.Count - MaxKeys)
+                        .ToList();
+
+                    foreach (var oldKey in oldKeys)
+                    {
+                        keyList.Remove(oldKey);
+                    }
+                }
+            }
         }
 
         #endregion Methods
+
+        public int MaxKeys { get; set; } = 5;
     }
 }

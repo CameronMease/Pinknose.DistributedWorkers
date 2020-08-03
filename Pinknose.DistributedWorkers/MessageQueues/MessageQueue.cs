@@ -40,10 +40,7 @@ namespace Pinknose.DistributedWorkers.MessageQueues
     {
         #region Fields
 
-        /// <summary>
-        /// Regular expression used to parse the exchange name and routing keys from the message's basic properties.
-        /// </summary>
-        private static Regex replyToRegex = new Regex("exchangeName:(?<exchangeName>.*),routingKey:(?<routingKey>.*)", RegexOptions.Compiled);
+
 
         private string _clientName;
         private string boundExchangeName = String.Empty;
@@ -79,39 +76,7 @@ namespace Pinknose.DistributedWorkers.MessageQueues
 
         public void Purge() => Channel.QueuePurge(Name);
 
-        public void RespondToMessage(MessageEnvelope originalMessageEnvelope, MessageBase responseMessage, EncryptionOption encryptionOption)
-        {
-            if (originalMessageEnvelope == null)
-            {
-                throw new ArgumentNullException(nameof(originalMessageEnvelope));
-            }
-
-            if (responseMessage == null)
-            {
-                throw new ArgumentNullException(nameof(responseMessage));
-            }
-
-            //responseMessage.ClientName = _clientName;
-
-            IBasicProperties basicProperties = this.Channel.CreateBasicProperties();
-            basicProperties.CorrelationId = originalMessageEnvelope.BasicProperties.CorrelationId;
-
-            Match match = replyToRegex.Match(originalMessageEnvelope.BasicProperties.ReplyTo);
-            string exchangeName = match.Groups["exchangeName"].Value;
-            string routingKey = match.Groups["routingKey"].Value;
-
-            var envelope = MessageEnvelope.WrapMessage(responseMessage, originalMessageEnvelope.SenderIdentityHash, this.ParentMessageClient, encryptionOption);
-            byte[] hashedMessage = envelope.Serialize();
-
-            lock (Channel)
-            {
-                Channel.BasicPublish(
-                    exchange: exchangeName,
-                    routingKey: routingKey,
-                    basicProperties: basicProperties,
-                    hashedMessage);
-            }
-        }
+        
 
         /*
         public void Write(MessageBase message, EncryptionOption encryptionOptions, MessageTagCollection tags)

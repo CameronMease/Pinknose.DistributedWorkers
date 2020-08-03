@@ -58,11 +58,13 @@ namespace Pinknose.DistributedWorkers.Keystore
 
         #region Properties
 
-        public int CurrentSharedKeyId { get; set; } = 0;
+        public TrustZoneSharedKey CurrentSharedKey => TrustZoneSharedKeys[DateTime.Now];
 
         public MessageClientIdentity ParentClientInfo { get; private set; }
 
-        public SharedKeyCollection SystemSharedKeys { get; } = new SharedKeyCollection();
+        public SharedKeyCollection TrustZoneSharedKeys { get; } = new SharedKeyCollection();
+
+        public MessageClientIdentity TrustCoordinatorIdentity { get; set; }
 
         public int Count => dictionary.Count;
 
@@ -78,26 +80,8 @@ namespace Pinknose.DistributedWorkers.Keystore
 
         #endregion Indexers
 
-/*
-protected PublicKeystore(SerializationInfo info, StreamingContext context) : base(info, context)
-{
-}
-*/
 
 #region Methods
-
-#if false
-        public void Add(string systemName, string clientName, byte[] publicKeyBlob, CngKeyBlobFormat format)
-        {
-            var key = CngKey.Import(publicKeyBlob, format);
-            dictionary.Add(clientName, AddSymmetricKeyIfNotExist(new MessageClientIdentity(systemName, clientName, publicKeyBlob, format)));
-        }
-
-        public void Add(string systemName, string clientName, CngKey key)
-        {
-            dictionary.Add(clientName, AddSymmetricKeyIfNotExist(new MessageClientIdentity(systemName, clientName, key)));
-        }
-#endif
 
         public void Add(MessageClientIdentity clientInfo)
         {

@@ -46,6 +46,7 @@ namespace Pinknose.DistributedWorkers.Clients
         /// </summary>
         public int HeartbeatInterval { get; private set; } = 1000;
 
+#if false
         private bool clientServerHandshakeComplete = false;
         //private string serverName = "server";
 
@@ -53,20 +54,22 @@ namespace Pinknose.DistributedWorkers.Clients
         {
             AutoReset = false
         };
+#endif
 
         private ReusableThreadSafeTimer heartbeatSendTimer = new ReusableThreadSafeTimer()
         {
             AutoReset = true
         };
 
-        #endregion Fields
+#endregion Fields
 
-        #region Constructors
+#region Constructors
 
-        public MessageClient(MessageClientIdentity identity, MessageClientIdentity serverIdentity, string rabbitMqServerHostName, string userName, string password, bool autoDeleteQueuesOnClose, bool queuesAreDurable, int heartbeatInterval, params MessageClientIdentity[] clientInfos) :
+        public MessageClient(MessageClientIdentity identity, MessageClientIdentity trustCoordinatorIdentity, string rabbitMqServerHostName, string userName, string password, bool autoDeleteQueuesOnClose, bool queuesAreDurable, int heartbeatInterval, params MessageClientIdentity[] clientInfos) :
              base(identity, rabbitMqServerHostName, userName, password, autoDeleteQueuesOnClose, queuesAreDurable)
         {
-            this.PublicKeystore.Add(serverIdentity);
+            this.PublicKeystore.TrustCoordinatorIdentity = trustCoordinatorIdentity;
+            this.PublicKeystore.Add(trustCoordinatorIdentity);
             this.PublicKeystore.AddRange(clientInfos);
             HeartbeatInterval = heartbeatInterval;
         }
@@ -76,7 +79,7 @@ namespace Pinknose.DistributedWorkers.Clients
             this(identity, serverIdentity, rabbitMqServerHostName, userName, password, autoDeleteQueuesOnClose, queuesAreDurable, heartArray.Empty<MessageClientIdentity>())
         {
         }
-#endif 
+#endif
 
 #endregion Constructors
 
@@ -123,10 +126,11 @@ namespace Pinknose.DistributedWorkers.Clients
             ClientAnnounceMessage message = new ClientAnnounceMessage(PublicKeystore.ParentClientInfo);
 
             //TODO: Encrypt this?
-            var result = this.WriteToServer(message, (int)timeout.TotalMilliseconds, false).Result;
+            this.BroadcastToAllClients(message, false);
 
             //var result = this.WriteToServer(message, out response, out rawResponse, (int)timeout.TotalMilliseconds);
 
+#if false
             if (result.CallResult == RpcCallResult.Timeout)
             {
                 throw new ConnectionException("Timeout trying to communicate with the server.");
@@ -171,7 +175,7 @@ namespace Pinknose.DistributedWorkers.Clients
                     heartbeatSendTimer.Start();
                 }
             }
-
+#endif
             IsConnected = true;
         }
 
@@ -204,7 +208,7 @@ namespace Pinknose.DistributedWorkers.Clients
 
         protected sealed override void SendHeartbeat()
         {
-            this.WriteToClientNoWait(NameHelper.GetServerName(), new HeartbeatMessage(), false);
+            //this.WriteToClientNoWait(NameHelper.GetServerName(), new HeartbeatMessage(), false);
         }
 
         private void DedicatedQueue_MessageReceived(object sender, MessageReceivedEventArgs e)
@@ -231,12 +235,14 @@ namespace Pinknose.DistributedWorkers.Clients
                 }
                 else if (e.MessageEnevelope.Message.GetType() == typeof(HeartbeatMessage))
                 {
+#if false
                     if (!serverHeartbeatTimer.Enabled)
                     {
                         Log.Information("Server heartbeat re-established.");
                     }
 
                     serverHeartbeatTimer.Restart();
+#endif
                 }
                 else if (e.MessageEnevelope.Message.GetType() == typeof(PublicKeyUpdate))
                 {
@@ -244,19 +250,29 @@ namespace Pinknose.DistributedWorkers.Clients
                     PublicKeystore.Add(tempMessage.ClientInfo);
                     //TODO: Re-enable Log.Verbose($"Received public key '{tempMessage.ClientInfo.ECKey.GetPublicKeyHash()}' for client '{tempMessage.ClientInfo.Name}'.");
                 }
-                else if (e.MessageEnevelope.GetType() == typeof(SystemSharedKeyUpdate))
+                else if (e.MessageEnevelope.Message.GetType() == typeof(TrustZoneSharedKeyUpdate))
                 {
-                    throw new NotImplementedException();
+                    var tempMessage = (TrustZoneSharedKeyUpdate)e.MessageEnevelope.Message;
+
+                    if (e.MessageEnevelope.SenderIdentityHash != this.PublicKeystore.TrustCoordinatorIdentity.IdentityHash)
+                    {
+                        throw new Exception("Trust Zone Key Update from client that is not the coordinator.");
+                    }
+
+                    PublicKeystore.TrustZoneSharedKeys.Add(tempMessage.SharedKey);
+                    Log.Verbose($"Received trust zone shared key");
                 }
                 else
                 {
                     FireMessageReceivedEvent(e);
                 }
             }
+#if false
             else if (clientServerHandshakeComplete)
             {
                 throw new Exception();
             }
+#endif
         }
 
         private void ServerHeartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -287,6 +303,6 @@ namespace Pinknose.DistributedWorkers.Clients
             }
         }
 
-        #endregion Methods
+#endregion Methods
     }
 }

@@ -22,6 +22,7 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using Pinknose.DistributedWorkers.Crypto;
 using System;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -52,23 +53,14 @@ namespace Pinknose.DistributedWorkers.Clients
             }
         }
 
-        private static RandomNumberGenerator RandomNumberGenerator { get; } = RNGCryptoServiceProvider.Create();
+
 
         #endregion Properties
 
         #region Methods
 
-        
 
-        public static byte[] GetRandomBytes(int length)
-        {
-            lock (RandomNumberGenerator)
-            {
-                byte[] bytes = new byte[length];
-                RandomNumberGenerator.GetBytes(bytes);
-                return bytes;
-            }
-        }
+
 
         /*
         internal static SignatureVerificationStatus ValidateSignature(byte[] rawMessage, byte[] signature, byte[] publicKey)
@@ -94,9 +86,9 @@ namespace Pinknose.DistributedWorkers.Clients
             return DecryptData(cypherText, this.PublicKeystore.GetSymmetricKey(cliendtIdentityHash), iv);
         }
 
-        internal byte[] DecryptDataWithSystemSharedKey(byte[] cypherText, byte[] iv)
+        internal byte[] DecryptDataWithSystemSharedKey(byte[] cypherText, byte[] iv, DateTime messageTimestamp)
         {
-            return DecryptData(cypherText, PublicKeystore.SystemSharedKeys[PublicKeystore.CurrentSharedKeyId], iv);
+            return DecryptData(cypherText, PublicKeystore.TrustZoneSharedKeys[messageTimestamp].AesKey, iv);
         }
 
         internal (byte[] CipherText, byte[] IV) EncryptDataWithClientKey(byte[] data, string clientIdentityHash)
@@ -109,9 +101,9 @@ namespace Pinknose.DistributedWorkers.Clients
             return EncryptData(data, this.PublicKeystore.GetSymmetricKey(clientInfo));
         }
 
-        internal (byte[] CipherText, byte[] IV, int keyId) EncryptDataWithSystemSharedKey(byte[] data)
+        internal (byte[] CipherText, byte[] IV, int keyId) EncryptDataWithSystemSharedKey(byte[] data, DateTime messageTimestamp)
         {
-            var response = EncryptData(data, PublicKeystore.SystemSharedKeys[PublicKeystore.CurrentSharedKeyId]);
+            var response = EncryptData(data, PublicKeystore.TrustZoneSharedKeys[messageTimestamp].AesKey);
             return (response.CipherText, response.IV, 0);
         }
 
@@ -186,7 +178,7 @@ namespace Pinknose.DistributedWorkers.Clients
             }
 
             aes.Key = key;
-            var iv = GetRandomBytes(16);
+            var iv = RandomNumberOracle.GetRandomBytes(16);
             aes.IV = iv;
 
             using var encryptor = aes.CreateEncryptor();

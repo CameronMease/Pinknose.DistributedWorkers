@@ -32,6 +32,7 @@ using RabbitMQ.Client.Exceptions;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -55,7 +56,10 @@ namespace Pinknose.DistributedWorkers.Clients
 
         #region Fields
 
-        protected static readonly int SharedKeyByteSize = 32;
+        /// <summary>
+        /// Regular expression used to parse the exchange name and routing keys from the message's basic properties.
+        /// </summary>
+        private static Regex replyToRegex = new Regex("exchangeName:(?<exchangeName>.*),routingKey:(?<routingKey>.*)", RegexOptions.Compiled);
 
         private string _password;
         private string _rabbitMqServerHostName;
@@ -130,7 +134,7 @@ namespace Pinknose.DistributedWorkers.Clients
         protected IModel Channel { get; private set; }
         protected string DedicatedQueueName => NameHelper.GetDedicatedQueueName(SystemName, ClientName);
 
-        protected PublicKeystore PublicKeystore { get; }
+        protected internal PublicKeystore PublicKeystore { get; }
 
         protected string ServerQueueName => NameHelper.GetServerQueueName(SystemName);
 
@@ -165,20 +169,21 @@ namespace Pinknose.DistributedWorkers.Clients
 
             //message.ClientName = this.ClientName;
 
-            var encryptionOption = encryptMessage ? EncryptionOption.EncryptWithSystemSharedKey : EncryptionOption.None;
+            var encryptionOptions = encryptMessage ? EncryptionOption.EncryptWithSystemSharedKey : EncryptionOption.None;
 
-            var wrapper = MessageEnvelope.WrapMessage(message, "", this, encryptionOption);
+            var formattedMessage = ConfigureMessageForSend(message, "", encryptionOptions);
+
+            //var wrapper = MessageEnvelope.WrapMessage(message, "", this, encryptionOptions);
 
             try
             {
                 lock (Channel)
                 {
                     Channel.BasicPublish(
-                        exchange: BroadcastExchangeName,
-                        routingKey: "",
-                        mandatory: true,
-                        basicProperties: null,
-                        body: wrapper.Serialize());
+                    exchange: BroadcastExchangeName,
+                    routingKey: "",
+                    basicProperties: formattedMessage.BasicProperties,
+                    formattedMessage.SignedMessage);
                 }
             }
             catch (AlreadyClosedException e)
@@ -196,6 +201,40 @@ namespace Pinknose.DistributedWorkers.Clients
             Dispose(true);
             // TODO: uncomment the following line if the finalizer is overridden above.
             // GC.SuppressFinalize(this);
+        }
+
+        public void RespondToMessage(MessageEnvelope originalMessageEnvelope, MessageBase responseMessage, EncryptionOption encryptionOption)
+        {
+            if (originalMessageEnvelope == null)
+            {
+                throw new ArgumentNullException(nameof(originalMessageEnvelope));
+            }
+
+            if (responseMessage == null)
+            {
+                throw new ArgumentNullException(nameof(responseMessage));
+            }
+
+            //responseMessage.ClientName = _clientName;
+
+            IBasicProperties basicProperties = this.Channel.CreateBasicProperties();
+            basicProperties.CorrelationId = originalMessageEnvelope.BasicProperties.CorrelationId;
+
+            Match match = replyToRegex.Match(originalMessageEnvelope.BasicProperties.ReplyTo);
+            string exchangeName = match.Groups["exchangeName"].Value;
+            string routingKey = match.Groups["routingKey"].Value;
+
+            var envelope = MessageEnvelope.WrapMessage(responseMessage, originalMessageEnvelope.SenderIdentityHash, this, encryptionOption);
+            byte[] hashedMessage = envelope.Serialize();
+
+            lock (Channel)
+            {
+                Channel.BasicPublish(
+                    exchange: exchangeName,
+                    routingKey: routingKey,
+                    basicProperties: basicProperties,
+                    hashedMessage);
+            }
         }
 
         /// <summary>
@@ -247,7 +286,7 @@ namespace Pinknose.DistributedWorkers.Clients
                 false => EncryptionOption.None
             };
 
-            var formattedMessage = ConfigureUnicastMessageForSend(message, clientName, encryptionOption);
+            var formattedMessage = ConfigureMessageForSend(message, clientName, encryptionOption);
 
             lock (Channel)
             {
@@ -259,7 +298,7 @@ namespace Pinknose.DistributedWorkers.Clients
             }
         }
 
-        protected (byte[] SignedMessage, IBasicProperties BasicProperties) ConfigureUnicastMessageForSend(MessageBase message, string recipientName, EncryptionOption encryptionOptions)
+        protected (byte[] SignedMessage, IBasicProperties BasicProperties) ConfigureMessageForSend(MessageBase message, string recipientName, EncryptionOption encryptionOptions)
         {
             if (message == null)
             {
@@ -389,7 +428,7 @@ namespace Pinknose.DistributedWorkers.Clients
                 false => EncryptionOption.None
             };
 
-            var formattedMessage = ConfigureUnicastMessageForSend(message, clientName, encryptionOption);
+            var formattedMessage = ConfigureMessageForSend(message, clientName, encryptionOption);
 
             lock (Channel)
             {

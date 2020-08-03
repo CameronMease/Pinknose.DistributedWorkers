@@ -22,6 +22,7 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using Pinknose.DistributedWorkers.Keystore;
 using System;
 
 namespace Pinknose.DistributedWorkers.Messages
@@ -37,13 +38,10 @@ namespace Pinknose.DistributedWorkers.Messages
     {
         #region Constructors
 
-        internal ClientAnnounceResponseMessage(AnnounceResponse response, int systemSharedKeyId, byte[] systemSharedKey/*PublicKeystore publicKeystore, */) : base()
+        internal ClientAnnounceResponseMessage(AnnounceResponse response, TrustZoneSharedKey trustZoneSharedKey) : base()
         {
             Response = response;
-            //ServerPublicKey = key.Export(CngKeyBlobFormat.EccFullPublicBlob);
-            SystemSharedKey = systemSharedKey;
-            SystemSharedKeyId = systemSharedKeyId;
-            //PublicKeystore = publicKeystore;
+            TrustZoneSharedKey = trustZoneSharedKey;
         }
 
         #endregion Constructors
@@ -53,15 +51,9 @@ namespace Pinknose.DistributedWorkers.Messages
 
         public AnnounceResponse Response { get; private set; }
 
-        public byte[] SystemSharedKey { get; private set; }
-
-        public int SystemSharedKeyId { get; private set; }
+        public TrustZoneSharedKey TrustZoneSharedKey { get; private set; }
 
         #endregion Properties
 
-        // Initialization Vector for asymmetric encryption.
-        //public byte[] Iv { get; private set; }
-
-        //public PublicKeystore PublicKeystore { get; private set; }
     }
 }

@@ -22,41 +22,38 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
-using Pinknose.DistributedWorkers.Clients;
-using System.Linq;
+using Pinknose.DistributedWorkers.Keystore;
+using System;
 
-namespace Pinknose.DistributedWorkers.Configuration
+namespace Pinknose.DistributedWorkers.Messages
 {
-    public sealed class MessageServerConfigurationBuilder : MessageClientConfigurationBase<MessageServerConfigurationBuilder>
+    /// <summary>
+    /// Message sent from the server to alert clients of a new shared encryption key for the system.
+    /// </summary>
+    [Serializable]
+    public class TrustZoneSharedKeyUpdate : MessageBase
     {
-        #region Fields
+        #region Constructors
 
-        private MessageClientIdentity _serverIdentity = null;
-
-        #endregion Fields
-
-        #region Methods
-
-        public MessageServerConfigurationBuilder Identity(MessageClientIdentity identity)
+        public TrustZoneSharedKeyUpdate(TrustZoneSharedKey sharedKey) : base()
         {
-            _serverIdentity = identity;
+            if (sharedKey is null)
+            {
+                throw new ArgumentNullException(nameof(sharedKey));
+            }
 
-            return this;
+            SharedKey = sharedKey;
         }
 
-        public MessageServer CreateMessageServer()
-        {
-            return new MessageServer(
-                _serverIdentity,
-                this._rabbitMQServerHostName,
-                this._userName,
-                this._password,
-                _autoDeleteQueuesOnClose,
-                _queuesAreDurable,
-                _clientIdentities.ToArray());
+        #endregion Constructors
 
-        }
+        #region Properties
 
-        #endregion Methods
+        public TrustZoneSharedKey SharedKey { get; private set; }
+
+
+
+
+        #endregion Properties
     }
 }

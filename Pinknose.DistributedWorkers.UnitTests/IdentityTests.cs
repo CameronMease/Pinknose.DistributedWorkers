@@ -30,7 +30,7 @@ namespace Pinknose.DistributedWorkers.UnitTests
 
             var client = new MessageClientConfigurationBuilder()
                 .Identity(imposterClientIdent)
-                .ServerIdentity(serverIdent)
+                .TrustCoordinatorIdentity(serverIdent)
                 .QueuesAreDurable(false)
                 .AutoDeleteQueuesOnClose(true)
                 .CreateMessageClient();

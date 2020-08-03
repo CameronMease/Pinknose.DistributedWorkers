@@ -30,6 +30,7 @@ using Pinknose.DistributedWorkers.Extensions;
 using Pinknose.DistributedWorkers.Logging;
 using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.MessageTags;
+using Pinknose.DistributedWorkers.Modules;
 using Pinknose.DistributedWorkers.Pushover;
 using Pinknose.DistributedWorkers.XBee;
 using Pinknose.DistributedWorkers.XBee.Messages;
@@ -96,6 +97,9 @@ namespace DistributedWorkersTestApp
             using var serverPublicInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-server.pub");
             using var serverPrivateInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-server.priv", "abc");
 
+            using var coordinatorPublicInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-coordinator.pub");
+            using var coordinatorPrivateInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-coordinator.priv", "monkey123");
+
             using var client1PublicInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-client1.pub");
             using var client1PrivateInfo = MessageClientIdentity.ImportFromFile(@"Keys\system-client1.priv", "abc");
 
@@ -116,13 +120,25 @@ namespace DistributedWorkersTestApp
 
 
 
+            var xbeeModule = new XBeeNetworkGatewayModule("COM12", new SerialPortParameters(115200, 8, StopBits.One, Parity.None, Handshake.None));
+            var coordinatorModule = new TrustCoordinatorModule(TimeSpan.FromMinutes(1));
+
+            var server = new MessageClientConfigurationBuilder()
+                .RabbitMQCredentials(userName, password)
+                .RabbitMQServerHostName(rabbitMQServerName)
+                .Identity(coordinatorPrivateInfo)
+                .AddClientIdentity(client1PublicInfo)
+                .AddClientIdentity(client2PublicInfo)
+                .AddClientIdentity(client3PublicInfo)
+                //.AddClientIdentity(pushoverPublicInfo)
+                .AutoDeleteQueuesOnClose(true)
+                .QueuesAreDurable(false)
+                .AddModule(coordinatorModule)
+                .AddModule(xbeeModule)
+                .CreateMessageClient();
 
 
-
-
-
-
-
+#if false
             var server = new MessageServerConfigurationBuilder()
                 .RabbitMQCredentials(userName, password)
                 .RabbitMQServerHostName(rabbitMQServerName)
@@ -134,7 +150,7 @@ namespace DistributedWorkersTestApp
                 .AutoDeleteQueuesOnClose(true)
                 .QueuesAreDurable(false)
                 .CreateMessageServer();
-
+#endif
 
             server.MessageReceived += (sender, e) =>
             {
@@ -194,7 +210,7 @@ namespace DistributedWorkersTestApp
 
                 return null;
             });
-            var xbeeModule = new XBeeNetworkGatewayModule("COM12", new SerialPortParameters(115200, 8, StopBits.One, Parity.None, Handshake.None));
+
 
 
 
@@ -229,12 +245,11 @@ namespace DistributedWorkersTestApp
             MessageClient client1 = new MessageClientConfigurationBuilder()
                 .RabbitMQCredentials(userName, password)
                 .RabbitMQServerHostName(rabbitMQServerName)
-                .ServerIdentity(serverPublicInfo)
+                .TrustCoordinatorIdentity(coordinatorPublicInfo)
                 .Identity(client1PrivateInfo)
                 .AutoDeleteQueuesOnClose(true)
                 .QueuesAreDurable(false)
                 .AddModule(pushoverModule)
-                .AddModule(xbeeModule)
                 .CreateMessageClient();
 
             xbeeModule.OpenXBee();
@@ -250,13 +265,13 @@ namespace DistributedWorkersTestApp
                     Console.WriteLine($"Client 1: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
                 }
             };
-            client1.Connect(TimeSpan.FromSeconds(10), odd);
+            client1.Connect(TimeSpan.FromSeconds(10), odd, new XBeeReceivedDataTag());
             client1.BeginFullWorkConsume(true);
 
             MessageClient client2 = new MessageClientConfigurationBuilder()
                 .RabbitMQCredentials(userName, password)
                 .RabbitMQServerHostName(rabbitMQServerName)
-                .ServerIdentity(serverPublicInfo)
+                .TrustCoordinatorIdentity(coordinatorPublicInfo)
                 .Identity(client2PrivateInfo)
                 .AutoDeleteQueuesOnClose(true)
                 .QueuesAreDurable(false)
@@ -271,8 +286,14 @@ namespace DistributedWorkersTestApp
                 {
                     Console.WriteLine($"Client 2: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
                 }
+                else if (e.MessageEnevelope.Message.GetType() == typeof(XBeeFromXBeeMessage))
+                {
+                    var tempMessage = (XBeeFromXBeeMessage)e.MessageEnevelope.Message;
+
+                    Console.WriteLine($"Client 2 XBee ({tempMessage.XBeeSourceAddress}): {tempMessage.RawData}");
+                }
             };
-            //client2.Connect(TimeSpan.FromSeconds(10), even);
+            client2.Connect(TimeSpan.FromSeconds(10), even, new XBeeReceivedDataTag());
             //client2.BeginFullWorkConsume(true);
 
 #if false
