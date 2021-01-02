@@ -22,12 +22,14 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using Pinknose.DistributedWorkers.Exceptions;
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Pinknose.DistributedWorkers.Clients
 {
@@ -41,6 +43,7 @@ namespace Pinknose.DistributedWorkers.Clients
         private string hash = null;
 
         private bool disposedValue = false;
+        private string systemName;
 
         #endregion Fields
 
@@ -161,12 +164,44 @@ namespace Pinknose.DistributedWorkers.Clients
         public ECDsa ECDsa { get; private set; }
 
         [DisplayName("Client Name")]
-        public string Name { get; private set; }
+        public string Name 
+        { 
+            get => name;
+            private set
+            {
+                ValidateName(value);
+                name = value;
+            }
+        }
 
         //[Browsable(false)]
         //public CngKey ECKey { get; private set; }
         [DisplayName("System Name")]
-        public string SystemName { get; private set; }
+        public string SystemName
+        {
+            get => systemName;
+            private set
+            {
+                ValidateName(value);
+                systemName = value;
+            }
+        }
+
+        private static Regex NameRegex = new Regex(@"[A-Za-z0-9_\-]+", RegexOptions.Compiled);
+        private string name;
+
+        private static void ValidateName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("Name cannot be NULL or empty.", nameof(name));
+            }
+
+            if (!NameRegex.IsMatch(name))
+            {
+                throw new NameException("Name can only contain letters, numbers, underscores, and dashes.");
+            }
+        }
 
         [Browsable(false)]
         internal ECDiffieHellman ECDiffieHellman { get; set; }

@@ -12,9 +12,14 @@ using System.Timers;
 
 namespace Pinknose.DistributedWorkers.Modules
 {
+    /// <summary>
+    /// Manages the shared key for a trust zone.  Ensures each client in a trust zone has the current shared key.
+    /// </summary>
     public sealed class TrustCoordinatorModule : ClientModule
     {
-        
+        /// <summary>
+        /// The current shared key for the trust zone.  All encypted broadcast messages use this key.
+        /// </summary>
         private TrustZoneSharedKey currentKey;
 
         private ReusableThreadSafeTimer keyUpdateTimer;
@@ -40,6 +45,11 @@ namespace Pinknose.DistributedWorkers.Modules
             keyUpdateTimer.Start();
         }
 
+        /// <summary>
+        /// When called, updates the trust zone's shared key.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void KeyUpdateTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             var newKey = CreateNewKey(currentKey.TrustZoneName, currentKey.ValidTo);
@@ -73,6 +83,11 @@ namespace Pinknose.DistributedWorkers.Modules
             e.MessageClient.PublicKeystore.TrustZoneSharedKeys.Add(currentKey);
         }
 
+        /// <summary>
+        /// Handles a received message.  If the message is a Client Announce Message, it send the client the current shared key.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MessageClient_MessageReceived(object sender, MessageQueues.MessageReceivedEventArgs e)
         {
             if (e.MessageEnevelope.Message.GetType() == typeof(ClientAnnounceMessage))

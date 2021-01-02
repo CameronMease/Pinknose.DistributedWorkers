@@ -8,5 +8,7 @@ namespace DistributedWorkersTestApp
     {
         public string PushoverAppApiKey { get; set; }
         public string PushoverUserKey { get; set; }
+
+        public string AzureIoTHubConnectionString { get; set; }
     }
 }

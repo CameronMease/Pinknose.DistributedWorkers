@@ -22,20 +22,31 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
 using Pinknose.DistributedWorkers.Clients;
 using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace Pinknose.DistributedWorkers.Messages
 {
     public partial class MessageBase
     {
-        [NonSerialized]
+        [JsonIgnore]
+        static readonly JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings()
+        {
+            Formatting = Formatting.None,
+            TypeNameHandling = TypeNameHandling.Objects
+        };
+
+
+        [JsonIgnore]
         private byte[] receivedRawMessage = null;
 
-        [NonSerialized]
+        [JsonIgnore]
         private byte[] receivedSignature = null;
 
         internal void ReverifySignature(ECDsaCng senderDsa)
@@ -56,6 +67,25 @@ namespace Pinknose.DistributedWorkers.Messages
         /// <returns></returns>
         internal byte[] Serialize()
         {
+            string json = JsonConvert.SerializeObject(this, jsonSerializerSettings);
+            return Encoding.UTF8.GetBytes(json);
+#if false
+            using (FileStream inputFile = new FileStream(@"C:\VeryLargeFile.bin", FileMode.Open, FileAccess.Read))
+            using (CryptoStream base64Stream = new CryptoStream(inputFile, new ToBase64Transform(), CryptoStreamMode.Read))
+            using (FileStream outputFile = new FileStream(@"C:\VeryLargeBase64File.txt", FileMode.CreateNew, FileAccess.Write))
+            {
+                await base64Stream.CopyToAsync(outputFile).ConfigureAwait(false);
+            }
+
+            using (MemoryStream ms = new MemoryStream())
+            using (BsonDataWriter datawriter = new BsonDataWriter(ms))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Serialize(datawriter, this);
+                return Convert.ToBase64String(ms.ToArray());
+            }
+
+
             var formatter = new BinaryFormatter();
             byte[] data;
 
@@ -71,6 +101,7 @@ namespace Pinknose.DistributedWorkers.Messages
             }
 
             return data;
+#endif
         }
 
 #if false
@@ -129,6 +160,11 @@ namespace Pinknose.DistributedWorkers.Messages
 
         internal static MessageBase Deserialize(byte[] messageBytes)
         {
+            string json = Encoding.UTF8.GetString(messageBytes);
+            var message = (MessageBase)JsonConvert.DeserializeObject(json, jsonSerializerSettings);
+            return message;
+
+#if false
             //var header = MessageSerializationWrapper.Deserialize(body);
 
             //byte[] messageContent = body[header.Length..];
@@ -144,6 +180,7 @@ namespace Pinknose.DistributedWorkers.Messages
 
                 return message;
             }
+#endif
         }
 
 #if false

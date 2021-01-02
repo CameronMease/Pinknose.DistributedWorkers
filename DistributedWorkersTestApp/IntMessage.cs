@@ -28,12 +28,13 @@ using System;
 namespace DistributedWorkersTestApp
 {
     [Serializable]
-    public class IntMessage : PayloadMessage<int>
+    public class IntMessage : MessageBase
     {
         #region Constructors
 
-        public IntMessage(int payload) : base(payload, false, false, false)
+        public IntMessage(int value) : base()
         {
+            Value = value;
         }
 
         #endregion Constructors
@@ -41,6 +42,8 @@ namespace DistributedWorkersTestApp
         #region Properties
 
         //public override Guid MessageTypeGuid => new Guid("{2DD8CDA5-FC5F-41B7-BD01-7F994EC6D257}");
+
+        public int Value { get; private set; }
 
         #endregion Properties
     }

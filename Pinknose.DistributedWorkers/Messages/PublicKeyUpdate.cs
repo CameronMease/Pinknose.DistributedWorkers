@@ -27,7 +27,6 @@ using System;
 
 namespace Pinknose.DistributedWorkers.Messages
 {
-    [Serializable]
     public sealed class PublicKeyUpdate : MessageBase
     {
         #region Constructors

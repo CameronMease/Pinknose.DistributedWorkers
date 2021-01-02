@@ -22,33 +22,40 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using Newtonsoft.Json;
 using Pinknose.DistributedWorkers.Messages;
+using Pinknose.DistributedWorkers.Serialization;
 using Serilog.Events;
 using System;
 
 namespace Pinknose.DistributedWorkers.Logging
 {
     [Serializable]
-    public class SerilogEventMessage : PayloadMessage<LogEvent>
+    public class SerilogEventMessage : MessageBase
     {
         #region Constructors
 
-        public SerilogEventMessage(LogEvent payload) : base(payload, false, true, false)
+        [JsonConstructor]
+        public SerilogEventMessage(LogEvent logEvent) : base()
         {
-            if (payload == null)
+            if (logEvent == null)
             {
-                throw new ArgumentNullException(nameof(payload));
+                throw new ArgumentNullException(nameof(logEvent));
             }
 
             //TODO: How do we do this now?
             //Tags.Add(SystemTags.SerilogEvent(payload.Level));
+
+            LogEvent = logEvent;
         }
 
         #endregion Constructors
 
         #region Properties
 
-     
+        [JsonConverter(typeof(SerilogLogEventJsonConverter))]
+        public LogEvent LogEvent { get; private set; }
+
         #endregion Properties
     }
 }

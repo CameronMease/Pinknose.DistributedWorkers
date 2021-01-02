@@ -33,7 +33,6 @@ namespace Pinknose.DistributedWorkers.Messages
         Rejected
     }
 
-    [Serializable]
     internal sealed class ClientAnnounceResponseMessage : MessageBase
     {
         #region Constructors

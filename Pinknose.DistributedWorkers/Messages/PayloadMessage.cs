@@ -31,7 +31,6 @@ namespace Pinknose.DistributedWorkers.Messages
     /// of the payload.  This is good for payload types that cannot be binary serialized.
     /// </summary>
     /// <typeparam name="TPayload">The .NET type of the payload.</typeparam>
-    [Serializable]
     public class PayloadMessage<TPayload> : MessageBase
     {
         #region Constructors

@@ -23,20 +23,22 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 using EasyNetQ.Management.Client.Model;
+using Newtonsoft.Json;
 using Pinknose.DistributedWorkers.Clients;
 using System;
 using System.Security.Cryptography;
 
 namespace Pinknose.DistributedWorkers.Messages
 {
-    [Serializable]
-    internal sealed class ClientAnnounceMessage : PayloadMessage<MessageClientIdentity>
+    internal sealed class ClientAnnounceMessage : MessageBase
     {
         #region Constructors
 
+        [JsonConstructor]
         internal ClientAnnounceMessage(MessageClientIdentity clientIdentity) : 
-            base(clientIdentity, false, true)
+            base()
         {
+            ClientIdentity = clientIdentity;
         }
 
         #endregion Constructors
@@ -44,6 +46,8 @@ namespace Pinknose.DistributedWorkers.Messages
         #region Properties
 
         public int HeartbeatInterval { get; internal set; }
+
+        public MessageClientIdentity ClientIdentity { get; private set; }
 
         #endregion Properties
     }

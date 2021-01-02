@@ -22,6 +22,7 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using Newtonsoft.Json;
 using Pinknose.DistributedWorkers.Keystore;
 using System;
 
@@ -30,11 +31,11 @@ namespace Pinknose.DistributedWorkers.Messages
     /// <summary>
     /// Message sent from the server to alert clients of a new shared encryption key for the system.
     /// </summary>
-    [Serializable]
     public class TrustZoneSharedKeyUpdate : MessageBase
     {
         #region Constructors
 
+        [JsonConstructor]
         public TrustZoneSharedKeyUpdate(TrustZoneSharedKey sharedKey) : base()
         {
             if (sharedKey is null)

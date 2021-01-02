@@ -23,26 +23,23 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 using Newtonsoft.Json;
+using Pinknose.DistributedWorkers.AzueIoT;
 using Pinknose.DistributedWorkers.Clients;
 using Pinknose.DistributedWorkers.Configuration;
 using Pinknose.DistributedWorkers.Crypto;
 using Pinknose.DistributedWorkers.Extensions;
-using Pinknose.DistributedWorkers.Logging;
 using Pinknose.DistributedWorkers.MessageQueues;
 using Pinknose.DistributedWorkers.MessageTags;
 using Pinknose.DistributedWorkers.Modules;
-using Pinknose.DistributedWorkers.Pushover;
 using Pinknose.DistributedWorkers.XBee;
 using Pinknose.DistributedWorkers.XBee.Messages;
+using Pinknose.DistributedWorkers.XBee.Serial;
 using Serilog;
 using System;
-using System.Configuration;
 using System.IO;
 using System.IO.Ports;
 using System.Security.Cryptography;
-using XBeeLibrary.Core;
-using XBeeLibrary.Core.Connection;
-using XBeeLibrary.Windows;
+using XBeeLibrary.Core.Models;
 using XBeeLibrary.Windows.Connection.Serial;
 
 namespace DistributedWorkersTestApp
@@ -120,7 +117,7 @@ namespace DistributedWorkersTestApp
 
 
 
-            var xbeeModule = new XBeeNetworkGatewayModule("COM12", new SerialPortParameters(115200, 8, StopBits.One, Parity.None, Handshake.None));
+            var xbeeModule = new XBeeNetworkGatewayModule("COM8", new SerialPortParameters(115200, 8, StopBits.One, Parity.None, Handshake.None));
             var coordinatorModule = new TrustCoordinatorModule(TimeSpan.FromMinutes(1));
 
             var server = new MessageClientConfigurationBuilder()
@@ -185,7 +182,7 @@ namespace DistributedWorkersTestApp
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
-                .WriteTo.DistributedWorkersSink(server)
+                //.WriteTo.DistributedWorkersSink(server)
                 .WriteTo.Console()
                 .CreateLogger();
 
@@ -200,6 +197,7 @@ namespace DistributedWorkersTestApp
             var even = new MessageTagValue("duhh", "even");
             var never = new MessageTagValue("duhh", "never");
 
+#if false
             var pushoverModule = new PushoverModule(secrets.PushoverAppApiKey, secrets.PushoverUserKey);
             pushoverModule.AddTransform<IntMessage>(t =>
             {
@@ -210,7 +208,7 @@ namespace DistributedWorkersTestApp
 
                 return null;
             });
-
+#endif
 
 
 
@@ -242,6 +240,28 @@ namespace DistributedWorkersTestApp
             pushoverClient.Connect(20000);
 #endif
 
+            AzureIoTModule iotModule = new AzureIoTModule(secrets.AzureIoTHubConnectionString);
+            iotModule.ForwardMessageToIoTHubTransform = (me) =>
+            {
+                return null;
+
+                if (me.Message.GetType() == typeof(XBeeFromXBeeMessage))
+                {
+                    var xBeeMessage = (XBeeFromXBeeMessage)me.Message;
+
+                    var iotMessage = new Microsoft.Azure.Devices.Client.Message();
+
+                    var tempData = xBeeMessage.GetJObject()["Data"];
+
+                    iotMessage.Properties.Add("Refrigerator Temperature", tempData[0]["Refrigerator"].ToString());
+                    iotMessage.Properties.Add("Freezer Temperature", tempData[1]["Freezer"].ToString());
+
+                    return iotMessage;
+                }
+
+                return null;
+            };
+
             MessageClient client1 = new MessageClientConfigurationBuilder()
                 .RabbitMQCredentials(userName, password)
                 .RabbitMQServerHostName(rabbitMQServerName)
@@ -249,7 +269,8 @@ namespace DistributedWorkersTestApp
                 .Identity(client1PrivateInfo)
                 .AutoDeleteQueuesOnClose(true)
                 .QueuesAreDurable(false)
-                .AddModule(pushoverModule)
+                //.AddModule(pushoverModule)
+                .AddModule(iotModule)
                 .CreateMessageClient();
 
             xbeeModule.OpenXBee();
@@ -262,7 +283,7 @@ namespace DistributedWorkersTestApp
 
                 if (e.MessageEnevelope.Message.GetType() == typeof(IntMessage))
                 {
-                    Console.WriteLine($"Client 1: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
+                    Console.WriteLine($"Client 1: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Value}.");
                 }
             };
             client1.Connect(TimeSpan.FromSeconds(10), odd, new XBeeReceivedDataTag());
@@ -284,7 +305,7 @@ namespace DistributedWorkersTestApp
                 e.Response = MessageResponse.Ack;
                 if (e.MessageEnevelope.Message.GetType() == typeof(IntMessage))
                 {
-                    Console.WriteLine($"Client 2: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Payload}.");
+                    Console.WriteLine($"Client 2: Message Payload: {((IntMessage)e.MessageEnevelope.Message).Value}.");
                 }
                 else if (e.MessageEnevelope.Message.GetType() == typeof(XBeeFromXBeeMessage))
                 {
@@ -318,6 +339,9 @@ namespace DistributedWorkersTestApp
 
             //
             //client3.Connect(TimeSpan.FromSeconds(10));
+
+
+            var serialPort = new XBeeRemoteSerialPort(xbeeModule, new SerializableXBeeAddress(new XBee64BitAddress("0013A20041AE9E32")));
 
             Log.Information("Dumdum");
 

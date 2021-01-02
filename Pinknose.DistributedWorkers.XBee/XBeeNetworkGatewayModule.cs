@@ -7,6 +7,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using XBeeLibrary.Core;
 using XBeeLibrary.Core.Events;
 using XBeeLibrary.Core.Models;
 
@@ -19,6 +20,11 @@ namespace Pinknose.DistributedWorkers.XBee
         private XBeeLibrary.Windows.ZigBeeDevice xBee;
 
         private bool xBeeWasOpen = false;
+
+        public RemoteXBeeDevice GetRemoteDevice(SerializableXBeeAddress remoteXBeeAddress)
+        {
+            return new RemoteXBeeDevice(xBee, remoteXBeeAddress.XBee64BitAddress);
+        }
 
         private bool tryToReconnect = false;
 
@@ -98,6 +104,17 @@ namespace Pinknose.DistributedWorkers.XBee
             checkXBeeTimer.Stop();
             xBeeWasOpen = false;
             xBee.Close();
+        }
+
+        public void Write(SerializableXBeeAddress remoteAddress, byte[] data)
+        {
+            var remoteDevice = new RemoteXBeeDevice(xBee, remoteAddress.XBee64BitAddress);
+            Write(remoteDevice, data);
+        }
+
+        public void Write(RemoteXBeeDevice remoteDevice, byte[] data)
+        {
+            xBee.SendData(remoteDevice, data);
         }
 
         private void CheckXBeeTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)

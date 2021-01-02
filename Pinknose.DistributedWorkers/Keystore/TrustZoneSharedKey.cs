@@ -1,4 +1,5 @@
-﻿using Pinknose.DistributedWorkers.Clients;
+﻿using Newtonsoft.Json;
+using Pinknose.DistributedWorkers.Clients;
 using Pinknose.DistributedWorkers.Crypto;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,6 @@ using System.Text;
 
 namespace Pinknose.DistributedWorkers.Keystore
 {
-    [Serializable]
     public class TrustZoneSharedKey
     {
         protected internal static readonly int SharedKeyByteSize = 32;
@@ -20,6 +20,7 @@ namespace Pinknose.DistributedWorkers.Keystore
             ValidTo = validTo;
         }
 
+        [JsonConstructor]
         internal TrustZoneSharedKey(string trustZoneName, byte[] aesKey, DateTime validFrom, DateTime validTo)
         {
             TrustZoneName = trustZoneName;

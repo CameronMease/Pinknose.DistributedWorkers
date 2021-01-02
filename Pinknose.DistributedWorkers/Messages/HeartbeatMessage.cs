@@ -26,7 +26,6 @@ using System;
 
 namespace Pinknose.DistributedWorkers.Messages
 {
-    [Serializable]
     public sealed class HeartbeatMessage : MessageBase
     {
         #region Constructors

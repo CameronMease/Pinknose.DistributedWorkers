@@ -1,13 +1,15 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
+using XBeeLibrary.Core;
 using XBeeLibrary.Core.Models;
 
 namespace Pinknose.DistributedWorkers.XBee.Messages
 {
-    [Serializable]
-    public class SerializableXBeeAddress : ISerializable
+    [JsonConverter(typeof(SerializableXBeeAddressJsonConverter))]
+    public class SerializableXBeeAddress
     {
         private const string ValueName = "Value";
 
@@ -32,24 +34,10 @@ namespace Pinknose.DistributedWorkers.XBee.Messages
         }
 
 
-        [field: NonSerializedAttribute()]
-        private XBee64BitAddress XBee64BitAddress { get; set; }
+        internal XBee64BitAddress XBee64BitAddress { get; set; }
 
         public bool Is64BitAddress { get; private set; } = true;
 
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue(nameof(Is64BitAddress), Is64BitAddress);
-
-            if (Is64BitAddress)
-            {
-                info.AddValue(ValueName, XBee64BitAddress.Value);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
 
         public override string ToString()
         {
@@ -62,5 +50,6 @@ namespace Pinknose.DistributedWorkers.XBee.Messages
                 throw new NotImplementedException();
             }
         }
+
     }
 }

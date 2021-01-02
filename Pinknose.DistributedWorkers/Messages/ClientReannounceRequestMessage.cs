@@ -26,7 +26,6 @@ using System;
 
 namespace Pinknose.DistributedWorkers.Messages
 {
-    [Serializable]
     internal sealed class ClientReannounceRequestMessage : MessageBase
     {
         #region Constructors

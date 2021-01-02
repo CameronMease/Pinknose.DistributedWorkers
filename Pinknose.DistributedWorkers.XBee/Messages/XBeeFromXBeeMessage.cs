@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using XBeeLibrary.Core.Models;
 
 namespace Pinknose.DistributedWorkers.XBee.Messages
 {
-    [Serializable]
     public class XBeeFromXBeeMessage : XBeeMessageBase
     {
         private string _rawData;
@@ -15,9 +16,10 @@ namespace Pinknose.DistributedWorkers.XBee.Messages
 
         }
 
-        public XBeeFromXBeeMessage(SerializableXBeeAddress sourceAddress, string rawData) : base()
+        [JsonConstructor]
+        public XBeeFromXBeeMessage(SerializableXBeeAddress xBeeSourceAddress, string rawData) : base()
         {
-            XBeeSourceAddress = sourceAddress;
+            XBeeSourceAddress = xBeeSourceAddress;
             _rawData = rawData;
         }
 
@@ -29,5 +31,10 @@ namespace Pinknose.DistributedWorkers.XBee.Messages
         }
 
         public override string RawData => _rawData;
+
+        public JObject GetJObject()
+        {
+            return (JObject)JsonConvert.DeserializeObject(RawData);
+        }
     }
 }

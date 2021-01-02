@@ -22,6 +22,7 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////
 
+using Newtonsoft.Json;
 using Pinknose.DistributedWorkers.Clients;
 using System;
 
@@ -30,7 +31,6 @@ namespace Pinknose.DistributedWorkers.Messages
     /// <summary>
     /// A message which is passed between client and server.
     /// </summary>
-    [Serializable]
     public abstract partial class MessageBase
     {
         #region Constructors
@@ -54,7 +54,7 @@ namespace Pinknose.DistributedWorkers.Messages
 
         //public Dictionary<string, object> CustomProperties { get; private set; } = new Dictionary<string, object>();
 
-        [field: NonSerializedAttribute()]
+        [JsonIgnore]
         public SignatureVerificationStatus SignatureVerificationStatus { get; private set; } = SignatureVerificationStatus.SignatureUnverified;
 
         #endregion Properties
